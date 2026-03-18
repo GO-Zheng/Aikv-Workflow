@@ -1,0 +1,34 @@
+services:
+  aikv:
+    image: aikv:latest
+    container_name: aikv
+    user: root
+    hostname: aikv
+    command: ["--config", "/app/aikv.toml"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../data:/app/data
+      - ../logs:/app/logs
+      - ../config/aikv.toml:/app/aikv.toml:ro
+    environment:
+      - RUST_LOG=info
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo PING | nc -w 1 localhost 6379 | grep -q PONG"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  aikv-workflow:
+    name: aikv-workflow
+    driver: bridge
