@@ -18,9 +18,9 @@ agentType: general-purpose
 
 ## 工作目录
 
-```
-/root/code/Flow/Aikv-Workflow
-```
+脚本会自动定位项目目录，通常为 `/Users/gozheng/code/wiqun/Aikv-Workflow` 或 `/root/code/Flow/Aikv-Workflow`
+
+> 注意：脚本使用 `$(dirname "${BASH_SOURCE[0]}")` 自动计算路径，无需手动指定工作目录。
 
 ## 脚本路径
 

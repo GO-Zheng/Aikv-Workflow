@@ -44,7 +44,7 @@ done
 
 if [[ "$ACTION" == "stop" ]]; then
     echo "停止监控栈..."
-    docker compose -f "$COMPOSE_FILE" down -v --remove-orphans
+    docker compose -p aikv-monitor -f "$COMPOSE_FILE" down -v --remove-orphans
     echo "已停止"
     exit 0
 fi
@@ -55,11 +55,11 @@ mkdir -p "$PROJECT_DIR/data/grafana"
 
 # 清理旧容器和网络（确保环境干净）
 echo "清理旧环境..."
-docker compose -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
+docker compose -p aikv-monitor -f "$COMPOSE_FILE" down -v --remove-orphans 2>/dev/null || true
 
 # 启动监控栈
 echo "启动监控栈..."
-docker compose -f "$COMPOSE_FILE" up -d
+docker compose -p aikv-monitor -f "$COMPOSE_FILE" up -d
 
 echo ""
 echo "=== 监控栈启动成功 ==="

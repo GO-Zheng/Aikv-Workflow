@@ -18,3 +18,8 @@ scrape_configs:
   - job_name: "aikv-exporter"
     static_configs:
       - targets: ["aikv-exporter:9121"]
+
+  # AiDb Exporter - AiDb 层指标 (MemTable, WAL, BlockCache)
+  - job_name: "aidb-exporter"
+    static_configs:
+      - targets: ["aidb-exporter:9120"]

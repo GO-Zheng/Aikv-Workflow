@@ -10,9 +10,7 @@ user-invocable: true
 
 ## 脚本路径
 
-```
-/root/code/Flow/Aikv-Workflow/scripts/export_metrics.sh
-```
+脚本位于 `scripts/export_metrics.sh`，会自动定位项目目录。
 
 ## 功能
 

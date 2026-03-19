@@ -41,6 +41,23 @@ services:
       timeout: 5s
       retries: 3
 
+  aidb-exporter:
+    image: aidb-exporter:v0.0.1
+    container_name: aidb-exporter
+    environment:
+      - AIDB_TARGET=redis://aikv:6379
+      - EXPORTER_PORT=9120
+    ports:
+      - "9120:9120"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9120/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
   prometheus:
     image: prom/prometheus:v3.9.1
     container_name: aikv-prometheus
