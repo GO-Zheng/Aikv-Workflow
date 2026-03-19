@@ -77,7 +77,7 @@ fi
 
 # 创建日志和数据目录
 mkdir -p "$LOG_DIR"
-mkdir -p "$PROJECT_DIR/data"
+mkdir -p "$PROJECT_DIR/data/aikv"
 
 # 日志文件以当前时间命名
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")

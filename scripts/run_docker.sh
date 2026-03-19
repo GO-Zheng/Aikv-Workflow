@@ -77,3 +77,6 @@ docker compose -f "$DOCKER_DIR/docker-compose.yaml" up -d
 
 echo ""
 echo "=== 启动成功 ==="
+
+# 执行功能测试脚本
+"$PROJECT_DIR/tests/test_functional.sh"

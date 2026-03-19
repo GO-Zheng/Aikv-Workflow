@@ -11,10 +11,17 @@ DOCKER_DIR="$PROJECT_DIR/docker"
 echo "  AiKv 环境清理"
 
 # 确认操作
-read -p "确认清理所有 AiKv 相关资源? (y/N): " confirm
-if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-    echo "取消清理"
-    exit 0
+FORCE=false
+if [[ "$1" == "--force" || "$1" == "-f" ]]; then
+    FORCE=true
+fi
+
+if [[ "$FORCE" != true ]]; then
+    read -p "确认清理所有 AiKv 相关资源? (y/N): " confirm
+    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        echo "取消清理"
+        exit 0
+    fi
 fi
 
 echo ""
@@ -51,7 +58,7 @@ pkill -f "aikv.*target" 2>/dev/null || true
 
 echo ""
 echo "=== 6. 清理本地目录 ==="
-rm -rf "$PROJECT_DIR/data"/*
+rm -rf "$PROJECT_DIR/data/aikv"/*
 rm -rf "$PROJECT_DIR/logs"/*
 rm -rf "$PROJECT_DIR/target"/*
 rm -f "$PROJECT_DIR/target/aikv.pid"
