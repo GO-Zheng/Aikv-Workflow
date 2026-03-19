@@ -21,10 +21,10 @@
 
 | 实际场景 | 现象 | 说明 |
 |------|------|------|
-| 纯内存读写（GET/SET） | User CPU 高, System CPU 低 | 正常状态，Aikv 主要在处理命令解析和数据结构访问 |
-| 开启 AOF 持久化 | System CPU 高 | AOF 刷盘（fsync）消耗系统 CPU |
-| RDB 快照生成 | System CPU 突然飙升 | fork() 创建子进程、COW 页面分配消耗 |
-| 网络吞吐量瓶颈 | System CPU 高，CPU 核心打满 | 每个连接都消耗 System CPU（socket I/O） |
+| 正常读写 | User CPU 高, System CPU 低 | 正常状态，命令解析和内存操作消耗 |
+| 大量写入 | Total CPU 骤升 | 写请求突增，数据写入内存消耗 CPU |
+| 大 Key 读取 | User CPU 飙升 | 解析大字符串、反序列化消耗 |
+| 连接数过多 | System CPU 高 | 大量 socket I/O 系统调用 |
 
 #### 总 CPU 使用率
 
@@ -41,4 +41,50 @@
 | 正常负载 | 指针在 0.7 以下 | 负载正常 |
 | 高负载 | 指针超过 0.7 | 警告，需排查原因或扩容 |
 | 单核饱和 | 指针接近 1.0 | 单核已达上限，考虑水平扩容 |
+
+---
+
+## Memory
+
+### 指标说明
+
+| 指标 | 采集器 | 含义 |
+|------|--------|------|
+| redis_memory_used_bytes | aikv-exporter | AiKv 实际分配的内存 (字节) |
+| redis_memory_used_peak_bytes | aikv-exporter | 历史峰值内存 (字节) |
+| process_resident_memory_bytes | aikv-exporter | 进程常驻物理内存 (字节) |
+| redis_mem_fragmentation_ratio | aikv-exporter | 内存碎片率 (RSS/Used) |
+
+### 面板说明
+
+#### 内存使用量
+
+| 曲线 | 曲线说明 | AiKv 中对应情况 | 计算公式 | 公式说明 |
+|------|----------|------------------|----------|----------|
+| RSS Memory (绿色) | 进程常驻物理内存 | 操作系统报告的实际物理内存占用 | `process_resident_memory_bytes{job="aikv-exporter"}` | 直接取值 |
+| Peak Memory (橙色) | 历史峰值内存 | 进程运行以来的最大内存分配 | `redis_memory_used_peak_bytes` | 直接取值 |
+| Used Memory (蓝色) | AiKv 实际分配的内存 | AiKv 进程分配的内存字节数 | `redis_memory_used_bytes` | 直接取值 |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 正常 | Used Memory 稳定在某一水平 | 内存使用正常 |
+| 突发写入 | Used Memory 快速上升 | 大量数据写入，内存分配增加 |
+| 内存泄漏 | Used Memory 持续增长不回落 | 内存未释放，可能是泄漏 |
+| RSS 远大于 Used | 内存碎片高 | 分配了但未使用，碎片严重 |
+| 持续高水位 | Peak Memory 接近机器内存 | 内存压力持续，迟早 OOM |
+
+#### 内存碎片率
+
+| 对象 | 说明 |
+|------|------|
+| 指标 | 当前内存碎片率 |
+| 采集器 | aikv-exporter |
+| AiKv 中对应情况 | 内存碎片情况 (RSS/Used ratio) |
+| 计算公式 | `redis_mem_fragmentation_ratio` |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 正常 | 1.0 - 1.5 | 内存碎片较少 |
+| 警告 | 1.5 - 3.0 | 内存碎片较多，考虑整理 |
+| 危险 | > 3.0 | 碎片严重，建议重启 AiKv |
 
