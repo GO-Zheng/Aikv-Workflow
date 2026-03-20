@@ -31,21 +31,17 @@ docker stop aikv 2>/dev/null || true
 docker rm aikv 2>/dev/null || true
 
 echo ""
-echo "=== 2. 删除 Docker 镜像 ==="
-docker rmi aikv:latest 2>/dev/null || true
-
-echo ""
-echo "=== 3. 删除 Docker 网络 ==="
+echo "=== 2. 删除 Docker 网络 ==="
 docker network rm aikv-workflow 2>/dev/null || true
 docker network rm aikv 2>/dev/null || true
 
 echo ""
-echo "=== 4. 删除 Docker 卷 ==="
+echo "=== 3. 删除 Docker 卷 ==="
 docker volume rm docker_aikv-data 2>/dev/null || true
 docker volume rm aikv_aikv1-data 2>/dev/null || true
 
 echo ""
-echo "=== 5. 停止本地进程 ==="
+echo "=== 4. 停止本地进程 ==="
 if [[ -f "$PROJECT_DIR/target/aikv.pid" ]]; then
     pid=$(cat "$PROJECT_DIR/target/aikv.pid")
     if kill -0 "$pid" 2>/dev/null; then
@@ -57,7 +53,7 @@ fi
 pkill -f "aikv.*target" 2>/dev/null || true
 
 echo ""
-echo "=== 6. 清理本地目录 ==="
+echo "=== 5. 清理本地目录 ==="
 rm -rf "$PROJECT_DIR/data/aikv"/*
 rm -rf "$PROJECT_DIR/logs"/*
 rm -rf "$PROJECT_DIR/target"/*
