@@ -32,7 +32,7 @@ RUN mkdir src && echo "fn main() {}" > src/main.rs
 COPY ../AiKv/src ./src
 
 # 修改 Cargo.toml 使用本地 AiDb
-RUN sed -i 's|aidb = { git = "https://github.com/wiqun/AiDb", tag = "v0.7.0" }|aidb = { path = "./AiDb" }|' Cargo.toml
+RUN sed -i 's|aidb = { .*git.*github.com/wiqun/AiDb.* }|aidb = { path = "./AiDb" }|; s|aidb = { path = "\.\./AiDb" }|aidb = { path = "./AiDb" }|' Cargo.toml
 
 # 编译
 ARG FEATURES=""

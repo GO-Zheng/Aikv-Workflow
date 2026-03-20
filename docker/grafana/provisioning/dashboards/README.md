@@ -6,8 +6,8 @@
 
 | 指标 | 采集器 | 含义 |
 |------|--------|------|
-| redis_cpu_sys_seconds_total | aikv-exporter | 进程在内核态消耗的 CPU 时间累计值 (秒) |
-| redis_cpu_user_seconds_total | aikv-exporter | 进程在用户态消耗的 CPU 时间累计值 (秒) |
+| redis_cpu_sys_seconds_total | aikv-exporter | 内核态 CPU 时间消耗，反映网络 I/O、文件 I/O、锁竞争等系统调用开销 |
+| redis_cpu_user_seconds_total | aikv-exporter | 用户态 CPU 时间消耗，反映命令解析、数据结构操作、业务逻辑等计算开销 |
 
 ### 面板说明
 
@@ -50,68 +50,10 @@
 
 | 指标 | 采集器 | 含义 |
 |------|--------|------|
-| redis_memory_used_bytes | aikv-exporter | AiKv 实际分配的内存 (字节) |
-| redis_memory_used_peak_bytes | aikv-exporter | 历史峰值内存 (字节) |
-| process_resident_memory_bytes | aikv-exporter | 进程常驻物理内存 (字节) |
-| redis_mem_fragmentation_ratio | aikv-exporter | 内存碎片率 (RSS/Used) |
-
----
-
-## AiDb (存储引擎)
-
-### 指标说明
-
-| 指标 | 采集器 | 含义 |
-|------|--------|------|
-| aidb_memtable_bytes | aidb-exporter | 活跃 MemTable 大小 (字节) |
-| aidb_total_memtable_bytes | aidb-exporter | 活跃 + 不可变 MemTables 总大小 (字节) |
-| aidb_wal_bytes | aidb-exporter | WAL (预写日志) 文件大小 (字节) |
-| aidb_block_cache_bytes | aidb-exporter | Block Cache 当前使用量 (字节) |
-| aidb_block_cache_capacity_bytes | aidb-exporter | Block Cache 容量 (字节) |
-
-### 面板说明
-
-#### AiDb MemTable & WAL
-
-| 曲线 | 曲线说明 | AiDb 中对应情况 | 计算公式 | 公式说明 |
-|------|----------|------------------|----------|----------|
-| MemTable (蓝色) | 活跃 MemTable 大小 | 当前正在写入的 MemTable | `aidb_memtable_bytes` | 直接取值 |
-| WAL (橙色) | Write-Ahead Log 文件大小 | 已写入但未刷盘的操作日志 | `aidb_wal_bytes` | 直接取值 |
-
-| 实际场景 | 现象 | 说明 |
-|------|------|------|
-| 正常写入 | MemTable 和 WAL 稳定在某一水平 | 数据正常写入和刷新 |
-| 写入压力大 | MemTable 持续增长 | 数据写入速度快于刷新速度 |
-| Flush 触发 | MemTable 突然下降 | 达到阈值触发 flush 到磁盘 |
-| WAL 持续增长 | WAL 文件变大 | 刷新不及时或写入密集 |
-
-#### AiDb Block Cache
-
-| 曲线 | 曲线说明 | AiDb 中对应情况 | 计算公式 | 公式说明 |
-|------|----------|------------------|----------|----------|
-| Block Cache 使用量 (蓝色) | 当前使用的缓存大小 | 已缓存的 SSTable block | `aidb_block_cache_bytes` | 直接取值 |
-| Block Cache 容量 (橙色) | 配置的最大容量 | 缓存层最大可用空间 | `aidb_block_cache_capacity_bytes` | 直接取值 |
-
-| 实际场景 | 现象 | 说明 |
-|------|------|------|
-| 正常读 | 使用量稳定 | 读写请求命中缓存 |
-| 缓存未命中 | 使用量较低 | 大量磁盘 I/O |
-| 缓存饱和 | 使用量接近容量 | 缓存命中率高，接近满载 |
-
-#### Block Cache 使用率
-
-| 对象 | 说明 |
-|------|------|
-| 显示内容 | 当前 Block Cache 使用率 |
-| 采集器 | aidb-exporter |
-| AiDb 中对应情况 | 缓存饱和度 |
-| 计算公式 | `aidb_block_cache_bytes / aidb_block_cache_capacity_bytes` |
-
-| 实际场景 | 现象 | 说明 |
-|------|------|------|
-| 正常 | 使用率 70% 以下 | 缓存未饱和，命中率高 |
-| 警告 | 使用率 70% - 90% | 缓存接近饱和，考虑扩容 |
-| 危险 | 使用率超过 90% | 缓存饱和，可能影响命中率 |
+| redis_memory_used_bytes | aikv-exporter | AiKv 分配器管理的内存，包含 KV 数据、过期数据、缓冲区等 |
+| redis_memory_used_peak_bytes | aikv-exporter | 历史最大内存占用，用于判断是否需要扩容 |
+| process_resident_memory_bytes | aikv-exporter | 进程实际占用的物理内存，反映 OS 层面的内存压力 |
+| redis_mem_fragmentation_ratio | aikv-exporter | 内存碎片率（RSS/Used），反映分配效率，碎片过高可能导致 OOM |
 
 ### 面板说明
 
@@ -145,4 +87,59 @@
 | 正常 | 1.0 - 1.5 | 内存碎片较少 |
 | 警告 | 1.5 - 3.0 | 内存碎片较多，考虑整理 |
 | 危险 | > 3.0 | 碎片严重，建议重启 AiKv |
+
+## AiDb
+
+### 指标说明
+
+
+| 指标                              | 采集器           | 含义                          |
+| ------------------------------- | ------------- | --------------------------- |
+| aidb_memtable_bytes             | aidb-exporter | 活跃 MemTable 大小，用于暂存写入数据，触发 flush 后写入磁盘 |
+| aidb_wal_bytes                  | aidb-exporter | WAL 预写日志文件大小，用于确保写入持久化，flush 后可清理 |
+| aidb_block_cache_bytes          | aidb-exporter | Block Cache 使用量，用于缓存 SSTable block 数据，加速读取 |
+| aidb_block_cache_capacity_bytes | aidb-exporter | Block Cache 容量上限 |
+
+### 面板说明
+
+#### AiDb MemTable
+
+| 曲线            | 曲线说明                 | AiDb 中对应情况       | 计算公式                  | 公式说明 |
+| ------------- | -------------------- | ---------------- | --------------------- | ---- |
+| MemTable | 活跃 MemTable 大小       | 当前正在写入的 MemTable | `aidb_memtable_bytes` | 直接取值 |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 正常写入 | MemTable 稳定在某一水平 | 数据正常写入和刷新 |
+| 写入压力大 | MemTable 持续增长 | 数据写入速度快于刷新速度 |
+| Flush 触发 | MemTable 突然下降 | 达到阈值触发 flush 到磁盘 |
+
+#### AiDb WAL
+
+| 曲线            | 曲线说明                 | AiDb 中对应情况       | 计算公式                  | 公式说明 |
+| ------------- | -------------------- | ---------------- | --------------------- | ---- |
+| WAL | Write-Ahead Log 文件大小 | 已写入但未刷盘的操作日志     | `aidb_wal_bytes`      | 直接取值 |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 正常写入 | WAL 稳定或周期性减小 | 正常 flush 到磁盘 |
+| WAL 持续增长 | WAL 文件变大 | 刷新不及时或写入密集 |
+
+#### AiDb Block Cache
+
+| 曲线 | 曲线说明 | AiDb 中对应情况 | 计算公式 | 阈值颜色 | 公式说明 |
+|------|----------|-----------------|----------|----------|----------|
+| Block Cache 使用率 | 缓存使用率 (%) | 已缓存的 SSTable block / 容量 | `aidb_block_cache_bytes / aidb_block_cache_capacity_bytes` | 绿/黄/红 | 直接取值并计算百分比 |
+
+| 颜色阈值 | 含义 |
+|----------|------|
+| 绿色 (0-70%) | 正常，缓存未饱和 |
+| 黄色 (70-90%) | 警告，缓存接近饱和 |
+| 红色 (>90%) | 危险，缓存饱和，可能影响命中率 |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 正常读 | 使用率稳定在 70% 以下 | 缓存命中率高 |
+| 缓存压力 | 使用率持续上升 | 缓存未命中增加，命中率下降 |
+| 缓存饱和 | 使用率超过 90% | 考虑扩容 Block Cache |
 

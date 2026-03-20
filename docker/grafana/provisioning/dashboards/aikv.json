@@ -449,7 +449,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**:\n- MemTable (蓝色): 活跃 MemTable 大小\n- WAL (橙色): Write-Ahead Log 文件大小\n\n**调优场景**:\n- MemTable 持续增长 → 写入压力大，考虑调大 memtable_size\n- WAL 持续增长 → 刷新不及时，检查 flush 配置",
+      "description": "**曲线说明**:\n- MemTable: 活跃内存表大小\n\n**调优场景**:\n- 持续增长 → 写入压力大，考虑调大 memtable_size\n- 周期性升降 → 正常 flush 行为",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -501,27 +501,11 @@
           },
           "unit": "bytes"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "WAL"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "orange",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 9,
-        "w": 12,
+        "w": 8,
         "x": 0,
         "y": 18
       },
@@ -552,18 +536,9 @@
           "expr": "aidb_memtable_bytes",
           "legendFormat": "MemTable",
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "aidb_wal_bytes",
-          "legendFormat": "WAL",
-          "refId": "B"
         }
       ],
-      "title": "AiDb MemTable & WAL",
+      "title": "AiDb MemTable",
       "type": "timeseries"
     },
     {
@@ -571,7 +546,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**:\n- Block Cache 使用量 (蓝色): 当前使用的缓存大小\n- Block Cache 容量 (橙色): 配置的最大容量\n\n**计算公式**: 使用率 = aidb_block_cache_bytes / aidb_block_cache_capacity_bytes\n\n**调优场景**:\n- 使用率接近 100% → 缓存命中率高，考虑扩容\n- 使用率持续很低 → 可能配置过大或访问量低",
+      "description": "**曲线说明**:\n- WAL: Write-Ahead Log 文件大小\n\n**调优场景**:\n- 持续增长 → 刷新不及时，检查 flush 配置\n- 周期性下降 → 正常 flush 到磁盘",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -623,28 +598,117 @@
           },
           "unit": "bytes"
         },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Block Cache 容量"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "orange",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
+        "overrides": []
       },
       "gridPos": {
         "h": 9,
-        "w": 12,
-        "x": 12,
+        "w": 8,
+        "x": 8,
+        "y": 18
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aidb_wal_bytes",
+          "legendFormat": "WAL",
+          "refId": "A"
+        }
+      ],
+      "title": "AiDb WAL",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**曲线说明**:\n- Block Cache 使用率 (%)\n\n**颜色阈值**:\n- 绿色 (0-70%): 正常\n- 黄色 (70-90%): 警告，缓存接近饱和\n- 红色 (>90%): 危险，缓存饱和\n\n**调优场景**:\n- 使用率持续 >80% → 考虑扩容 Block Cache",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
         "y": 18
       },
       "id": 6,
@@ -671,94 +735,13 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "aidb_block_cache_bytes",
-          "legendFormat": "Block Cache 使用量",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "aidb_block_cache_capacity_bytes",
-          "legendFormat": "Block Cache 容量",
-          "refId": "B"
-        }
-      ],
-      "title": "AiDb Block Cache",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "**计算公式**: `aidb_block_cache_bytes / aidb_block_cache_capacity_bytes`\n\n**阈值说明**:\n- 绿色 (0-70%): 正常，缓存未饱和\n- 黄色 (70-90%): 警告，缓存接近饱和\n- 红色 (>90%): 危险，缓存饱和，可能影响命中率",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "max": 1,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 0.7
-              },
-              {
-                "color": "red",
-                "value": 0.9
-              }
-            ]
-          },
-          "unit": "percentunit"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 9,
-        "w": 6,
-        "x": 0,
-        "y": 27
-      },
-      "id": 7,
-      "options": {
-        "minVizHeight": 75,
-        "minVizWidth": 75,
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "sizing": "auto"
-      },
-      "pluginVersion": "12.4.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
           "expr": "aidb_block_cache_bytes / aidb_block_cache_capacity_bytes",
           "legendFormat": "Block Cache 使用率",
           "refId": "A"
         }
       ],
-      "title": "Block Cache 使用率",
-      "type": "gauge"
+      "title": "AiDb Block Cache",
+      "type": "timeseries"
     }
   ],
   "preload": false,
@@ -780,6 +763,6 @@
   "timezone": "browser",
   "title": "AiKv",
   "uid": "aikv",
-  "version": 8,
+  "version": 9,
   "weekStart": ""
 }

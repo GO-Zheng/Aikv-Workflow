@@ -8,10 +8,23 @@
 #
 # 参数：
 #   --metric      指标名，支持：
-#                  - redis_cpu_sys_seconds_total
-#                  - redis_cpu_user_seconds_total
-#                  - all_cpu (所有 CPU 相关指标)
-#                  - all (所有可用指标)
+#                  CPU:
+#                    - redis_cpu_sys_seconds_total    系统 CPU
+#                    - redis_cpu_user_seconds_total   用户 CPU
+#                    - all_cpu                        所有 CPU 指标
+#                  Memory:
+#                    - redis_memory_used_bytes        已分配内存
+#                    - redis_memory_used_peak_bytes   峰值内存
+#                    - process_resident_memory_bytes  RSS 内存
+#                    - redis_mem_fragmentation_ratio  内存碎片率
+#                  AiDb:
+#                    - aidb_memtable_bytes             MemTable 大小
+#                    - aidb_wal_bytes                  WAL 大小
+#                    - aidb_block_cache_bytes          Block Cache 使用量
+#                    - aidb_block_cache_capacity_bytes Block Cache 容量
+#                    - aidb_all                        所有 AiDb 指标
+#                  其他:
+#                    - all (所有可用指标)
 #   --duration    时间范围，如：5m, 1h, 30m, 24h
 #   --format      输出格式：json (默认) 或 csv
 #   --list        列出所有可用指标
@@ -46,10 +59,27 @@ while [[ $# -gt 0 ]]; do
             ;;
         --list)
             echo "可用指标："
-            echo "  redis_cpu_sys_seconds_total   - 系统 CPU 时间"
-            echo "  redis_cpu_user_seconds_total  - 用户 CPU 时间"
-            echo "  all_cpu                       - 所有 CPU 相关指标"
-            echo "  all                           - 所有可用指标"
+            echo ""
+            echo "CPU:"
+            echo "  redis_cpu_sys_seconds_total     - 系统 CPU 时间"
+            echo "  redis_cpu_user_seconds_total    - 用户 CPU 时间"
+            echo "  all_cpu                         - 所有 CPU 指标"
+            echo ""
+            echo "Memory:"
+            echo "  redis_memory_used_bytes          - 已分配内存"
+            echo "  redis_memory_used_peak_bytes    - 峰值内存"
+            echo "  process_resident_memory_bytes   - RSS 内存"
+            echo "  redis_mem_fragmentation_ratio   - 内存碎片率"
+            echo ""
+            echo "AiDb:"
+            echo "  aidb_memtable_bytes             - MemTable 大小"
+            echo "  aidb_wal_bytes                 - WAL 大小"
+            echo "  aidb_block_cache_bytes         - Block Cache 使用量"
+            echo "  aidb_block_cache_capacity_bytes - Block Cache 容量"
+            echo "  aidb_all                        - 所有 AiDb 指标"
+            echo ""
+            echo "其他:"
+            echo "  all                             - 所有可用指标"
             exit 0
             ;;
         --help|-h)
@@ -108,8 +138,17 @@ case "$METRIC" in
     all_cpu)
         QUERY="{__name__=~\"redis_cpu_.*\"}"
         ;;
+    redis_memory_used_bytes|redis_memory_used_peak_bytes|process_resident_memory_bytes|redis_mem_fragmentation_ratio)
+        QUERY="$METRIC"
+        ;;
+    aidb_memtable_bytes|aidb_wal_bytes|aidb_block_cache_bytes|aidb_block_cache_capacity_bytes)
+        QUERY="$METRIC"
+        ;;
+    aidb_all)
+        QUERY="{__name__=~\"aidb_.*\"}"
+        ;;
     all)
-        QUERY="{__name__=~\"redis_.*|process_.*\"}"
+        QUERY="{__name__=~\"redis_.*|process_.*|aidb_.*\"}"
         ;;
     *)
         QUERY="$METRIC"

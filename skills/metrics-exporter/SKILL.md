@@ -8,6 +8,10 @@ user-invocable: true
 
 导出 AiKv 监控指标数据，供 AI 分析使用。
 
+## 执行要求
+
+**必须使用 Skill 工具调用本 Skill，执行其中的脚本命令。禁止绕过 Skill 直接执行 Bash 命令。**
+
 ## 脚本路径
 
 脚本位于 `scripts/export_metrics.sh`，会自动定位项目目录。
@@ -55,7 +59,16 @@ user-invocable: true
 |--------|------|
 | redis_cpu_sys_seconds_total | 系统 CPU 时间 |
 | redis_cpu_user_seconds_total | 用户 CPU 时间 |
+| redis_memory_used_bytes | 已分配内存 |
+| redis_memory_used_peak_bytes | 峰值内存 |
+| process_resident_memory_bytes | RSS 内存 |
+| redis_mem_fragmentation_ratio | 内存碎片率 |
+| aidb_memtable_bytes | MemTable 大小 |
+| aidb_wal_bytes | WAL 大小 |
+| aidb_block_cache_bytes | Block Cache 使用量 |
+| aidb_block_cache_capacity_bytes | Block Cache 容量 |
 | all_cpu | 所有 CPU 相关指标 |
+| aidb_all | 所有 AiDb 指标 |
 | all | 所有可用指标 |
 
 ## 使用场景

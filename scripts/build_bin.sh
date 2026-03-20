@@ -59,23 +59,36 @@ while $WHILE_LOOP; do
     esac
 done
 
-echo "=== 开始构建：切换到本地 AiDb 依赖 ==="
+echo "=== 开始构建 ==="
 echo "工作流目录: $WORKFLOW_DIR"
 echo "AiKv 目录: $AIKV_DIR"
 echo "构建命令: $BUILD_CMD"
 
-# 1. 修改 Cargo.toml, 切换到本地路径依赖
-echo "修改 Cargo.toml: 切换 aidb 为本地路径依赖..."
-sed -i "s|$AIDB_GIT|$AIDB_PATH|" "$CARGO_TOML"
+# 1. 检查当前依赖状态并决定是否需要切换
+if grep -q 'aidb = { path = "../AiDb" }' "$CARGO_TOML"; then
+    # 已经是本地路径依赖，直接构建
+    echo "检测到 Cargo.toml 已使用本地 AiDb 路径依赖"
+    NEED_SWAP=false
+elif grep -q 'aidb = { git = "https://github.com/wiqun/AiDb"' "$CARGO_TOML"; then
+    # 使用 Git 依赖，需要切换到本地
+    echo "切换 Cargo.toml: Git 依赖 -> 本地路径依赖..."
+    sed -i "s|$AIDB_GIT|$AIDB_PATH|" "$CARGO_TOML"
+    NEED_SWAP=true
+else
+    echo "警告: 无法识别 aidb 依赖类型，跳过依赖切换"
+    NEED_SWAP=false
+fi
 
 # 2. 执行构建
 echo "执行构建..."
 cd "$AIKV_DIR"
 eval "$BUILD_CMD"
 
-# 3. 恢复原始 Cargo.toml
-echo "恢复 Cargo.toml: 还原为 Git 依赖..."
-sed -i "s|$AIDB_PATH|$AIDB_GIT|" "$CARGO_TOML"
+# 3. 如果之前切换了依赖，则恢复原始状态
+if $NEED_SWAP; then
+    echo "恢复 Cargo.toml: 本地路径依赖 -> Git 依赖..."
+    sed -i "s|$AIDB_PATH|$AIDB_GIT|" "$CARGO_TOML"
+fi
 
 # 4. 复制产物到 Aikv-Workflow/target
 TARGET_DIR="$WORKFLOW_DIR/target"
