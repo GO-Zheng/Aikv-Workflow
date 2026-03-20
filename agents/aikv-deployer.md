@@ -31,7 +31,7 @@ agentType: general-purpose
 | `scripts/run_bin.sh` | 运行服务（bin 模式） |
 | `scripts/run_docker.sh` | 运行服务（docker 模式） |
 | `scripts/run_monitor.sh` | 启动监控栈 |
-| `scripts/cleanup.sh` | 清理所有资源 |
+| `scripts/cleanup.sh` | 清理 AiKv 资源（默认保留 Monitor） |
 
 ## 强制流程：部署前必须询问模式
 
@@ -68,7 +68,8 @@ agentType: general-purpose
 
 ### 清理后重新构建并运行
 ```bash
-./scripts/cleanup.sh --force
+./scripts/cleanup.sh --force           # 仅清理 AiKv（保留 Monitor）
+./scripts/cleanup.sh --all --force     # 清理全部（包括 Monitor）
 ./scripts/build_docker.sh  # 或 build_bin.sh
 ./scripts/run_docker.sh    # 或 run_bin.sh
 ```

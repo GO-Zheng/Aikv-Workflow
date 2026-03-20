@@ -57,9 +57,10 @@ user-invocable: true
 ```
 
 ### cleanup
-清理所有资源（data、logs、target、容器、镜像、网络）
+清理 AiKv 资源（默认保留 Monitor 网络）
 ```bash
-./scripts/cleanup.sh --force
+./scripts/cleanup.sh --force           # 仅清理 AiKv（保留 Monitor）
+./scripts/cleanup.sh --all --force      # 清理全部（包括 Monitor）
 ```
 
 ## 使用示例
