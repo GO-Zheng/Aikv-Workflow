@@ -35,14 +35,9 @@ services:
     restart: unless-stopped
     networks:
       - aikv-workflow
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9121"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
 
   aidb-exporter:
-    image: aidb-exporter:v0.0.1
+    image: aidb-exporter:v0.0.2
     container_name: aidb-exporter
     environment:
       - AIDB_TARGET=redis://aikv:6379
@@ -79,6 +74,11 @@ services:
     restart: unless-stopped
     networks:
       - aikv-workflow
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   grafana:
     image: grafana/grafana:12.4.1
@@ -95,6 +95,11 @@ services:
     restart: unless-stopped
     networks:
       - aikv-workflow
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 networks:
   aikv-workflow:

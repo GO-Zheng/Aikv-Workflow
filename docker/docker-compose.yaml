@@ -12,12 +12,12 @@ services:
       - ../logs:/app/logs
       - ../config/aikv.toml:/app/aikv.toml:ro
     environment:
-      - RUST_LOG=info
+      - RUST_LOG=debug
     restart: unless-stopped
     networks:
       - aikv-workflow
     healthcheck:
-      test: ["CMD", "sh", "-c", "echo PING | nc -w 1 localhost 6379 | grep -q PONG"]
+      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "ping"]
       interval: 30s
       timeout: 5s
       retries: 3

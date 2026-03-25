@@ -29,7 +29,7 @@ databases = 16
 # Log level
 # ptions: trace, debug, info, warn, error
 # CONFIG SET loglevel <level>
-level = "info"
+level = "debug"
 
 
 [slowlog]
