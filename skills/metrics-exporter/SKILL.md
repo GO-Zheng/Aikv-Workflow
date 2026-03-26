@@ -88,6 +88,10 @@ user-invocable: true
 | keyspace_hits | Keyspace 命中次数 | Keyspace 命中率 |
 | keyspace_misses | Keyspace 未命中次数 | Keyspace 命中率 |
 | keyspace_ratio | Keyspace 命中率 (0-1) | Keyspace 命中率 |
+| latency_p50 | 总延迟 P50 (秒) | 命令延迟 P50/P95/P99 |
+| latency_p95 | 总延迟 P95 (秒) | 命令延迟 P50/P95/P99 |
+| latency_p99 | 总延迟 P99 (秒) | 命令延迟 P50/P95/P99 |
+| latency_by_cmd | 各命令类型延迟分布 | 命令类型延迟分布 |
 | all_cpu | 所有 CPU 相关指标 | CPU 相关面板 |
 | aidb_all | 所有 AiDb 指标 | AiDb 相关面板 |
 | all | 所有可用指标 | 全部面板 |
@@ -160,6 +164,24 @@ user-invocable: true
 
 # 导出指定时间范围
 ./scripts/export_metrics.sh --metric=keyspace_ratio --start=11:30 --end=12:00
+```
+
+2. 将 JSON 输出发送给 AI 分析
+
+## 示例：分析命令延迟
+
+1. 导出数据：
+```bash
+# 导出 P50/P95/P99 延迟
+./scripts/export_metrics.sh --metric=latency_p50 --duration=5m
+./scripts/export_metrics.sh --metric=latency_p95 --duration=5m
+./scripts/export_metrics.sh --metric=latency_p99 --duration=5m
+
+# 导出各命令类型延迟
+./scripts/export_metrics.sh --metric=latency_by_cmd --duration=5m
+
+# 导出指定时间范围
+./scripts/export_metrics.sh --metric=latency_p99 --start=11:30 --end=12:00
 ```
 
 2. 将 JSON 输出发送给 AI 分析

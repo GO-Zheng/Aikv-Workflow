@@ -36,6 +36,11 @@
 #                    - keyspace_hits                   Keyspace 命中次数
 #                    - keyspace_misses                 Keyspace 未命中次数
 #                    - keyspace_ratio                  Keyspace 命中率
+#                  Latency:
+#                    - latency_p50                    总延迟 P50
+#                    - latency_p95                    总延迟 P95
+#                    - latency_p99                    总延迟 P99
+#                    - latency_by_cmd                 各命令类型延迟
 #                  其他:
 #                    - all (所有可用指标)
 #   --duration    时间范围，如：5m, 1h, 30m, 24h (默认: 5m)
@@ -122,6 +127,11 @@ while [[ $# -gt 0 ]]; do
             echo "  keyspace_misses                 - Keyspace 未命中次数 (对应\"Keyspace 命中率\"面板)"
             echo "  keyspace_ratio                  - Keyspace 命中率 (0-1)"
             echo ""
+            echo "Latency:"
+            echo "  latency_p50                    - 总延迟 P50 (秒)"
+            echo "  latency_p95                    - 总延迟 P95 (秒)"
+            echo "  latency_p99                    - 总延迟 P99 (秒)"
+            echo "  latency_by_cmd                - 各命令类型延迟分布"
             echo "其他:"
             echo "  all                             - 所有可用指标"
             exit 0
@@ -261,6 +271,18 @@ case "$METRIC" in
         ;;
     keyspace_ratio)
         QUERY="rate(redis_keyspace_hits_total[1m]) / (rate(redis_keyspace_hits_total[1m]) + rate(redis_keyspace_misses_total[1m]))"
+        ;;
+    latency_p50)
+        QUERY="histogram_quantile(0.50, sum(rate(redis_commands_latencies_usec_bucket[1m])) by (le)) / 1e6"
+        ;;
+    latency_p95)
+        QUERY="histogram_quantile(0.95, sum(rate(redis_commands_latencies_usec_bucket[1m])) by (le)) / 1e6"
+        ;;
+    latency_p99)
+        QUERY="histogram_quantile(0.99, sum(rate(redis_commands_latencies_usec_bucket[1m])) by (le)) / 1e6"
+        ;;
+    latency_by_cmd)
+        QUERY="histogram_quantile(0.50, sum(rate(redis_commands_latencies_usec_bucket[1m])) by (le, cmd)) / 1e6"
         ;;
     redis_commands_total|commands_all)
         QUERY="rate(redis_commands_total[1m])"
