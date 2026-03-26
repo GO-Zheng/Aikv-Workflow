@@ -3,7 +3,8 @@
 # 导出 AiKv 监控指标
 #
 # 用法：
-#   ./export_metrics.sh --metric=<metric_name> --duration=<duration> [--format=json|csv]
+#   ./export_metrics.sh --metric=<metric_name> [--duration=<duration>] [--format=json|csv]
+#   ./export_metrics.sh --metric=<metric_name> --start=<start_time> --end=<end_time> [--format=json|csv]
 #   ./export_metrics.sh --list
 #
 # 参数：
@@ -23,15 +24,28 @@
 #                    - aidb_block_cache_bytes          Block Cache 使用量
 #                    - aidb_block_cache_capacity_bytes Block Cache 容量
 #                    - aidb_all                        所有 AiDb 指标
+#                  QPS/OPS:
+#                    - qps                             读命令 QPS
+#                    - ops                             所有命令 OPS
+#                    - redis_commands_total            按命令类型的统计
+#                    - commands_all                    所有命令统计
 #                  其他:
 #                    - all (所有可用指标)
-#   --duration    时间范围，如：5m, 1h, 30m, 24h
+#   --duration    时间范围，如：5m, 1h, 30m, 24h (默认: 5m)
+#   --start       起始时间 (与 --end 配合使用，优先级高于 --duration)
+#                  格式: HH:MM (今天，如 11:30)
+#                       YYYY-MM-DD HH:MM (指定日期，如 2026-03-26 11:30)
+#                       YYYY-MM-DDTHH:MM (ISO 格式，如 2026-03-26T11:30)
+#   --end         结束时间 (与 --start 配合使用)
+#                  格式同上 (如 12:00)
 #   --format      输出格式：json (默认) 或 csv
 #   --list        列出所有可用指标
 #
 # 示例：
 #   ./export_metrics.sh --metric=redis_cpu_user_seconds_total --duration=5m
 #   ./export_metrics.sh --metric=all_cpu --duration=1h --format=csv
+#   ./export_metrics.sh --metric=ops --start=11:30 --end=12:00
+#   ./export_metrics.sh --metric=all --start="2026-03-26 11:30" --end="2026-03-26 12:00"
 #   ./export_metrics.sh --list
 
 set -e
@@ -42,6 +56,8 @@ PROMETHEUS_URL="http://localhost:9090"
 METRIC=""
 DURATION="5m"
 FORMAT="json"
+START_TIME=""
+END_TIME=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -51,6 +67,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         --duration=*)
             DURATION="${1#*=}"
+            shift
+            ;;
+        --start=*)
+            START_TIME="${1#*=}"
+            shift
+            ;;
+        --end=*)
+            END_TIME="${1#*=}"
             shift
             ;;
         --format=*)
@@ -78,22 +102,32 @@ while [[ $# -gt 0 ]]; do
             echo "  aidb_block_cache_capacity_bytes - Block Cache 容量"
             echo "  aidb_all                        - 所有 AiDb 指标"
             echo ""
+            echo "QPS/OPS:"
+            echo "  qps                             - 读命令 QPS (get|mget|hget|sget|lget|smembers|scard|sismember)"
+            echo "  ops                             - 所有命令 OPS"
+            echo "  redis_commands_total            - 按命令类型的统计"
+            echo "  commands_all                    - 所有命令统计"
+            echo ""
             echo "其他:"
             echo "  all                             - 所有可用指标"
             exit 0
             ;;
         --help|-h)
-            echo "用法: $0 --metric=<metric> --duration=<duration> [--format=json|csv] [--list]"
+            echo "用法: $0 --metric=<metric> [--duration=<duration>] [--start=<start>] [--end=<end>] [--format=json|csv] [--list]"
             echo ""
             echo "参数:"
             echo "  --metric      指标名 (必填，可用 --list 查看所有指标)"
-            echo "  --duration    时间范围 (默认: 5m)"
+            echo "  --duration    时间范围，如: 5m, 1h, 30m, 24h (默认: 5m)"
+            echo "  --start       起始时间 (与 --end 配合使用，优先级高于 --duration)"
+            echo "                格式: HH:MM, YYYY-MM-DD HH:MM, YYYY-MM-DDTHH:MM"
+            echo "  --end         结束时间 (与 --start 配合使用)"
             echo "  --format      输出格式: json 或 csv (默认: json)"
             echo "  --list        列出所有可用指标"
             echo ""
             echo "示例:"
             echo "  $0 --metric=redis_cpu_user_seconds_total --duration=5m"
-            echo "  $0 --metric=all_cpu --duration=1h --format=csv"
+            echo "  $0 --metric=ops --start=11:30 --end=12:00"
+            echo "  $0 --metric=all --start=\"2026-03-26 11:30\" --end=\"2026-03-26 12:00\""
             exit 0
             ;;
         *)
@@ -122,10 +156,56 @@ duration_to_seconds() {
     esac
 }
 
-# 获取时间戳
+# 解析时间字符串为 Unix 时间戳
+parse_time_to_timestamp() {
+    local time_str="$1"
+    local ts
+
+    # 尝试解析 HH:MM 格式 (今天)
+    if [[ "$time_str" =~ ^([0-9]{1,2}):([0-9]{2})$ ]]; then
+        local hour="${BASH_REMATCH[1]}"
+        local min="${BASH_REMATCH[2]}"
+        ts=$(date -d "$(date +%Y-%m-%d) $hour:$min:00" +%s 2>/dev/null) || ts=""
+    # 尝试解析 YYYY-MM-DD HH:MM 格式
+    elif [[ "$time_str" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}\ [0-9]{1,2}:[0-9]{2}$ ]]; then
+        ts=$(date -d "$time_str:00" +%s 2>/dev/null) || ts=""
+    # 尝试解析 YYYY-MM-DDTHH:MM 格式 (ISO 格式)
+    elif [[ "$time_str" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{1,2}:[0-9]{2}$ ]]; then
+        ts=$(date -d "$time_str:00" +%s 2>/dev/null) || ts=""
+    else
+        ts=""
+    fi
+
+    echo "$ts"
+}
+
+# 计算时间范围
 NOW=$(date +%s)
-SECONDS=$(duration_to_seconds "$DURATION")
-START=$((NOW - SECONDS))
+
+if [[ -n "$START_TIME" && -n "$END_TIME" ]]; then
+    # 使用绝对时间范围
+    START=$(parse_time_to_timestamp "$START_TIME")
+    END=$(parse_time_to_timestamp "$END_TIME")
+
+    if [[ -z "$START" || -z "$END" ]]; then
+        echo "错误: 无法解析时间格式: $START_TIME 或 $END_TIME"
+        echo "支持的格式: HH:MM, YYYY-MM-DD HH:MM, YYYY-MM-DDTHH:MM"
+        exit 1
+    fi
+
+    if [[ "$START" -ge "$END" ]]; then
+        echo "错误: 起始时间必须早于结束时间"
+        exit 1
+    fi
+
+    TIME_DESC="$START_TIME - $END_TIME"
+else
+    # 使用相对时间
+    SECONDS=$(duration_to_seconds "$DURATION")
+    START=$((NOW - SECONDS))
+    END=$NOW
+    TIME_DESC="最近 $DURATION ($(date -d @$START '+%Y-%m-%d %H:%M:%S') - $(date -d @$END '+%Y-%m-%d %H:%M:%S'))"
+fi
 
 # PromQL 查询
 case "$METRIC" in
@@ -147,6 +227,15 @@ case "$METRIC" in
     aidb_all)
         QUERY="{__name__=~\"aidb_.*\"}"
         ;;
+    qps)
+        QUERY="sum(rate(redis_commands_total{cmd=~\"get|mget|hget|sget|lget|smembers|scard|sismember\"}[1m]))"
+        ;;
+    ops)
+        QUERY="sum(rate(redis_commands_total[1m]))"
+        ;;
+    redis_commands_total|commands_all)
+        QUERY="rate(redis_commands_total[1m])"
+        ;;
     all)
         QUERY="{__name__=~\"redis_.*|process_.*|aidb_.*\"}"
         ;;
@@ -157,15 +246,14 @@ esac
 
 # 调用 Prometheus API
 echo "导出指标: $METRIC"
-echo "时间范围: 最近 $DURATION"
-echo "时间点: $(date -d @$START '+%Y-%m-%d %H:%M:%S') - $(date -d @$NOW '+%Y-%m-%d %H:%M:%S')"
+echo "时间范围: $TIME_DESC"
 echo ""
 
 if [[ "$FORMAT" == "csv" ]]; then
     curl -s "$PROMETHEUS_URL/api/v1/query_range" \
         -d "query=$QUERY" \
         -d "start=$START" \
-        -d "end=$NOW" \
+        -d "end=$END" \
         -d "step=15s" | jq -r '
             if .status == "success" then
                 .data.result[] |
@@ -179,6 +267,6 @@ else
     curl -s "$PROMETHEUS_URL/api/v1/query_range" \
         -d "query=$QUERY" \
         -d "start=$START" \
-        -d "end=$NOW" \
+        -d "end=$END" \
         -d "step=15s"
 fi

@@ -29,13 +29,25 @@ user-invocable: true
 ./scripts/export_metrics.sh --list
 ```
 
-### 导出单个指标
+### 导出单个指标（相对时间）
 ```bash
 # 导出最近 5 分钟的 User CPU
 ./scripts/export_metrics.sh --metric=redis_cpu_user_seconds_total --duration=5m
 
 # 导出最近 1 小时
 ./scripts/export_metrics.sh --metric=redis_cpu_sys_seconds_total --duration=1h
+```
+
+### 导出单个指标（绝对时间）
+```bash
+# 导出今天 11:30 - 12:00 的 OPS
+./scripts/export_metrics.sh --metric=ops --start=11:30 --end=12:00
+
+# 导出指定日期时间范围
+./scripts/export_metrics.sh --metric=all --start="2026-03-26 11:30" --end="2026-03-26 12:00"
+
+# 也支持 ISO 格式
+./scripts/export_metrics.sh --metric=ops --start="2026-03-26T11:30" --end="2026-03-26T12:00"
 ```
 
 ### 导出所有 CPU 指标
@@ -67,6 +79,9 @@ user-invocable: true
 | aidb_wal_bytes | WAL 大小 |
 | aidb_block_cache_bytes | Block Cache 使用量 |
 | aidb_block_cache_capacity_bytes | Block Cache 容量 |
+| qps | 读命令 QPS (get/mget/hget/sget/lget/smembers/scard/sismember) |
+| ops | 所有命令 OPS |
+| redis_commands_total | 按命令类型的统计 |
 | all_cpu | 所有 CPU 相关指标 |
 | aidb_all | 所有 AiDb 指标 |
 | all | 所有可用指标 |
@@ -82,6 +97,20 @@ user-invocable: true
 1. 导出数据：
 ```bash
 ./scripts/export_metrics.sh --metric=all_cpu --duration=5m
+```
+
+2. 将 JSON 输出发送给 AI 分析
+
+## 示例：分析 QPS/OPS
+
+1. 导出数据：
+```bash
+# 导出 QPS 和 OPS
+./scripts/export_metrics.sh --metric=qps --duration=5m
+./scripts/export_metrics.sh --metric=ops --duration=5m
+
+# 导出指定时间范围
+./scripts/export_metrics.sh --metric=ops --start=11:30 --end=12:00
 ```
 
 2. 将 JSON 输出发送给 AI 分析

@@ -84,6 +84,25 @@ docker ps -a --filter "name=aikv"
 tail -f logs/aikv_*.log
 ```
 
+## 监控与指标导出
+
+部署后如需导出监控数据分析，使用 **metrics-exporter** Skill：
+```bash
+# 列出所有可用指标
+./scripts/export_metrics.sh --list
+
+# 导出 QPS/OPS 数据
+./scripts/export_metrics.sh --metric=qps --duration=5m
+./scripts/export_metrics.sh --metric=ops --duration=5m
+
+# 导出所有指标
+./scripts/export_metrics.sh --metric=all --duration=5m
+
+# 导出指定时间范围
+./scripts/export_metrics.sh --metric=ops --start=11:30 --end=12:00
+./scripts/export_metrics.sh --metric=all --start="2026-03-26 11:30" --end="2026-03-26 12:00"
+```
+
 ## 触发条件
 
 当用户描述包含以下意图时调用此 Agent：

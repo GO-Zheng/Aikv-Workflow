@@ -88,6 +88,32 @@
 | 警告 | 1.5 - 3.0 | 内存碎片较多，考虑整理 |
 | 危险 | > 3.0 | 碎片严重，建议重启 AiKv |
 
+---
+
+## QPS/OPS
+
+### 指标说明
+
+| 指标 | 采集器 | 含义 |
+|------|--------|------|
+| redis_commands_total | redis_exporter | 按命令类型统计的累计命令数，带 `cmd` 标签区分 GET/SET/MGET 等命令 |
+
+### 面板说明
+
+#### QPS/OPS
+
+| 曲线 | 曲线说明 | AiKv 中对应情况 | 计算公式 | 公式说明 |
+|------|----------|-----------------|----------|----------|
+| QPS (蓝色) | 读命令每秒调用次数 | GET/MGET/HGET/SGET/LGET/SMEMBERS/SCARD/SISMEMBER 等只读命令 | `sum(rate(redis_commands_total{cmd=~"get\|mget\|hget\|sget\|lget\|smembers\|scard\|sismember"}[1m]))` | 读命令类型 1 分钟 rate 求和 |
+| OPS (橙色) | 全部命令每秒调用次数 | 包含读写全部命令 | `sum(rate(redis_commands_total[1m]))` | 所有命令类型 1 分钟 rate 求和 |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 读多写少 | QPS/OPS 比值高 | 读操作占主导，可考虑读写分离架构 |
+| 写多读少 | OPS 接近上限 | 写入压力大，考虑优化写入或扩容 |
+| OPS 持续高 | 接近系统上限 | 考虑扩容或优化查询 |
+| 突发流量 | OPS 突增 | 检查是否有批量任务或攻击 |
+
 ## AiDb
 
 ### 指标说明
