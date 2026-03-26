@@ -75,6 +75,8 @@ user-invocable: true
 | redis_memory_used_peak_bytes | 峰值内存 | 内存使用量 |
 | process_resident_memory_bytes | RSS 内存 | 内存使用量 |
 | redis_mem_fragmentation_ratio | 内存碎片率 | 内存碎片率 |
+| redis_connected_clients | 当前连接数 | 当前连接数 |
+| redis_commands_processed_total | 累计命令数 | 累计命令数 |
 | aidb_memtable_bytes | MemTable 大小 | AiDb MemTable |
 | aidb_wal_bytes | WAL 大小 | AiDb WAL |
 | aidb_block_cache_bytes | Block Cache 使用量 | AiDb Block Cache |

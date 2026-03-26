@@ -18,6 +18,9 @@
 #                    - redis_memory_used_peak_bytes   峰值内存
 #                    - process_resident_memory_bytes  RSS 内存
 #                    - redis_mem_fragmentation_ratio  内存碎片率
+#                  连接:
+#                    - redis_connected_clients        当前连接数
+#                    - redis_commands_processed_total 累计命令数
 #                  AiDb:
 #                    - aidb_memtable_bytes             MemTable 大小
 #                    - aidb_wal_bytes                  WAL 大小
@@ -94,6 +97,10 @@ while [[ $# -gt 0 ]]; do
             echo "  redis_memory_used_peak_bytes    - 峰值内存"
             echo "  process_resident_memory_bytes   - RSS 内存"
             echo "  redis_mem_fragmentation_ratio   - 内存碎片率"
+            echo ""
+            echo "连接:"
+            echo "  redis_connected_clients         - 当前连接数"
+            echo "  redis_commands_processed_total  - 累计命令数"
             echo ""
             echo "AiDb:"
             echo "  aidb_memtable_bytes             - MemTable 大小"
@@ -219,6 +226,9 @@ case "$METRIC" in
         QUERY="{__name__=~\"redis_cpu_.*\"}"
         ;;
     redis_memory_used_bytes|redis_memory_used_peak_bytes|process_resident_memory_bytes|redis_mem_fragmentation_ratio)
+        QUERY="$METRIC"
+        ;;
+    redis_connected_clients|redis_commands_processed_total)
         QUERY="$METRIC"
         ;;
     aidb_memtable_bytes|aidb_wal_bytes|aidb_block_cache_bytes|aidb_block_cache_capacity_bytes)
