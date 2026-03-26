@@ -85,6 +85,9 @@ user-invocable: true
 | ops | 所有命令 OPS | QPS/OPS |
 | redis_commands_total | 按命令类型的统计 | 命令类型分布 |
 | command_ratio | 各命令占比 (0-1) | 命令类型占比 |
+| keyspace_hits | Keyspace 命中次数 | Keyspace 命中率 |
+| keyspace_misses | Keyspace 未命中次数 | Keyspace 命中率 |
+| keyspace_ratio | Keyspace 命中率 (0-1) | Keyspace 命中率 |
 | all_cpu | 所有 CPU 相关指标 | CPU 相关面板 |
 | aidb_all | 所有 AiDb 指标 | AiDb 相关面板 |
 | all | 所有可用指标 | 全部面板 |
@@ -142,7 +145,24 @@ user-invocable: true
 ./scripts/export_metrics.sh --metric=command_ratio --start=11:30 --end=12:00
 ```
 
-2. 直接返回每个命令的占比 (0-1)，无需 AI 自行计算
+2. 直接返回每个命令的占比 (0-1) 发送给 AI 分析
+
+## 示例：分析 Keyspace 命中率
+
+1. 导出数据：
+```bash
+# 导出命中率趋势
+./scripts/export_metrics.sh --metric=keyspace_ratio --duration=5m
+
+# 导出命中和未命中次数
+./scripts/export_metrics.sh --metric=keyspace_hits --duration=5m
+./scripts/export_metrics.sh --metric=keyspace_misses --duration=5m
+
+# 导出指定时间范围
+./scripts/export_metrics.sh --metric=keyspace_ratio --start=11:30 --end=12:00
+```
+
+2. 将 JSON 输出发送给 AI 分析
 
 ## Prometheus API
 

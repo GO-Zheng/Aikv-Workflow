@@ -184,6 +184,35 @@
 
 ---
 
+## Keyspace 命中率
+
+### 指标说明
+
+| 指标 | 采集器 | 含义 |
+|------|--------|------|
+| redis_keyspace_hits_total | redis_exporter | GET 命令成功找到 key 的次数 |
+| redis_keyspace_misses_total | redis_exporter | GET 命令返回 key 不存在的次数 |
+
+### 面板说明
+
+#### Keyspace 命中率
+
+| 曲线 | 曲线说明 | AiKv 中对应情况 | 计算公式 | 公式说明 |
+|------|----------|-----------------|----------|----------|
+| Hits (蓝色) | GET 命令命中次数 | GET 请求找到 key 并返回值 | `rate(redis_keyspace_hits_total[1m])` | 1 分钟内命中次数增长率 |
+| Misses (橙色) | GET 命令未命中次数 | GET 请求 key 不存在，返回 nil | `rate(redis_keyspace_misses_total[1m])` | 1 分钟内未命中次数增长率 |
+| Hit Ratio (绿色) | 命中率 | 命中次数 / 总请求次数 | `rate(redis_keyspace_hits_total[1m]) / (rate(redis_keyspace_hits_total[1m]) + rate(redis_keyspace_misses_total[1m]))` | 命中率百分比 |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 正常 | Hit Ratio 高 (>80%)，Misses 很低 | 大部分 GET 请求都命中了数据 |
+| Hit Ratio 持续低 | 大部分请求都 miss | 检查业务逻辑，确认 key 是否正确写入 |
+| Misses 持续高 | Misses 曲线持续较高 | key 不存在，可能原因：数据从未写入、已过期、被删除 |
+| Misses 突增 | Misses 突然增加 | 可能有批量删除、大量 key 过期、或缓存穿透攻击 |
+
+
+---
+
 ## AiDb
 
 ### 指标说明

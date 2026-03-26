@@ -32,6 +32,10 @@
 #                    - ops                             所有命令 OPS
 #                    - redis_commands_total            按命令类型的统计 (对应"命令类型分布"面板)
 #                    - command_ratio                   各命令占比 0-1 (对应"命令类型占比"饼图)
+#                  Keyspace:
+#                    - keyspace_hits                   Keyspace 命中次数
+#                    - keyspace_misses                 Keyspace 未命中次数
+#                    - keyspace_ratio                  Keyspace 命中率
 #                  其他:
 #                    - all (所有可用指标)
 #   --duration    时间范围，如：5m, 1h, 30m, 24h (默认: 5m)
@@ -114,6 +118,9 @@ while [[ $# -gt 0 ]]; do
             echo "  ops                             - 所有命令 OPS"
             echo "  redis_commands_total            - 按命令类型的统计 (对应\"命令类型分布\"面板)"
             echo "  command_ratio                   - 各命令占比 0-1 (对应\"命令类型占比\"饼图)"
+            echo "  keyspace_hits                   - Keyspace 命中次数 (对应\"Keyspace 命中率\"面板)"
+            echo "  keyspace_misses                 - Keyspace 未命中次数 (对应\"Keyspace 命中率\"面板)"
+            echo "  keyspace_ratio                  - Keyspace 命中率 (0-1)"
             echo ""
             echo "其他:"
             echo "  all                             - 所有可用指标"
@@ -245,6 +252,15 @@ case "$METRIC" in
         ;;
     command_ratio)
         QUERY="sum(rate(redis_commands_total[1m])) by (cmd) / ignoring(cmd) group_left sum(rate(redis_commands_total[1m]))"
+        ;;
+    keyspace_hits)
+        QUERY="rate(redis_keyspace_hits_total[1m])"
+        ;;
+    keyspace_misses)
+        QUERY="rate(redis_keyspace_misses_total[1m])"
+        ;;
+    keyspace_ratio)
+        QUERY="rate(redis_keyspace_hits_total[1m]) / (rate(redis_keyspace_hits_total[1m]) + rate(redis_keyspace_misses_total[1m]))"
         ;;
     redis_commands_total|commands_all)
         QUERY="rate(redis_commands_total[1m])"

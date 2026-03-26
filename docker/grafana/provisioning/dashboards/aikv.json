@@ -1195,7 +1195,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**:\n- Keyspace Hits (蓝色): 键查找命中次数\n- Keyspace Misses (橙色): 键查找未命中次数\n- Hit Ratio (绿色): 命中率 = hits / (hits + misses)\n\n**数据来源**:\n- Hits: `rate(redis_keyspace_hits_total[1m])`\n- Misses: `rate(redis_keyspace_misses_total[1m])`\n\n**调优场景**:\n- Hit Ratio < 80% → 考虑增大缓存\n- Misses 持续高 → 缓存容量不足",
+      "description": "**曲线说明**:\n- Hits (蓝色): GET 命令成功找到 key 的次数\n- Misses (橙色): GET 命令返回 key 不存在的次数\n- Hit Ratio (绿色): 命中率 = hits / (hits + misses)\n\n**数据来源**:\n- Hits: `rate(redis_keyspace_hits_total[1m])`\n- Misses: `rate(redis_keyspace_misses_total[1m])`\n\n**调优场景**:\n- 正常: Hit Ratio 高 (>80%)，Misses 很低，大部分 GET 请求都命中了数据\n- Hit Ratio 持续低: 大部分请求都 miss，检查业务逻辑\n- Misses 持续高: key 不存在，可能原因：数据从未写入、已过期、被删除\n- Misses 突增: 可能有批量删除、大量 key 过期、或缓存穿透攻击",
       "fieldConfig": {
         "defaults": {
           "color": {
