@@ -92,6 +92,11 @@ user-invocable: true
 | latency_p95 | 总延迟 P95 (秒) | 命令延迟 P50/P95/P99 |
 | latency_p99 | 总延迟 P99 (秒) | 命令延迟 P50/P95/P99 |
 | latency_by_cmd | 各命令类型延迟分布 | 命令类型延迟分布 |
+| redis_net_input_bytes_total | 累计接收字节 | 网络 I/O 速率 |
+| redis_net_output_bytes_total | 累计发送字节 | 网络 I/O 速率 |
+| net_input_rate | 网络输入速率 (bytes/s) | 网络 I/O 速率 |
+| net_output_rate | 网络输出速率 (bytes/s) | 网络 I/O 速率 |
+| all_net | 所有网络 I/O 指标 | 网络 I/O 速率 |
 | all_cpu | 所有 CPU 相关指标 | CPU 相关面板 |
 | aidb_all | 所有 AiDb 指标 | AiDb 相关面板 |
 | all | 所有可用指标 | 全部面板 |
@@ -182,6 +187,23 @@ user-invocable: true
 
 # 导出指定时间范围
 ./scripts/export_metrics.sh --metric=latency_p99 --start=11:30 --end=12:00
+```
+
+2. 将 JSON 输出发送给 AI 分析
+
+## 示例：分析网络 I/O
+
+1. 导出数据：
+```bash
+# 导出网络输入/输出速率
+./scripts/export_metrics.sh --metric=net_input_rate --duration=5m
+./scripts/export_metrics.sh --metric=net_output_rate --duration=5m
+
+# 导出所有网络 I/O 指标
+./scripts/export_metrics.sh --metric=all_net --duration=5m
+
+# 导出指定时间范围
+./scripts/export_metrics.sh --metric=net_input_rate --start=11:30 --end=12:00
 ```
 
 2. 将 JSON 输出发送给 AI 分析

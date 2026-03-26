@@ -41,6 +41,12 @@
 #                    - latency_p95                    总延迟 P95
 #                    - latency_p99                    总延迟 P99
 #                    - latency_by_cmd                 各命令类型延迟
+#                  网络:
+#                    - redis_net_input_bytes_total  累计接收字节
+#                    - redis_net_output_bytes_total 累计发送字节
+#                    - net_input_rate              网络输入速率 (bytes/s)
+#                    - net_output_rate             网络输出速率 (bytes/s)
+#                    - all_net                     所有网络 I/O 指标
 #                  其他:
 #                    - all (所有可用指标)
 #   --duration    时间范围，如：5m, 1h, 30m, 24h (默认: 5m)
@@ -132,6 +138,13 @@ while [[ $# -gt 0 ]]; do
             echo "  latency_p95                    - 总延迟 P95 (秒)"
             echo "  latency_p99                    - 总延迟 P99 (秒)"
             echo "  latency_by_cmd                - 各命令类型延迟分布"
+            echo ""
+            echo "Network I/O:"
+            echo "  redis_net_input_bytes_total  - 累计接收字节"
+            echo "  redis_net_output_bytes_total - 累计发送字节"
+            echo "  net_input_rate               - 网络输入速率 (bytes/s)"
+            echo "  net_output_rate              - 网络输出速率 (bytes/s)"
+            echo "  all_net                      - 所有网络 I/O 指标"
             echo "其他:"
             echo "  all                             - 所有可用指标"
             exit 0
@@ -283,6 +296,18 @@ case "$METRIC" in
         ;;
     latency_by_cmd)
         QUERY="histogram_quantile(0.50, sum(rate(redis_commands_latencies_usec_bucket[1m])) by (le, cmd)) / 1e6"
+        ;;
+    redis_net_input_bytes_total|redis_net_output_bytes_total)
+        QUERY="$METRIC"
+        ;;
+    net_input_rate)
+        QUERY="rate(redis_net_input_bytes_total[1m])"
+        ;;
+    net_output_rate)
+        QUERY="rate(redis_net_output_bytes_total[1m])"
+        ;;
+    all_net)
+        QUERY="{__name__=~\"redis_net_.*\"}"
         ;;
     redis_commands_total|commands_all)
         QUERY="rate(redis_commands_total[1m])"
