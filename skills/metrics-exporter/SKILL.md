@@ -97,6 +97,11 @@ user-invocable: true
 | net_input_rate | 网络输入速率 (bytes/s) | 网络 I/O 速率 |
 | net_output_rate | 网络输出速率 (bytes/s) | 网络 I/O 速率 |
 | all_net | 所有网络 I/O 指标 | 网络 I/O 速率 |
+| disk_read_rate | 磁盘读取速率 (bytes/s) | 磁盘 I/O 速率 |
+| disk_write_rate | 磁盘写入速率 (bytes/s) | 磁盘 I/O 速率 |
+| disk_read_iops | 磁盘读取 IOPS | 磁盘 IOPS |
+| disk_write_iops | 磁盘写入 IOPS | 磁盘 IOPS |
+| all_disk | 所有磁盘 I/O 指标 | 磁盘 I/O |
 | all_cpu | 所有 CPU 相关指标 | CPU 相关面板 |
 | aidb_all | 所有 AiDb 指标 | AiDb 相关面板 |
 | all | 所有可用指标 | 全部面板 |
@@ -204,6 +209,27 @@ user-invocable: true
 
 # 导出指定时间范围
 ./scripts/export_metrics.sh --metric=net_input_rate --start=11:30 --end=12:00
+```
+
+2. 将 JSON 输出发送给 AI 分析
+
+## 示例：分析磁盘 I/O
+
+1. 导出数据：
+```bash
+# 导出磁盘读取/写入速率
+./scripts/export_metrics.sh --metric=disk_read_rate --duration=5m
+./scripts/export_metrics.sh --metric=disk_write_rate --duration=5m
+
+# 导出磁盘 IOPS
+./scripts/export_metrics.sh --metric=disk_read_iops --duration=5m
+./scripts/export_metrics.sh --metric=disk_write_iops --duration=5m
+
+# 导出所有磁盘 I/O 指标
+./scripts/export_metrics.sh --metric=all_disk --duration=5m
+
+# 导出指定时间范围
+./scripts/export_metrics.sh --metric=disk_read_rate --start=11:30 --end=12:00
 ```
 
 2. 将 JSON 输出发送给 AI 分析

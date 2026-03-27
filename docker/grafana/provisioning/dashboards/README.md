@@ -92,6 +92,104 @@
 
 ## QPS/OPS
 
+## 磁盘 I/O
+
+## 网络 I/O
+
+## Keyspace 命中率
+
+### 指标说明
+
+| 指标 | 采集器 | 含义 |
+|------|--------|------|
+| redis_keyspace_hits_total | redis_exporter | GET 命令成功找到 key 的次数 |
+| redis_keyspace_misses_total | redis_exporter | GET 命令返回 key 不存在的次数 |
+
+### 面板说明
+
+#### Keyspace 命中率
+
+| 曲线 | 曲线说明 | AiKv 中对应情况 | 计算公式 | 公式说明 |
+|------|----------|-----------------|----------|----------|
+| Hits (蓝色) | GET 命令命中次数 | GET 请求找到 key 并返回值 | `rate(redis_keyspace_hits_total[1m])` | 1 分钟内命中次数增长率 |
+| Misses (橙色) | GET 命令未命中次数 | GET 请求 key 不存在，返回 nil | `rate(redis_keyspace_misses_total[1m])` | 1 分钟内未命中次数增长率 |
+| Hit Ratio (绿色) | 命中率 | 命中次数 / 总请求次数 | `rate(redis_keyspace_hits_total[1m]) / (rate(redis_keyspace_hits_total[1m]) + rate(redis_keyspace_misses_total[1m]))` | 命中率百分比 |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 正常 | Hit Ratio 高 (>80%)，Misses 很低 | 大部分 GET 请求都命中了数据 |
+| Hit Ratio 持续低 | 大部分请求都 miss | 检查业务逻辑，确认 key 是否正确写入 |
+| Misses 持续高 | Misses 曲线持续较高 | key 不存在，可能原因：数据从未写入、已过期、被删除 |
+| Misses 突增 | Misses 突然增加 | 可能有批量删除、大量 key 过期、或缓存穿透攻击 |
+
+
+---
+
+### 指标说明
+
+| 指标 | 采集器 | 含义 |
+|------|--------|------|
+| redis_net_input_bytes_total | redis_exporter | 服务器累计接收的字节数 |
+| redis_net_output_bytes_total | redis_exporter | 服务器累计发送的字节数 |
+
+### 面板说明
+
+#### 网络 I/O 速率
+
+| 曲线 | 曲线说明 | AiKv 中对应情况 | 计算公式 | 公式说明 |
+|------|----------|-----------------|----------|----------|
+| Input (橙色) | 网络输入速率 | 服务器接收数据的速率 | `rate(redis_net_input_bytes_total[$__rate_interval])` | 每秒接收字节数 |
+| Output (蓝色) | 网络输出速率 | 服务器发送数据的速率 | `rate(redis_net_output_bytes_total[$__rate_interval])` | 每秒发送字节数 |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 输入速率高 | 大量写入或数据同步 | 写入压力大 |
+| 输出速率高 | 大量读取或数据导出 | 读取压力大 |
+| 两者都高 | 复制或备份操作 | 正常运维场景 |
+
+---
+
+### 指标说明
+
+| 指标 | 采集器 | 含义 |
+|------|--------|------|
+| node_disk_read_bytes_total | node_exporter | 磁盘累计读取字节数 |
+| node_disk_written_bytes_total | node_exporter | 磁盘累计写入字节数 |
+| node_disk_reads_completed_total | node_exporter | 磁盘读取完成次数 |
+| node_disk_writes_completed_total | node_exporter | 磁盘写入完成次数 |
+
+> **注意**：磁盘 I/O 指标由 node_exporter 采集自 `/proc/diskstats`，反映的是**宿主机所有进程**的磁盘 I/O 总和，而非仅 AiKv/AiDb 服务的磁盘 I/O。
+
+### 面板说明
+
+#### 磁盘 I/O 速率
+
+| 曲线 | 曲线说明 | 计算公式 | 公式说明 |
+|------|----------|----------|----------|
+| Read (蓝色) | 磁盘每秒读取字节数 | `rate(node_disk_read_bytes_total[$__rate_interval])` | 按设备分组 |
+| Write (橙色) | 磁盘每秒写入字节数 | `rate(node_disk_written_bytes_total[$__rate_interval])` | 按设备分组 |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 写入为主 | Write 远高于 Read | 写入密集型负载 |
+| 读取为主 | Read 远高于 Write | 读取密集型负载 |
+| 两者都高 | 整体磁盘负载重 | 检查是否存在 IO 瓶颈 |
+
+#### 磁盘 IOPS
+
+| 曲线 | 曲线说明 | 计算公式 | 公式说明 |
+|------|----------|----------|----------|
+| Read (蓝色) | 磁盘每秒读取次数 | `rate(node_disk_reads_completed_total[$__rate_interval])` | 按设备分组 |
+| Write (橙色) | 磁盘每秒写入次数 | `rate(node_disk_writes_completed_total[$__rate_interval])` | 按设备分组 |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 高 IOPS 低吞吐量 | 小块 I/O 为主 | 随机读写场景 |
+| 低 IOPS 高吞吐量 | 大块 I/O 为主 | 顺序读写场景 |
+| IOPS 突然下降 | 磁盘性能下降 | 可能存在磁盘故障或竞争 |
+
+---
+
 ### 指标说明
 
 | 指标 | 采集器 | 含义 |
@@ -181,35 +279,6 @@
 |------|------|------|
 | 正常 | 持续增长 | 服务正常运行 |
 | 增长停滞 | 命令数不再增加 | 服务可能故障，需排查 |
-
----
-
-## Keyspace 命中率
-
-### 指标说明
-
-| 指标 | 采集器 | 含义 |
-|------|--------|------|
-| redis_keyspace_hits_total | redis_exporter | GET 命令成功找到 key 的次数 |
-| redis_keyspace_misses_total | redis_exporter | GET 命令返回 key 不存在的次数 |
-
-### 面板说明
-
-#### Keyspace 命中率
-
-| 曲线 | 曲线说明 | AiKv 中对应情况 | 计算公式 | 公式说明 |
-|------|----------|-----------------|----------|----------|
-| Hits (蓝色) | GET 命令命中次数 | GET 请求找到 key 并返回值 | `rate(redis_keyspace_hits_total[1m])` | 1 分钟内命中次数增长率 |
-| Misses (橙色) | GET 命令未命中次数 | GET 请求 key 不存在，返回 nil | `rate(redis_keyspace_misses_total[1m])` | 1 分钟内未命中次数增长率 |
-| Hit Ratio (绿色) | 命中率 | 命中次数 / 总请求次数 | `rate(redis_keyspace_hits_total[1m]) / (rate(redis_keyspace_hits_total[1m]) + rate(redis_keyspace_misses_total[1m]))` | 命中率百分比 |
-
-| 实际场景 | 现象 | 说明 |
-|------|------|------|
-| 正常 | Hit Ratio 高 (>80%)，Misses 很低 | 大部分 GET 请求都命中了数据 |
-| Hit Ratio 持续低 | 大部分请求都 miss | 检查业务逻辑，确认 key 是否正确写入 |
-| Misses 持续高 | Misses 曲线持续较高 | key 不存在，可能原因：数据从未写入、已过期、被删除 |
-| Misses 突增 | Misses 突然增加 | 可能有批量删除、大量 key 过期、或缓存穿透攻击 |
-
 
 ---
 

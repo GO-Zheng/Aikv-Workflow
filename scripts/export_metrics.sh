@@ -47,6 +47,12 @@
 #                    - net_input_rate              网络输入速率 (bytes/s)
 #                    - net_output_rate             网络输出速率 (bytes/s)
 #                    - all_net                     所有网络 I/O 指标
+#                  磁盘 I/O:
+#                    - disk_read_rate              磁盘读取速率 (bytes/s)
+#                    - disk_write_rate             磁盘写入速率 (bytes/s)
+#                    - disk_read_iops              磁盘读取 IOPS
+#                    - disk_write_iops             磁盘写入 IOPS
+#                    - all_disk                   所有磁盘 I/O 指标
 #                  其他:
 #                    - all (所有可用指标)
 #   --duration    时间范围，如：5m, 1h, 30m, 24h (默认: 5m)
@@ -145,6 +151,13 @@ while [[ $# -gt 0 ]]; do
             echo "  net_input_rate               - 网络输入速率 (bytes/s)"
             echo "  net_output_rate              - 网络输出速率 (bytes/s)"
             echo "  all_net                      - 所有网络 I/O 指标"
+            echo ""
+            echo "Disk I/O:"
+            echo "  disk_read_rate               - 磁盘读取速率 (bytes/s)"
+            echo "  disk_write_rate              - 磁盘写入速率 (bytes/s)"
+            echo "  disk_read_iops               - 磁盘读取 IOPS"
+            echo "  disk_write_iops              - 磁盘写入 IOPS"
+            echo "  all_disk                    - 所有磁盘 I/O 指标"
             echo "其他:"
             echo "  all                             - 所有可用指标"
             exit 0
@@ -308,6 +321,21 @@ case "$METRIC" in
         ;;
     all_net)
         QUERY="{__name__=~\"redis_net_.*\"}"
+        ;;
+    disk_read_rate)
+        QUERY="rate(node_disk_read_bytes_total[1m])"
+        ;;
+    disk_write_rate)
+        QUERY="rate(node_disk_written_bytes_total[1m])"
+        ;;
+    disk_read_iops)
+        QUERY="rate(node_disk_reads_completed_total[1m])"
+        ;;
+    disk_write_iops)
+        QUERY="rate(node_disk_writes_completed_total[1m])"
+        ;;
+    all_disk)
+        QUERY="{__name__=~\"node_disk_.*\"}"
         ;;
     redis_commands_total|commands_all)
         QUERY="rate(redis_commands_total[1m])"
