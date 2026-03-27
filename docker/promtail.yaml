@@ -1,0 +1,49 @@
+server:
+  http_listen_port: 9081
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+client:
+  url: http://loki:3100/loki/api/v1/push
+  tenant_id: fake
+  batchwait: 1s
+  batchsize: 102400
+
+scrape_configs:
+  # 采集 AiKv Docker 容器日志 (stdout/stderr)
+  - job_name: aikv-docker-logs
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 10s
+        filters:
+          - name: label
+            values: ["com.docker.compose.service=aikv"]         
+      # 或者用 label 过滤(如果给容器打了 label):
+      # filters:
+      #   - name: label
+      #     values: ["app=aikv"]
+    relabel_configs:
+      # 设置 job 和 host 标签
+      - replacement: "aikv"
+        target_label: job
+      - replacement: "aikv"
+        target_label: host
+      # 提取容器名到 container 标签
+      - source_labels: [__meta_docker_container_name]
+        regex: "/?(.*)"
+        target_label: container
+      # 清理 Docker 特殊 label，避免 Loki 拒绝
+      - action: labeldrop
+        regex: "com_docker_compose_.*|org_opencontainers_.*|__meta_docker_.*"
+
+  # 采集 AiKv 文件日志 (本地旧日志) - 已禁用
+  # - job_name: aikv-logs
+  #   static_configs:
+  #     - targets:
+  #         - localhost
+  #       labels:
+  #         job: aikv
+  #         host: aikv
+  #         __path__: /var/log/aikv/**/*.log

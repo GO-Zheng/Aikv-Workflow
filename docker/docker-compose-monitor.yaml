@@ -80,6 +80,37 @@ services:
       timeout: 5s
       retries: 3
 
+  loki:
+    image: grafana/loki:3.7
+    container_name: aikv-loki
+    user: "0:0"
+    command:
+      - "-config.file=/etc/loki/loki.yaml"
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki.yaml:/etc/loki/loki.yaml:ro
+      - ../data/loki:/loki
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  promtail:
+    image: grafana/promtail:3.6.8
+    container_name: aikv-promtail
+    user: "0:0"
+    command:
+      - "-config.file=/etc/promtail/promtail.yaml"
+    ports:
+      - "9081:9081"
+    volumes:
+      - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
+      - ../logs:/var/log/aikv:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
   grafana:
     image: grafana/grafana:12.4.1
     container_name: aikv-grafana

@@ -1,0 +1,4 @@
+apiVersion: 1
+
+dashboards:
+  default_home_dashboard_path: /etc/grafana/provisioning/dashboards/home.json
