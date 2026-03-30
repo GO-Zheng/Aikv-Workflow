@@ -1,30 +1,30 @@
 #!/bin/bash
-# AiKv Cluster Initialization Script
+# AiKv 集群初始化脚本
 #
-# This script initializes an AiKv cluster using AiKv's MetaRaft commands:
-# 1. Add master nodes (except bootstrap) as learners via CLUSTER METARAFT ADDLEARNER
-# 2. Promote learners to voters via CLUSTER METARAFT PROMOTE
-# 3. Meet all nodes using CLUSTER MEET
-# 4. Assign hash slots to master nodes using CLUSTER ADDSLOTSRANGE
-# 5. Set up replication using CLUSTER ADDREPLICATION
+# 本脚本使用 AiKv 的 MetaRaft 命令初始化集群:
+# 1. 通过 CLUSTER METARAFT ADDLEARNER 将 master 节点（除 bootstrap 外）添加为 learner
+# 2. 通过 CLUSTER METARAFT PROMOTE 将 learner 晋升为 voter
+# 3. 通过 CLUSTER MEET 连接所有节点
+# 4. 通过 CLUSTER ADDSLOTSRANGE 分配 hash slots 给 master 节点
+# 5. 通过 CLUSTER ADDREPLICATION 设置主从复制关系
 #
-# AiKv uses OpenRaft-based Multi-Raft architecture, different from Redis Cluster.
+# AiKv 使用基于 OpenRaft 的 Multi-Raft 架构，区别于 Redis Cluster。
 
 set -e
 
-# Colors for output
+# 输出颜色
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Default configuration
+# 默认配置
 MASTERS=("127.0.0.1:6379" "127.0.0.1:6381" "127.0.0.1:6383")
 REPLICAS=("127.0.0.1:6380" "127.0.0.1:6382" "127.0.0.1:6384")
 REDIS_CLI="${REDIS_CLI:-redis-cli}"
 
-# Print functions
+# 打印函数
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
 }
@@ -41,7 +41,7 @@ print_warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
-# Usage information
+# 使用说明
 usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
@@ -91,7 +91,7 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate configuration
+# 验证配置
 MASTER_COUNT=${#MASTERS[@]}
 REPLICA_COUNT=${#REPLICAS[@]}
 
@@ -111,7 +111,7 @@ if [ ${MASTER_COUNT} -lt 3 ]; then
     exit 1
 fi
 
-# Function to get node ID
+# 获取节点 ID 的函数
 get_node_id() {
     local host=$1
     local port=$2
@@ -129,7 +129,7 @@ check_node() {
     fi
 }
 
-# Step 1: Check all nodes are reachable
+# 步骤 1: 检查所有节点是否可达
 print_info "Step 1: Checking node connectivity..."
 ALL_NODES=("${MASTERS[@]}" "${REPLICAS[@]}")
 for node in "${ALL_NODES[@]}"; do
@@ -143,7 +143,7 @@ for node in "${ALL_NODES[@]}"; do
 done
 echo
 
-# Step 2: Get node IDs for all masters
+# 步骤 2: 获取所有 master 的节点 ID
 print_info "Step 2: Retrieving master node IDs..."
 declare -A MASTER_IDS
 for i in "${!MASTERS[@]}"; do
@@ -159,9 +159,9 @@ for i in "${!MASTERS[@]}"; do
 done
 echo
 
-# Step 3: Add non-bootstrap masters as learners via MetaRaft
+# 步骤 3: 通过 MetaRaft 将非 bootstrap 的 master 添加为 learner
 print_info "Step 3: Adding masters as MetaRaft learners..."
-# Node 1 (bootstrap) is already a voter, add nodes 2 and 3 as learners
+# Node 1 (bootstrap) 已经是 voter，将节点 2 和 3 添加为 learner
 if [ ${MASTER_COUNT} -gt 1 ]; then
     node2="${MASTERS[1]}"
     node2_id="${MASTER_IDS[$node2]}"
@@ -215,12 +215,12 @@ else
 fi
 echo
 
-# Step 5: Meet all nodes
+# 步骤 5: 连接所有节点
 print_info "Step 5: Meeting all nodes..."
 bs_host="${MASTERS[0]%:*}"
 bs_port="${MASTERS[0]#*:}"
 
-# Get all node IDs
+# 获取所有节点 ID
 declare -A ALL_NODE_IDS
 for node in "${ALL_NODES[@]}"; do
     IFS=':' read -r host port <<< "${node}"
@@ -228,7 +228,7 @@ for node in "${ALL_NODES[@]}"; do
     ALL_NODE_IDS["${node}"]="${node_id}"
 done
 
-# Meet all masters first (including self)
+# 首先连接所有 master（包括自身）
 for node in "${MASTERS[@]}"; do
     node_id="${ALL_NODE_IDS[$node]}"
     IFS=':' read -r host port <<< "${node}"
@@ -236,7 +236,7 @@ for node in "${MASTERS[@]}"; do
     ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER MEET ${host} ${port} ${node_id} 2>&1 | grep -q "OK" || true
 done
 
-# Meet replicas
+# 连接 replicas
 for node in "${REPLICAS[@]}"; do
     node_id="${ALL_NODE_IDS[$node]}"
     IFS=':' read -r host port <<< "${node}"
@@ -248,7 +248,7 @@ sleep 3
 print_success "All nodes met"
 echo
 
-# Step 6: Assign hash slots to masters
+# 步骤 6: 分配 hash slots 给 masters
 print_info "Step 6: Assigning hash slots to masters..."
 TOTAL_SLOTS=16384
 SLOTS_PER_MASTER=$((TOTAL_SLOTS / MASTER_COUNT))
@@ -267,14 +267,14 @@ for i in "${!MASTERS[@]}"; do
 
     print_info "Assigning slots ${start_slot}-${end_slot} to ${master} (ID: ${master_id})..."
 
-    # For first master (bootstrap), no node_id needed
+    # 第一个 master (bootstrap) 不需要指定 node_id
     if [ $i -eq 0 ]; then
         ${REDIS_CLI} -h ${host} -p ${port} CLUSTER ADDSLOTSRANGE ${start_slot} ${end_slot} 2>&1 | grep -q "OK" || {
             print_error "Failed to assign slots to ${master}"
             exit 1
         }
     else
-        # For other masters, specify node_id
+        # 其他 master 需要指定 node_id
         bs_host="${MASTERS[0]%:*}"
         bs_port="${MASTERS[0]#*:}"
         ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER ADDSLOTSRANGE ${start_slot} ${end_slot} ${master_id} 2>&1 | grep -q "OK" || {
@@ -286,10 +286,10 @@ for i in "${!MASTERS[@]}"; do
 done
 echo
 
-# Step 7: Set up replication
+# 步骤 7: 设置主从复制
 print_info "Step 7: Setting up replication..."
 
-# Map replicas to masters (by index)
+# 按索引映射 replicas 到 masters
 for i in "${!REPLICAS[@]}"; do
     replica="${REPLICAS[$i]}"
     replica_id="${ALL_NODE_IDS[$replica]}"
@@ -311,7 +311,7 @@ for i in "${!REPLICAS[@]}"; do
 done
 echo
 
-# Step 8: Verify cluster status
+# 步骤 8: 验证集群状态
 print_info "Step 8: Verifying cluster status..."
 sleep 2
 

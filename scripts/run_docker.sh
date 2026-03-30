@@ -3,10 +3,10 @@
 # 运行 AiKv Docker 镜像
 #
 # 用法：
-#   ./run_docker.sh                   # 运行 aikv:latest
-#   ./run_docker.sh -t myimage:v1     # 指定镜像
-#   ./run_docker.sh --stop            # 停止容器
-#   ./run_docker.sh --help            # 查看帮助
+#   ./run_docker.sh               # 运行 aikv:latest
+#   ./run_docker.sh -t myimage:v1 # 指定镜像
+#   ./run_docker.sh --stop        # 停止容器
+#   ./run_docker.sh --help        # 查看帮助
 
 set -e
 
@@ -38,9 +38,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --stop    停止容器"
             echo ""
             echo "示例:"
-            echo "  $0                    # 运行 aikv:latest"
-            echo "  $0 -t myimage:v1     # 运行自定义镜像"
-            echo "  $0 --stop            # 停止容器"
+            echo "  $0               # 运行 aikv:latest"
+            echo "  $0 -t myimage:v1 # 运行自定义镜像"
+            echo "  $0 --stop        # 停止容器"
             exit 0
             ;;
         *)
@@ -63,6 +63,7 @@ mkdir -p "$PROJECT_DIR/data"
 # 清理旧容器和网络（确保环境干净）
 echo "清理旧环境..."
 docker compose -p aikv -f "$DOCKER_DIR/docker-compose.yaml" down -v --remove-orphans 2>/dev/null || true
+rm -rf "$PROJECT_DIR/data/aikv"/*
 
 # 检查镜像是否存在
 if ! docker image inspect "$IMAGE_NAME" >/dev/null 2>&1; then

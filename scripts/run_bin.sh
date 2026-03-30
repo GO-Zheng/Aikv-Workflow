@@ -3,9 +3,9 @@
 # 启动 AiKv 服务并执行冒烟测试
 #
 # 用法：
-#   ./run_aikv.sh          # 启动服务(默认 AiDb 模式)
-#   ./run_aikv.sh --memory # 启动服务(memory 模式)
-#   ./run_aikv.sh --help   # 查看帮助
+#   ./run_aikv.sh           # 启动服务(默认 AiDb 模式)
+#   ./run_aikv.sh --memory  # 启动服务(memory 模式)
+#   ./run_aikv.sh --help    # 查看帮助
 
 set -e
 

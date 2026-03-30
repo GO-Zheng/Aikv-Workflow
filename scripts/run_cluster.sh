@@ -3,13 +3,13 @@
 # 运行 AiKv 集群模式 Docker 镜像 (3主3从)
 #
 # 用法：
-#   ./run_cluster.sh                               # 启动集群
-#   ./run_cluster.sh --init                        # 启动并初始化集群
-#   ./run_cluster.sh --with-cluster-monitor        # 启动集群 + 集群监控 exporters
-#   ./run_cluster.sh --init --with-cluster-monitor # 启动 + 初始化 + 监控
-#   ./run_cluster.sh --stop                        # 停止集群
-#   ./run_cluster.sh --stop --with-cluster-monitor # 停止集群 + 集群监控
-#   ./run_cluster.sh --help                        # 查看帮助
+#   ./run_cluster.sh                                # 启动集群
+#   ./run_cluster.sh --init                         # 启动并初始化集群
+#   ./run_cluster.sh --with-cluster-monitor         # 启动集群 + 集群监控 exporters
+#   ./run_cluster.sh --init --with-cluster-monitor  # 启动 + 初始化 + 监控
+#   ./run_cluster.sh --stop                         # 停止集群
+#   ./run_cluster.sh --stop --with-cluster-monitor  # 停止集群 + 集群监控
+#   ./run_cluster.sh --help                         # 查看帮助
 
 set -e
 
@@ -48,17 +48,17 @@ while [[ $# -gt 0 ]]; do
             echo "用法: $0 [--init] [--stop] [--with-cluster-monitor] [-t IMAGE]"
             echo ""
             echo "参数:"
-            echo "  --init                  启动后初始化集群"
-            echo "  --stop                  停止集群"
-            echo "  --with-cluster-monitor, -m  同时启动/停止集群监控 exporters"
-            echo "  -t IMAGE                镜像名和标签 (默认: aikv:latest)"
+            echo "  --init                   启动后初始化集群"
+            echo "  --stop                   停止集群"
+            echo "  --with-cluster-monitor,  -m  同时启动/停止集群监控 exporters"
+            echo "  -t IMAGE                 镜像名和标签 (默认: aikv:latest)"
             echo ""
             echo "示例:"
-            echo "  $0                              # 启动集群"
-            echo "  $0 --init                      # 启动并初始化"
-            echo "  $0 --with-cluster-monitor       # 启动集群 + 集群监控"
+            echo "  $0                                # 启动集群"
+            echo "  $0 --init                         # 启动并初始化"
+            echo "  $0 --with-cluster-monitor         # 启动集群 + 集群监控"
             echo "  $0 --init --with-cluster-monitor  # 启动 + 初始化 + 监控"
-            echo "  $0 --stop                      # 停止集群"
+            echo "  $0 --stop                         # 停止集群"
             echo "  $0 --stop --with-cluster-monitor  # 停止集群 + 集群监控"
             exit 0
             ;;
@@ -88,6 +88,7 @@ mkdir -p "$PROJECT_DIR/data/aikv-cluster"
 # 清理旧容器和网络
 echo "清理旧环境..."
 docker compose -p aikv-cluster -f "$CLUSTER_COMPOSE" down -v --remove-orphans 2>/dev/null || true
+rm -rf "$PROJECT_DIR/data/aikv-cluster"/*
 
 if [[ "$WITH_CLUSTER_MONITOR" == "true" ]]; then
     docker compose -p aikv-cluster-monitor -f "$CLUSTER_MONITOR_COMPOSE" down 2>/dev/null || true
@@ -124,7 +125,7 @@ if [[ "$WITH_CLUSTER_MONITOR" == "true" ]]; then
     echo ""
     echo "=== 集群监控端口 ==="
     echo "Redis Exporters:"
-    echo "  master-1:  127.0.0.1:9121 (复用单机)"
+    echo "  master-1:  127.0.0.1:9121"
     echo "  replica-1: 127.0.0.1:9221"
     echo "  master-2:  127.0.0.1:9321"
     echo "  replica-2: 127.0.0.1:9421"
@@ -132,7 +133,7 @@ if [[ "$WITH_CLUSTER_MONITOR" == "true" ]]; then
     echo "  replica-3: 127.0.0.1:9621"
     echo ""
     echo "Aidb Exporters:"
-    echo "  master-1:  127.0.0.1:9120 (复用单机)"
+    echo "  master-1:  127.0.0.1:9120"
     echo "  replica-1: 127.0.0.1:9220"
     echo "  master-2:  127.0.0.1:9320"
     echo "  replica-2: 127.0.0.1:9420"

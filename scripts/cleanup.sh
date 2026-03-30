@@ -46,14 +46,14 @@ for arg in "$@"; do
             echo "  --single, -s        清理单机 AiKv"
             echo "  --cluster, -c       清理集群 AiKv"
             echo "  --cluster-monitor, -m 清理集群监控 exporters"
-            echo "  --all, -a           清理全部（包括单机 monitor）"
+            echo "  --all, -a           清理全部 (包括单机 monitor)"
             echo "  --force, -f         跳过确认提示"
             echo ""
             echo "示例:"
-            echo "  $0                      # 清理单机 AiKv"
-            echo "  $0 --cluster            # 清理集群 AiKv"
-            echo "  $0 --cluster-monitor    # 清理集群监控"
-            echo "  $0 --all                # 清理全部"
+            echo "  $0                    # 清理单机 AiKv"
+            echo "  $0 --cluster          # 清理集群 AiKv"
+            echo "  $0 --cluster-monitor  # 清理集群监控"
+            echo "  $0 --all              # 清理全部"
             exit 0
             ;;
     esac
@@ -96,7 +96,7 @@ if [[ "$CLEAN_CLUSTER_MONITOR" == "true" ]]; then
     docker compose -p aikv-cluster-monitor -f "$DOCKER_DIR/docker-compose-cluster-monitor.yaml" down 2>/dev/null || true
 fi
 
-# 清理全部（包括单机 monitor）
+# 清理全部 (包括单机 monitor)
 if [[ "$CLEAN_ALL" == "true" ]]; then
     echo "=== 清理全部 (包括 Monitor) ==="
     docker compose -p aikv -f "$DOCKER_DIR/docker-compose.yaml" down -v --remove-orphans 2>/dev/null || true
@@ -112,7 +112,7 @@ if [[ "$CLEAN_ALL" == "true" ]]; then
     rm -rf "$PROJECT_DIR/data/grafana"/*
 fi
 
-# 清理网络（如果没被使用）
+# 清理网络 (如果没被使用)
 cleanup_network() {
     local network=$1
     local count=$(docker network inspect "$network" --format '{{len .Containers}}' 2>/dev/null || echo "0")

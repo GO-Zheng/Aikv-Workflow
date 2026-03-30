@@ -3,8 +3,8 @@
 # 运行 AiKv 监控栈 (Prometheus + Grafana)
 #
 # 用法：
-#   ./run_monitor.sh              # 启动监控栈
-#   ./run_monitor.sh --stop       # 停止监控栈
+#   ./run_monitor.sh         # 启动监控栈
+#   ./run_monitor.sh --stop  # 停止监控栈
 
 set -e
 
@@ -26,11 +26,11 @@ while [[ $# -gt 0 ]]; do
             echo "用法: $0 [--stop]"
             echo ""
             echo "参数:"
-            echo "  --stop    停止监控栈"
+            echo "  --stop  停止监控栈"
             echo ""
             echo "启动的服务:"
             echo "  - Prometheus (http://localhost:9090)"
-            echo "  - Grafana   (http://localhost:3000, admin/admin)"
+            echo "  - Grafana    (http://localhost:3000, admin/admin)"
             echo "  - node-exporter     (http://localhost:9100)"
             echo "  - aikv-exporter     (http://localhost:9121)"
             exit 0
