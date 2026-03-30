@@ -14,11 +14,12 @@ agentType: general-purpose
 
 ## 能力
 
-1. **构建** — 使用本地 AiDb 构建 AiKv 二进制或 Docker 镜像
-2. **部署** — 启动本地服务或 Docker 容器
-3. **监控** — 启动监控栈（Prometheus + Grafana + node-exporter + aikv-exporter）
-4. **清理** — 清理所有相关资源
-5. **调试** — 检查日志、进程状态、容器状态
+1. **构建** — 使用本地 AiDb 构建 AiKv 二进制或 Docker 镜像（支持集群模式）
+2. **部署** — 启动单节点或集群模式服务
+3. **监控** — 启动监控栈（Prometheus + Grafana + node-exporter + aikv-exporter + Loki + Promtail）
+4. **集群初始化** — 使用 init_cluster.sh 初始化 Raft 集群
+5. **清理** — 清理所有相关资源
+6. **调试** — 检查日志、进程状态、容器状态
 
 ## 脚本路径
 
@@ -28,10 +29,29 @@ agentType: general-purpose
 |------|------|
 | `scripts/build_bin.sh` | 构建 AiKv 二进制 |
 | `scripts/build_docker.sh` | 构建 Docker 镜像 |
+| `scripts/build_docker.sh --cluster` | 构建集群模式 Docker 镜像 |
 | `scripts/run_bin.sh` | 运行服务（bin 模式） |
-| `scripts/run_docker.sh` | 运行服务（docker 模式） |
-| `scripts/run_monitor.sh` | 启动监控栈 |
-| `scripts/cleanup.sh` | 清理 AiKv 资源（默认保留 Monitor） |
+| `scripts/run_docker.sh` | 运行单节点服务（docker 模式） |
+| `scripts/init_cluster.sh` | 初始化 AiKv 集群 |
+| `scripts/cleanup.sh` | 清理 AiKv 资源 |
+| `scripts/export_metrics.sh` | 导出监控指标 |
+| `scripts/export_logs.sh` | 导出日志 |
+
+## 集群模式
+
+AiKv 使用 Raft consensus（通过 AiDb），不同于 Redis gossip protocol。
+
+**节点规划（3主3从）：**
+| 节点 | 端口 | Raft 端口 | 角色 |
+|------|------|-----------|------|
+| m1 | 6379 | 50051 | Master (bootstrap) |
+| m2 | 6380 | 50052 | Master |
+| m3 | 6381 | 50053 | Master |
+| r1 | 6382 | 50054 | Replica of m1 |
+| r2 | 6383 | 50055 | Replica of m2 |
+| r3 | 6384 | 50056 | Replica of m3 |
+
+**Docker Compose：** `docker/docker-compose-cluster.yaml`
 
 ## 强制流程：部署前必须询问模式
 
@@ -41,66 +61,90 @@ agentType: general-purpose
 - "帮我构建并部署 AiKv"
 - "重新部署 AiKv"
 - "启动 AiKv 服务"
+- "部署集群"
 - "帮我启动"
 
 ### 询问内容
 
 ```
 请问使用哪种模式？
-- bin: 本地二进制运行
-- docker: Docker 容器运行（推荐）
+- single: 单节点模式
+- cluster: 集群模式（3主3从）
 ```
 
-### 执行流程
+### 执行流程（单节点）
 
-1. **询问部署方式** — 必须等用户回复
-2. **执行清理（如需要）** — 清理旧环境
-3. **执行构建** — 根据选择的模式构建
-4. **执行部署** — 启动服务
+1. **询问模式** — 必须等用户回复
+2. **执行清理** — 清理旧环境
+3. **执行构建** — `build_docker.sh`
+4. **执行部署** — `run_docker.sh`
 5. **验证** — 检查服务是否正常运行
+
+### 执行流程（集群）
+
+1. **询问模式** — 必须等用户回复
+2. **执行清理** — 清理旧环境
+3. **执行构建** — `build_docker.sh --cluster`
+4. **启动集群** — `./scripts/run_cluster.sh --init`
+5. **初始化集群** — `./scripts/init_cluster.sh`
+6. **验证** — `redis-cli -c -p 6379 CLUSTER INFO`
 
 ## 常用任务
 
-### 启动监控栈
+### 启动单节点
 ```bash
-./scripts/run_monitor.sh
+./scripts/build_docker.sh
+./scripts/run_docker.sh
 ```
 
-### 清理后重新构建并运行
+### 启动集群
 ```bash
-./scripts/cleanup.sh --force           # 仅清理 AiKv（保留 Monitor）
-./scripts/cleanup.sh --all --force     # 清理全部（包括 Monitor）
-./scripts/build_docker.sh  # 或 build_bin.sh
-./scripts/run_docker.sh    # 或 run_bin.sh
+./scripts/build_docker.sh --cluster
+./scripts/run_cluster.sh --init
+./scripts/init_cluster.sh
+```
+
+### 启动监控栈
+```bash
+docker compose -f docker-compose-monitor.yaml up -d
+```
+
+### 清理环境
+```bash
+./scripts/cleanup.sh --force              # 清理 AiKv（保留 Monitor）
+./scripts/cleanup.sh --cluster --force   # 清理集群
+./scripts/cleanup.sh --all --force       # 清理全部
+```
+
+### 检查集群状态
+```bash
+redis-cli -p 6379 CLUSTER INFO
+redis-cli -p 6379 CLUSTER NODES
+redis-cli -c -p 6379 SET test test
+redis-cli -c -p 6380 GET test  # 验证跨节点访问
 ```
 
 ### 检查服务状态
 ```bash
-# 检查进程
-ps aux | grep aikv | grep -v grep
 # 检查 Docker 容器
 docker ps -a --filter "name=aikv"
 # 检查日志
-tail -f logs/aikv_*.log
+docker logs aikv-m1
+tail -f logs/cluster/aikv-m1.log
 ```
 
-## 监控与指标导出
+## 监控与数据导出
 
-部署后如需导出监控数据分析，使用 **metrics-exporter** Skill：
+部署后如需导出数据分析：
+
+**metrics-exporter Skill：**
 ```bash
-# 列出所有可用指标
-./scripts/export_metrics.sh --list
-
-# 导出 QPS/OPS 数据
-./scripts/export_metrics.sh --metric=qps --duration=5m
-./scripts/export_metrics.sh --metric=ops --duration=5m
-
-# 导出所有指标
 ./scripts/export_metrics.sh --metric=all --duration=5m
+```
 
-# 导出指定时间范围
-./scripts/export_metrics.sh --metric=ops --start=11:30 --end=12:00
-./scripts/export_metrics.sh --metric=all --start="2026-03-26 11:30" --end="2026-03-26 12:00"
+**logs-exporter Skill：**
+```bash
+./scripts/export_logs.sh --service=aikv --duration=5m
 ```
 
 ## 触发条件
@@ -110,11 +154,14 @@ tail -f logs/aikv_*.log
 - "重新部署 AiKv"
 - "启动 AiKv 服务"
 - "启动监控"
+- "部署集群"
 - "检查 AiKv 运行状态"
+- "帮我初始化集群"
 - "AiKv 出问题了帮我排查"
 
 ## 强制规则
 
-1. **禁止默认模式** — 收到启动服务请求时，必须询问模式，禁止自行默认
+1. **禁止默认模式** — 收到启动服务请求时，必须询问 single/cluster 模式
 2. **等用户回复** — 询问后必须等用户选择，再执行对应命令
 3. **使用 Agent 工具** — 调用此 Agent 时必须使用 Agent 工具，不能用 Bash 代替
+4. **集群部署后必须初始化** — 启动集群容器后，必须运行 init_cluster.sh

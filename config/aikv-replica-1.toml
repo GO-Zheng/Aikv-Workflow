@@ -1,0 +1,20 @@
+# AiKv Replica 1 (of Master 1)
+# 端口: 6379 (映射到宿主机 6382), Raft: 50051 (映射到宿主机 50054)
+
+[server]
+host = "0.0.0.0"
+port = 6379
+
+[cluster]
+enabled = true
+raft_address = "aikv-replica-1:50052"
+is_bootstrap = false
+peers = []
+
+[storage]
+engine = "aidb"
+data_dir = "/app/data"
+databases = 16
+
+[logging]
+level = "debug"
