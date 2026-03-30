@@ -14,12 +14,30 @@ scrape_configs:
     static_configs:
       - targets: ["node-exporter:9100"]
 
-  # Redis Exporter - AiKv 指标
   - job_name: "aikv-exporter"
     static_configs:
       - targets: ["aikv-exporter:9121"]
 
-  # AiDb Exporter - AiDb 层指标 (MemTable, WAL, BlockCache)
   - job_name: "aidb-exporter"
     static_configs:
       - targets: ["aidb-exporter:9120"]
+
+  - job_name: "aikv-cluster-exporter"
+    static_configs:
+      - targets:
+          - "aikv-exporter-master-1:9121"
+          - "aikv-exporter-master-2:9121"
+          - "aikv-exporter-master-3:9121"
+          - "aikv-exporter-replica-1:9121"
+          - "aikv-exporter-replica-2:9121"
+          - "aikv-exporter-replica-3:9121"
+
+  - job_name: "aidb-cluster-exporter"
+    static_configs:
+      - targets:
+          - "aidb-exporter-master-1:9120"
+          - "aidb-exporter-master-2:9120"
+          - "aidb-exporter-master-3:9120"
+          - "aidb-exporter-replica-1:9120"
+          - "aidb-exporter-replica-2:9120"
+          - "aidb-exporter-replica-3:9120"

@@ -18,12 +18,14 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 # 解析参数
 FEATURES=""
 BUILD_OPTS=""
-IMAGE_NAME="aikv:latest"
+IMAGE_TAG="latest"
+CUSTOM_IMAGE_NAME=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -t)
-            IMAGE_NAME="$2"
+            IMAGE_TAG="$2"
+            CUSTOM_IMAGE_NAME=true
             shift 2
             ;;
         --release)
@@ -32,18 +34,22 @@ while [[ $# -gt 0 ]]; do
             ;;
         --cluster)
             FEATURES="--build-arg FEATURES=cluster"
+            if [[ "$CUSTOM_IMAGE_NAME" == "false" ]]; then
+                IMAGE_TAG="cluster"
+            fi
             shift
             ;;
         --help|-h)
             echo "用法: $0 [-t IMAGE] [--release] [--cluster]"
             echo ""
             echo "参数:"
-            echo "  -t IMAGE     镜像名和标签 (默认: aikv:latest)"
+            echo "  -t IMAGE     镜像名和标签 (默认: aikv:latest, 集群模式默认: aikv:cluster)"
             echo "  --release    生产优化模式"
             echo "  --cluster    启用集群模式"
             echo ""
             echo "示例:"
             echo "  $0                        # aikv:latest"
+            echo "  $0 --cluster              # aikv:cluster"
             echo "  $0 -t myimage:v1         # 自定义镜像名"
             echo "  $0 --release             # release 镜像"
             echo "  $0 --release --cluster   # release + 集群"
@@ -55,6 +61,8 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+IMAGE_NAME="aikv:${IMAGE_TAG}"
 
 cd "$PROJECT_DIR"
 

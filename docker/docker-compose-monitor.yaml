@@ -34,7 +34,9 @@ services:
       - "9121:9121"
     restart: unless-stopped
     networks:
-      - aikv-workflow
+      aikv-workflow:
+        aliases:
+          - aikv-exporter-master-1
 
   aidb-exporter:
     image: aidb-exporter:v0.0.2
@@ -46,12 +48,9 @@ services:
       - "9120:9120"
     restart: unless-stopped
     networks:
-      - aikv-workflow
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9120/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+      aikv-workflow:
+        aliases:
+          - aidb-exporter-master-1
 
   prometheus:
     image: prom/prometheus:v3.9.1

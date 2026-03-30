@@ -17,7 +17,7 @@ services:
   # Master-1 (Bootstrap Node)
   # ============================================================
   aikv-master-1:
-    image: aikv:latest
+    image: aikv:cluster
     container_name: aikv-master-1
     hostname: aikv-master-1
     user: root
@@ -33,7 +33,9 @@ services:
       - RUST_LOG=debug
     restart: unless-stopped
     networks:
-      - aikv-workflow
+      aikv-workflow:
+        aliases:
+          - aikv    # 兼容单机模式 monitor
     healthcheck:
       test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "ping"]
       interval: 30s
@@ -45,7 +47,7 @@ services:
   # Replica-1 (of Master-1)
   # ============================================================
   aikv-replica-1:
-    image: aikv:latest
+    image: aikv:cluster
     container_name: aikv-replica-1
     hostname: aikv-replica-1
     user: root
@@ -73,7 +75,7 @@ services:
   # Master-2
   # ============================================================
   aikv-master-2:
-    image: aikv:latest
+    image: aikv:cluster
     container_name: aikv-master-2
     hostname: aikv-master-2
     user: root
@@ -101,7 +103,7 @@ services:
   # Replica-2 (of Master-2)
   # ============================================================
   aikv-replica-2:
-    image: aikv:latest
+    image: aikv:cluster
     container_name: aikv-replica-2
     hostname: aikv-replica-2
     user: root
@@ -129,7 +131,7 @@ services:
   # Master-3
   # ============================================================
   aikv-master-3:
-    image: aikv:latest
+    image: aikv:cluster
     container_name: aikv-master-3
     hostname: aikv-master-3
     user: root
@@ -157,7 +159,7 @@ services:
   # Replica-3 (of Master-3)
   # ============================================================
   aikv-replica-3:
-    image: aikv:latest
+    image: aikv:cluster
     container_name: aikv-replica-3
     hostname: aikv-replica-3
     user: root
@@ -183,4 +185,5 @@ services:
 
 networks:
   aikv-workflow:
-    external: true
+    name: aikv-workflow
+    driver: bridge
