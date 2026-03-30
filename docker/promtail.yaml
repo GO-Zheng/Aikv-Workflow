@@ -19,21 +19,14 @@ scrape_configs:
         refresh_interval: 10s
         filters:
           - name: label
-            values: ["com.docker.compose.service=aikv"]         
-      # 或者用 label 过滤(如果给容器打了 label):
-      # filters:
-      #   - name: label
-      #     values: ["app=aikv"]
+            values: ["app=aikv"]
     relabel_configs:
-      # 设置 job 和 host 标签
       - replacement: "aikv"
         target_label: job
-      - replacement: "aikv"
-        target_label: host
-      # 提取容器名到 container 标签
+      # host 标签使用容器名，便于区分节点
       - source_labels: [__meta_docker_container_name]
         regex: "/?(.*)"
-        target_label: container
+        target_label: service
       # 清理 Docker 特殊 label，避免 Loki 拒绝
       - action: labeldrop
         regex: "com_docker_compose_.*|org_opencontainers_.*|__meta_docker_.*"

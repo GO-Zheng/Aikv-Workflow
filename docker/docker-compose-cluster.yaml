@@ -32,6 +32,8 @@ services:
     environment:
       - RUST_LOG=debug
     restart: unless-stopped
+    labels:
+      - app=aikv
     networks:
       aikv-workflow:
         aliases:
@@ -62,6 +64,8 @@ services:
     environment:
       - RUST_LOG=debug
     restart: unless-stopped
+    labels:
+      - app=aikv
     networks:
       - aikv-workflow
     healthcheck:
@@ -90,6 +94,8 @@ services:
     environment:
       - RUST_LOG=debug
     restart: unless-stopped
+    labels:
+      - app=aikv
     networks:
       - aikv-workflow
     healthcheck:
@@ -118,6 +124,8 @@ services:
     environment:
       - RUST_LOG=debug
     restart: unless-stopped
+    labels:
+      - app=aikv
     networks:
       - aikv-workflow
     healthcheck:
@@ -146,6 +154,8 @@ services:
     environment:
       - RUST_LOG=debug
     restart: unless-stopped
+    labels:
+      - app=aikv
     networks:
       - aikv-workflow
     healthcheck:
@@ -174,6 +184,8 @@ services:
     environment:
       - RUST_LOG=debug
     restart: unless-stopped
+    labels:
+      - app=aikv
     networks:
       - aikv-workflow
     healthcheck:

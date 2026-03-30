@@ -6,21 +6,21 @@ user-invocable: true
 
 # Logs Exporter Skill
 
-导出 AiKv 日志数据，供 AI 分析使用。
+导出 AiKv 日志数据, 供 AI 分析使用。
 
 ## 执行要求
 
-**必须使用 Skill 工具调用本 Skill，执行其中的脚本命令。禁止绕过 Skill 直接执行 Bash 命令。**
+**必须使用 Skill 工具调用本 Skill, 执行其中的脚本命令。禁止绕过 Skill 直接执行 Bash 命令。**
 
 ## 脚本路径
 
-脚本位于 `scripts/export_logs.sh`，会自动定位项目目录。
+脚本位于 `scripts/export_logs.sh`, 会自动定位项目目录。
 
 ## 功能
 
 - 导出指定时间范围内的 Loki 日志
-- 支持按日志级别（ERROR/WARN/INFO/DEBUG）过滤
-- 支持按服务名（job 标签）和主机名（host 标签）过滤
+- 支持按日志级别 (ERROR/WARN/INFO/DEBUG ) 过滤
+- 支持按服务名 (job 标签 ) 和节点名 (service 标签 ) 过滤
 - 支持 JSON/CSV 格式输出
 - 支持自定义时间范围
 
@@ -31,7 +31,7 @@ user-invocable: true
 ./scripts/export_logs.sh --list
 ```
 
-### 导出最近日志（相对时间）
+### 导出最近日志 (相对时间 ) 
 ```bash
 # 导出最近 5 分钟的所有日志
 ./scripts/export_logs.sh --duration=5m
@@ -66,14 +66,20 @@ user-invocable: true
 # 只导出 aikv 服务的日志
 ./scripts/export_logs.sh --service=aikv --duration=30m
 
-# 组合过滤：aikv 服务的 ERROR 日志
+# 组合过滤: aikv 服务的 ERROR 日志
 ./scripts/export_logs.sh --service=aikv --level=error --duration=1h
 ```
 
-### 按主机名过滤
+### 按节点名过滤
 ```bash
-# 只导出 aikv 主机的日志
-./scripts/export_logs.sh --host=aikv --duration=30m
+# 只导出 aikv-master-1 节点的日志
+./scripts/export_logs.sh --host=aikv-master-1 --duration=30m
+
+# 只导出 aikv-replica-1 节点的日志
+./scripts/export_logs.sh --host=aikv-replica-1 --duration=30m
+
+# 导出所有节点的日志 (默认 ) 
+./scripts/export_logs.sh --duration=30m
 ```
 
 ### 输出 CSV 格式
@@ -98,13 +104,18 @@ user-invocable: true
 ## 注意事项
 
 ### 服务名 (--service)
-AiKv 的 Promtail job 标签值为 `aikv`，所以应使用：
+AiKv 的 Promtail job 标签值为 `aikv` (所有节点统一 ) , 所以应使用: 
 ```bash
 ./scripts/export_logs.sh --service=aikv --duration=30m
 ```
 
+### 节点名 (--host)
+节点名对应 Promtail 的 `service` 标签, 值为容器名: 
+- 单机模式: `aikv`
+- 集群模式: `aikv-master-1`, `aikv-replica-1`, `aikv-master-2`, `aikv-replica-2`, `aikv-master-3`, `aikv-replica-3`
+
 ### 日志级别过滤
-日志中的级别是以 ANSI 颜色码格式记录的（如 `[32m INFO[0m`、`[31m ERROR[0m`），`--level` 参数通过字符串匹配过滤。如果级别过滤无效，可以直接用文本过滤：
+日志中的级别是以 ANSI 颜色码格式记录的 (如 `[32m INFO[0m`、`[31m ERROR[0m` ) , `--level` 参数通过字符串匹配过滤。如果级别过滤无效, 可以直接用文本过滤: 
 ```bash
 # 过滤包含 ERROR 字样的日志行
 ./scripts/export_logs.sh --service=aikv-logs --level=error --duration=30m
@@ -121,19 +132,19 @@ AiKv 的 Promtail job 标签值为 `aikv`，所以应使用：
 
 ## 与 metrics-exporter 的配合
 
-日志 + 指标组合分析：
+日志 + 指标组合分析: 
 
 ```
-指标分析：发现某个时间点 QPS 下降
+指标分析: 发现某个时间点 QPS 下降
    ↓
-日志分析：同时段有什么 ERROR 日志？
+日志分析: 同时段有什么 ERROR 日志？
    ↓
 ./scripts/export_logs.sh --start=14:30 --end=14:35 --level=error
 ```
 
 ## Loki API
 
-底层调用 Loki 的 `query_range` API：
-- 地址：`http://localhost:3100/loki/api/v1/query_range`
-- 最大条数：5000 条
-- 默认条数：1000 条
+底层调用 Loki 的 `query_range` API: 
+- 地址: `http://localhost:3100/loki/api/v1/query_range`
+- 最大条数: 5000 条
+- 默认条数: 1000 条

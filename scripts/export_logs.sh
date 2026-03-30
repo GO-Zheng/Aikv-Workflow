@@ -2,27 +2,27 @@
 
 # 导出 AiKv 日志
 #
-# 用法：
+# 用法: 
 #   ./export_logs.sh [--duration=<duration>] [--format=json|csv]
 #   ./export_logs.sh --start=<start_time> --end=<end_time> [--level=<level>] [--service=<service>] [--format=json|csv]
 #   ./export_logs.sh --list
 #
-# 参数：
-#   --duration    时间范围，如：5m, 1h, 30m, 24h (默认: 5m)
-#   --start       起始时间 (与 --end 配合使用，优先级高于 --duration)
-#                  格式: HH:MM (今天，如 11:30)
-#                       YYYY-MM-DD HH:MM (指定日期，如 2026-03-26 11:30)
-#                       YYYY-MM-DDTHH:MM (ISO 格式，如 2026-03-26T11:30)
+# 参数: 
+#   --duration    时间范围, 如: 5m, 1h, 30m, 24h (默认: 5m)
+#   --start       起始时间 (与 --end 配合使用, 优先级高于 --duration)
+#                  格式: HH:MM (今天, 如 11:30)
+#                       YYYY-MM-DD HH:MM (指定日期, 如 2026-03-26 11:30)
+#                       YYYY-MM-DDTHH:MM (ISO 格式, 如 2026-03-26T11:30)
 #   --end         结束时间 (与 --start 配合使用)
 #                  格式同上 (如 12:00)
-#   --level       日志级别过滤：error, warn, info, debug (可选，多个用逗号分隔)
-#   --service     服务名过滤，如：aikv (对应 Promtail 的 job 标签)
-#   --host        主机名过滤，如：aikv
-#   --limit       最大返回条数 (默认: 1000，上限 5000)
-#   --format      输出格式：json (默认) 或 csv
+#   --level       日志级别过滤: error, warn, info, debug (可选, 多个用逗号分隔)
+#   --service     服务名过滤, 如: aikv (对应 Promtail 的 job 标签)
+#   --host        节点名过滤 (service 标签), 如: aikv-master-1, aikv-replica-1
+#   --limit       最大返回条数 (默认: 1000, 上限 5000)
+#   --format      输出格式: json (默认) 或 csv
 #   --list        列出所有可用标签和值
 #
-# 示例：
+# 示例: 
 #   ./export_logs.sh --duration=5m
 #   ./export_logs.sh --start=11:30 --end=12:00
 #   ./export_logs.sh --start="2026-03-26 11:30" --end="2026-03-26 12:00"
@@ -81,28 +81,28 @@ while [[ $# -gt 0 ]]; do
         --list)
             echo "=== 可用标签 ==="
             echo ""
-            echo "获取标签名："
+            echo "获取标签名: "
             curl -s "$LOKI_URL/loki/api/v1/label" | jq -r '.data[]' 2>/dev/null
             echo ""
-            echo "获取 job 标签值："
+            echo "获取 job 标签值: "
             curl -s "$LOKI_URL/loki/api/v1/label/job/values" | jq -r '.data[]' 2>/dev/null
             echo ""
-            echo "获取 host 标签值："
-            curl -s "$LOKI_URL/loki/api/v1/label/host/values" | jq -r '.data[]' 2>/dev/null
+            echo "获取 service 标签值: "
+            curl -s "$LOKI_URL/loki/api/v1/label/service/values" | jq -r '.data[]' 2>/dev/null
             exit 0
             ;;
         --help|-h)
             echo "用法: $0 [--duration=<duration>] [--start=<start>] [--end=<end>] [--level=<level>] [--service=<service>] [--host=<host>] [--limit=<n>] [--format=json|csv] [--list]"
             echo ""
             echo "参数:"
-            echo "  --duration    时间范围，如: 5m, 1h, 30m, 24h (默认: 5m)"
-            echo "  --start       起始时间 (与 --end 配合使用，优先级高于 --duration)"
+            echo "  --duration    时间范围, 如: 5m, 1h, 30m, 24h (默认: 5m)"
+            echo "  --start       起始时间 (与 --end 配合使用, 优先级高于 --duration)"
             echo "                格式: HH:MM, YYYY-MM-DD HH:MM, YYYY-MM-DDTHH:MM"
             echo "  --end         结束时间 (与 --start 配合使用)"
             echo "  --level       日志级别过滤: error, warn, info, debug (逗号分隔多个)"
             echo "  --service     服务名过滤 (job 标签)"
-            echo "  --host        主机名过滤 (host 标签)"
-            echo "  --limit       最大返回条数 (默认: 1000，上限 5000)"
+            echo "  --host        节点名过滤 (service 标签), 如: aikv-master-1, aikv-replica-1"
+            echo "  --limit       最大返回条数 (默认: 1000, 上限 5000)"
             echo "  --format      输出格式: json 或 csv (默认: json)"
             echo "  --list        列出所有可用标签"
             echo ""
@@ -205,9 +205,13 @@ build_logql() {
         job_filter="{job=~\".+\"}"
     fi
 
-    # 主机过滤
+    # 主机过滤 (service 标签, 对应 Promtail 的 service label)
     if [[ -n "$HOST" ]]; then
-        query="$job_filter |= \"host=\\\"$HOST\\\"\""
+        if [[ -n "$SERVICE" ]]; then
+            query="{job=\"$SERVICE\", service=\"$HOST\"}"
+        else
+            query="{job=\"aikv\", service=\"$HOST\"}"
+        fi
     else
         query="$job_filter"
     fi
