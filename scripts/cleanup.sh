@@ -3,10 +3,10 @@
 # AiKv 环境清理脚本
 #
 # 用法：
-#   ./cleanup.sh                    # 清理单机 AiKv
-#   ./cleanup.sh --cluster          # 清理集群 AiKv
-#   ./cleanup.sh --cluster-monitor   # 清理集群监控 exporters
-#   ./cleanup.sh --all              # 清理全部（包括单机 monitor）
+#   ./cleanup.sh                   # 清理单机 AiKv
+#   ./cleanup.sh --cluster         # 清理集群 AiKv
+#   ./cleanup.sh --cluster-monitor # 清理集群监控 exporters
+#   ./cleanup.sh --all             # 清理全部（包括单机 monitor）
 #   ./cleanup.sh --force           # 跳过确认
 
 set -e
@@ -98,7 +98,7 @@ fi
 
 # 清理全部（包括单机 monitor）
 if [[ "$CLEAN_ALL" == "true" ]]; then
-    echo "=== 清理全部（包括 Monitor）==="
+    echo "=== 清理全部 (包括 Monitor) ==="
     docker compose -p aikv -f "$DOCKER_DIR/docker-compose.yaml" down -v --remove-orphans 2>/dev/null || true
     docker compose -p aikv-cluster -f "$DOCKER_DIR/docker-compose-cluster.yaml" down -v --remove-orphans 2>/dev/null || true
     docker compose -p aikv-cluster-monitor -f "$DOCKER_DIR/docker-compose-cluster-monitor.yaml" down 2>/dev/null || true
