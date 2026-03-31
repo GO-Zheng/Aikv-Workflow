@@ -85,9 +85,8 @@ AiKv 使用 Raft consensus（通过 AiDb），不同于 Redis gossip protocol。
 1. **询问模式** — 必须等用户回复
 2. **执行清理** — 清理旧环境
 3. **执行构建** — `build_docker.sh --cluster`
-4. **启动集群** — `./scripts/run_cluster.sh --init`
-5. **初始化集群** — `./scripts/init_cluster.sh`
-6. **验证** — `redis-cli -c -p 6379 CLUSTER INFO`
+4. **启动集群** — `./scripts/run_cluster.sh`（默认包含初始化 + 功能测试）
+5. **验证** — `redis-cli -c -p 6379 CLUSTER INFO`
 
 ## 常用任务
 
@@ -100,8 +99,7 @@ AiKv 使用 Raft consensus（通过 AiDb），不同于 Redis gossip protocol。
 ### 启动集群
 ```bash
 ./scripts/build_docker.sh --cluster
-./scripts/run_cluster.sh --init
-./scripts/init_cluster.sh
+./scripts/run_cluster.sh  # 自动初始化 + 功能测试
 ```
 
 ### 启动监控栈

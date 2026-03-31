@@ -45,10 +45,10 @@ user-invocable: true
 ```
 
 ### docker-run-cluster
-启动 AiKv 集群（3主3从 Docker 容器）
+启动 AiKv 集群（3主3从 Docker 容器，默认会初始化并测试）
 ```bash
-./scripts/run_cluster.sh --init  # 启动并初始化
-./scripts/run_cluster.sh         # 仅启动（不初始化）
+./scripts/run_cluster.sh         # 启动并初始化 + 功能测试（默认）
+./scripts/run_cluster.sh --no-init  # 仅启动（不初始化）
 ./scripts/run_cluster.sh --stop  # 停止
 ```
 
@@ -91,7 +91,7 @@ docker compose -f docker-compose-monitor.yaml up -d
 
 **集群部署流程：**
 1. 构建集群镜像：`./scripts/build_docker.sh --cluster`
-2. 启动并初始化：`./scripts/run_cluster.sh --init`
+2. 启动并初始化：`./scripts/run_cluster.sh`（自动初始化 + 功能测试）
 3. 验证集群：`redis-cli -c -p 6379 CLUSTER INFO`
 
 ## 使用示例

@@ -3,10 +3,10 @@
 # 运行 AiKv 集群模式 Docker 镜像 (3主3从)
 #
 # 用法：
-#   ./run_cluster.sh                                # 启动集群
-#   ./run_cluster.sh --init                         # 启动并初始化集群
+#   ./run_cluster.sh                                # 启动集群（默认初始化）
+#   ./run_cluster.sh --no-init                      # 启动集群（不初始化）
 #   ./run_cluster.sh --with-cluster-monitor         # 启动集群 + 集群监控 exporters
-#   ./run_cluster.sh --init --with-cluster-monitor  # 启动 + 初始化 + 监控
+#   ./run_cluster.sh --no-init --with-cluster-monitor  # 启动（不初始化）+ 监控
 #   ./run_cluster.sh --stop                         # 停止集群
 #   ./run_cluster.sh --stop --with-cluster-monitor  # 停止集群 + 集群监控
 #   ./run_cluster.sh --help                         # 查看帮助
@@ -21,15 +21,15 @@ CLUSTER_MONITOR_COMPOSE="$DOCKER_DIR/docker-compose-cluster-monitor.yaml"
 
 # 默认值
 ACTION="start"
-DO_INIT=false
+DO_INIT=true
 WITH_CLUSTER_MONITOR=false
 IMAGE_NAME="aikv:latest"
 
 # 解析参数
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --init)
-            DO_INIT=true
+        --no-init)
+            DO_INIT=false
             shift
             ;;
         --stop)
@@ -45,19 +45,19 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --help|-h)
-            echo "用法: $0 [--init] [--stop] [--with-cluster-monitor] [-t IMAGE]"
+            echo "用法: $0 [--no-init] [--stop] [--with-cluster-monitor] [-t IMAGE]"
             echo ""
             echo "参数:"
-            echo "  --init                   启动后初始化集群"
-            echo "  --stop                   停止集群"
-            echo "  --with-cluster-monitor,  -m  同时启动/停止集群监控 exporters"
-            echo "  -t IMAGE                 镜像名和标签 (默认: aikv:latest)"
+            echo "  --no-init                 跳过集群初始化"
+            echo "  --stop                    停止集群"
+            echo "  --with-cluster-monitor, -m  同时启动/停止集群监控 exporters"
+            echo "  -t IMAGE                  镜像名和标签 (默认: aikv:latest)"
             echo ""
             echo "示例:"
-            echo "  $0                                # 启动集群"
-            echo "  $0 --init                         # 启动并初始化"
+            echo "  $0                                # 启动集群并初始化"
+            echo "  $0 --no-init                      # 启动集群（不初始化）"
             echo "  $0 --with-cluster-monitor         # 启动集群 + 集群监控"
-            echo "  $0 --init --with-cluster-monitor  # 启动 + 初始化 + 监控"
+            echo "  $0 --no-init --with-cluster-monitor  # 启动（不初始化）+ 监控"
             echo "  $0 --stop                         # 停止集群"
             echo "  $0 --stop --with-cluster-monitor  # 停止集群 + 集群监控"
             exit 0
@@ -146,12 +146,16 @@ echo ""
 echo "等待节点就绪..."
 sleep 5
 
-# 初始化集群
+# 初始化集群（默认执行）
 if [[ "$DO_INIT" == "true" ]]; then
     echo ""
     echo "=== 初始化集群 ==="
     "$SCRIPT_DIR/init_cluster.sh"
+
+    echo ""
+    echo "=== 运行集群功能测试 ==="
+    "$SCRIPT_DIR/test_cluster_functional.sh"
 else
-    echo "如需初始化集群，请运行:"
+    echo "跳过集群初始化。如需手动初始化，请运行:"
     echo "  ./scripts/init_cluster.sh"
 fi
