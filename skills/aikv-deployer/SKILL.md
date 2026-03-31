@@ -47,9 +47,9 @@ user-invocable: true
 ### docker-run-cluster
 启动 AiKv 集群（3主3从 Docker 容器，默认会初始化并测试）
 ```bash
-./scripts/run_cluster.sh         # 启动并初始化 + 功能测试（默认）
-./scripts/run_cluster.sh --no-init  # 仅启动（不初始化）
-./scripts/run_cluster.sh --stop  # 停止
+./scripts/run_cluster.sh           # 启动并初始化 + 功能测试（默认）
+./scripts/run_cluster.sh --no-init # 仅启动（不初始化）
+./scripts/run_cluster.sh --stop    # 停止
 ```
 
 ### cluster-init
@@ -74,9 +74,9 @@ docker compose -f docker-compose-monitor.yaml up -d
 ### cleanup
 清理 AiKv 资源
 ```bash
-./scripts/cleanup.sh --force              # 仅清理 AiKv（保留 Monitor）
-./scripts/cleanup.sh --cluster --force   # 清理集群
-./scripts/cleanup.sh --all --force       # 清理全部（包括 Monitor）
+./scripts/cleanup.sh --force            # 仅清理 AiKv（保留 Monitor）
+./scripts/cleanup.sh --cluster --force  # 清理集群
+./scripts/cleanup.sh --all --force      # 清理全部（包括 Monitor）
 ```
 
 ## 集群模式说明

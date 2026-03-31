@@ -109,9 +109,9 @@ docker compose -f docker-compose-monitor.yaml up -d
 
 ### 清理环境
 ```bash
-./scripts/cleanup.sh --force              # 清理 AiKv（保留 Monitor）
-./scripts/cleanup.sh --cluster --force   # 清理集群
-./scripts/cleanup.sh --all --force       # 清理全部
+./scripts/cleanup.sh --force            # 清理 AiKv（保留 Monitor）
+./scripts/cleanup.sh --cluster --force  # 清理集群
+./scripts/cleanup.sh --all --force      # 清理全部
 ```
 
 ### 检查集群状态
