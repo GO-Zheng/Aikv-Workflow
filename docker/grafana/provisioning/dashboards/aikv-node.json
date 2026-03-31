@@ -1,0 +1,2077 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- System CPU (\u6a59\u8272): \u5185\u6838\u6001 CPU\uff0c\u53cd\u6620\u7cfb\u7edf\u8c03\u7528\u3001I/O \u7b49\u5f85\n- User CPU (\u84dd\u8272): \u7528\u6237\u6001 CPU\uff0c\u53cd\u6620\u4e1a\u52a1\u903b\u8f91\u8ba1\u7b97\n- Total CPU (\u7eff\u8272): \u4e24\u8005\u4e4b\u548c\n\n**\u8ba1\u7b97\u516c\u5f0f**:\n- System CPU: `rate(redis_cpu_sys_seconds_total[1m])`\n- User CPU: `rate(redis_cpu_user_seconds_total[1m])`\n- Total CPU: `rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])`\n\n**\u8c03\u4f18\u573a\u666f**:\n- User CPU \u9ad8 \u2192 \u4e1a\u52a1\u903b\u8f91\u91cd\uff0c\u8003\u8651\u4f18\u5316\u7b97\u6cd5\n- System CPU \u9ad8 \u2192 I/O \u9891\u7e41\uff0c\u68c0\u67e5 AOF/RDB \u7b56\u7565\n- \u4e24\u8005\u90fd\u9ad8 \u2192 \u8d1f\u8f7d\u4e25\u91cd\uff0c\u8003\u8651\u6269\u5bb9",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "System CPU"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "User CPU"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Total CPU"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 18,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(redis_cpu_sys_seconds_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])",
+          "legendFormat": "System CPU",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(redis_cpu_user_seconds_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])",
+          "legendFormat": "User CPU",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(redis_cpu_sys_seconds_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval]) + rate(redis_cpu_user_seconds_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])",
+          "legendFormat": "Total CPU",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "CPU \u4f7f\u7528\u7387",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u8ba1\u7b97\u516c\u5f0f**: `rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])`\n\n**\u9608\u503c\u8bf4\u660e**:\n- \u7eff\u8272 (0-70%): \u6b63\u5e38\n- \u9ec4\u8272 (70-90%): \u8b66\u544a\uff0cCPU \u8d1f\u8f7d\u8f83\u9ad8\n- \u7ea2\u8272 (>90%): \u5371\u9669\uff0cCPU \u5373\u5c06\u9971\u548c\n\n**\u6ce8\u610f**: \u503c\u8868\u793a CPU \u6838\u5fc3\u6570\uff0c1.0 = 1 \u6838 100%",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 1,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "rate(redis_cpu_sys_seconds_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval]) + rate(redis_cpu_user_seconds_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])",
+          "legendFormat": "Total CPU",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "\u603b CPU \u4f7f\u7528\u7387",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- RSS Memory (\u7eff\u8272): \u8fdb\u7a0b\u5e38\u9a7b\u7269\u7406\u5185\u5b58\u5185\u5b58\n- Peak Memory (\u6a59\u8272): \u5386\u53f2\u5cf0\u503c\u5185\u5b58\n- Used Memory (\u84dd\u8272): AiKv \u5b9e\u9645\u5206\u914d\u7684\n\n**\u8ba1\u7b97\u516c\u5f0f**: \u76f4\u63a5\u53d6\u503c\n\n**\u8c03\u4f18\u573a\u666f**:\n- Used Memory \u6301\u7eed\u589e\u957f \u2192 \u53ef\u80fd\u6709\u5185\u5b58\u6cc4\u6f0f\n- Peak Memory \u63a5\u8fd1\u673a\u5668\u5185\u5b58 \u2192 \u8003\u8651\u6269\u5bb9\u6216\u4f18\u5316\u6570\u636e\u7ed3\u6784",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 18,
+        "x": 0,
+        "y": 9
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "process_resident_memory_bytes{job=\"aikv-cluster-exporter\", node=\"$node\"}",
+          "legendFormat": "RSS Memory",
+          "range": true,
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "redis_memory_used_peak_bytes{job=\"aikv-cluster-exporter\", node=\"$node\"}",
+          "legendFormat": "Peak Memory",
+          "range": true,
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "redis_memory_used_bytes{job=\"aikv-cluster-exporter\", node=\"$node\"}",
+          "legendFormat": "Used Memory",
+          "range": true,
+          "refId": "C"
+        }
+      ],
+      "title": "\u5185\u5b58\u4f7f\u7528\u91cf",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u8ba1\u7b97\u516c\u5f0f**: `redis_mem_fragmentation_ratio`\n\n**\u9608\u503c\u8bf4\u660e**:\n- \u7eff\u8272 (0-1.5): \u6b63\u5e38\uff0c\u5185\u5b58\u788e\u7247\u8f83\u5c11\n- \u9ec4\u8272 (1.5-3): \u8b66\u544a\uff0c\u5185\u5b58\u788e\u7247\u8f83\u591a\n- \u7ea2\u8272 (>3): \u5371\u9669\uff0c\u5185\u5b58\u788e\u7247\u4e25\u91cd\uff0c\u5efa\u8bae\u91cd\u542f\n\n**\u8bf4\u660e**: RSS/Used Memory ratio\uff0c\u53cd\u6620\u5185\u5b58\u5206\u914d\u6548\u7387",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "max": 5,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 1.5
+              },
+              {
+                "color": "red",
+                "value": 3
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 6,
+        "x": 18,
+        "y": 9
+      },
+      "id": 4,
+      "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "sizing": "auto"
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "redis_mem_fragmentation_ratio{job=\"aikv-cluster-exporter\", node=\"$node\"}",
+          "legendFormat": "Fragmentation",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "\u5185\u5b58\u788e\u7247\u7387",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- QPS (\u84dd\u8272): \u8bfb\u547d\u4ee4\u6bcf\u79d2\u8c03\u7528\u6b21\u6570 (GET/MGET/HGET/SMEMBERS \u7b49)\n- OPS (\u6a59\u8272): \u5168\u90e8\u547d\u4ee4\u6bcf\u79d2\u8c03\u7528\u6b21\u6570\n\n**\u8ba1\u7b97\u516c\u5f0f**:\n- QPS: sum(rate(redis_commands_total{cmd=~\"get|mget|hget|sget|lget|smembers|scard|sismember\"}[1m]))\n- OPS: sum(rate(redis_commands_total[1m]))\n\n**\u8c03\u4f18\u573a\u666f**:\n- OPS \u6301\u7eed\u63a5\u8fd1\u4e0a\u9650 \u2192 \u8003\u8651\u6269\u5bb9\u6216\u4f18\u5316\u67e5\u8be2\n- QPS/OPS \u6bd4\u503c\u9ad8 \u2192 \u8bfb\u591a\u5199\u5c11\uff0c\u53ef\u8003\u8651\u8bfb\u5199\u5206\u79bb",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OPS"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 18,
+        "x": 0,
+        "y": 18
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum(rate(redis_commands_total{job=\"aikv-cluster-exporter\", node=\"$node\",cmd=~\"get|mget|hget|sget|lget|smembers|scard|sismember\"}[$__rate_interval]))",
+          "legendFormat": "QPS",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "editorMode": "code",
+          "expr": "sum(rate(redis_commands_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval]))",
+          "legendFormat": "OPS",
+          "range": true,
+          "refId": "B"
+        }
+      ],
+      "title": "QPS/OPS",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**: \u5f53\u524d\u5b9e\u65f6\u8fde\u63a5\u6570\n\n**\u6570\u636e\u6765\u6e90**: `redis_connected_clients`\n\n**\u9608\u503c\u8bf4\u660e**:\n- \u7eff\u8272: \u6b63\u5e38 (< 100)\n- \u9ec4\u8272: \u8b66\u544a (100-500)\n- \u7ea2\u8272: \u5371\u9669 (> 500)\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u6301\u7eed\u9ad8 \u2192 \u8fde\u63a5\u6570\u63a5\u8fd1\u4e0a\u9650\uff0c\u8003\u8651\u6269\u5bb9\n- \u7a81\u589e/\u7a81\u964d \u2192 \u68c0\u67e5\u5e94\u7528\u8fde\u63a5\u6c60\u914d\u7f6e",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 3,
+        "x": 18,
+        "y": 18
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "redis_connected_clients{job=\"aikv-cluster-exporter\", node=\"$node\"}",
+          "legendFormat": "\u5f53\u524d\u8fde\u63a5\u6570",
+          "refId": "A"
+        }
+      ],
+      "title": "\u5f53\u524d\u8fde\u63a5\u6570",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- Total Commands (\u84dd\u8272): AiKv \u7d2f\u8ba1\u5904\u7406\u7684\u547d\u4ee4\u603b\u6570\n- Connections (\u6a59\u8272): \u7d2f\u8ba1\u63a5\u6536\u7684\u8fde\u63a5\u6570\n\n**\u6570\u636e\u6765\u6e90**:\n- Total Commands: `redis_commands_processed_total` (Counter)\n- Connections: `redis_connections_received_total` (Counter)\n\n**\u8c03\u4f18\u573a\u666f**:\n- Commands \u589e\u957f\u505c\u6ede \u2192 \u670d\u52a1\u53ef\u80fd\u6545\u969c\n- Connections \u5f02\u5e38\u589e\u957f \u2192 \u53ef\u80fd\u5b58\u5728\u8fde\u63a5\u6cc4\u6f0f",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Connections"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 3,
+        "x": 21,
+        "y": 18
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "redis_commands_processed_total{job=\"aikv-cluster-exporter\", node=\"$node\"}",
+          "legendFormat": "\u7d2f\u8ba1\u547d\u4ee4\u6570",
+          "refId": "A"
+        }
+      ],
+      "title": "\u7d2f\u8ba1\u547d\u4ee4\u6570",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- \u7f51\u7edc\u8f93\u5165\u901f\u7387 (\u6a59\u8272): \u670d\u52a1\u5668\u63a5\u6536\u6570\u636e\u7684\u901f\u7387\n- \u7f51\u7edc\u8f93\u51fa\u901f\u7387 (\u84dd\u8272): \u670d\u52a1\u5668\u53d1\u9001\u6570\u636e\u7684\u901f\u7387\n\n**\u8ba1\u7b97\u516c\u5f0f**:\n- \u8f93\u5165\u901f\u7387: `rate(redis_net_input_bytes_total[$__rate_interval])`\n- \u8f93\u51fa\u901f\u7387: `rate(redis_net_output_bytes_total[$__rate_interval])`\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u8f93\u5165\u901f\u7387\u9ad8 \u2192 \u5927\u91cf\u5199\u5165\u6216\u6570\u636e\u540c\u6b65\n- \u8f93\u51fa\u901f\u7387\u9ad8 \u2192 \u5927\u91cf\u8bfb\u53d6\u6216\u6570\u636e\u5bfc\u51fa\n- \u4e24\u8005\u90fd\u9ad8 \u2192 \u590d\u5236\u6216\u5907\u4efd\u64cd\u4f5c",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Input"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "palette-classic"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Output"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "palette-classic"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 26
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(redis_net_input_bytes_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])",
+          "legendFormat": "Input",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(redis_net_output_bytes_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])",
+          "legendFormat": "Output",
+          "refId": "B"
+        }
+      ],
+      "title": "\u7f51\u7edc I/O \u901f\u7387",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- Hits (\u84dd\u8272): GET \u547d\u4ee4\u6210\u529f\u627e\u5230 key \u7684\u6b21\u6570\n- Misses (\u6a59\u8272): GET \u547d\u4ee4\u8fd4\u56de key \u4e0d\u5b58\u5728\u7684\u6b21\u6570\n- Hit Ratio (\u7eff\u8272): \u547d\u4e2d\u7387 = hits / (hits + misses)\n\n**\u6570\u636e\u6765\u6e90**:\n- Hits: `rate(redis_keyspace_hits_total[1m])`\n- Misses: `rate(redis_keyspace_misses_total[1m])`\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u6b63\u5e38: Hit Ratio \u9ad8 (>80%)\uff0cMisses \u5f88\u4f4e\uff0c\u5927\u90e8\u5206 GET \u8bf7\u6c42\u90fd\u547d\u4e2d\u4e86\u6570\u636e\n- Hit Ratio \u6301\u7eed\u4f4e: \u5927\u90e8\u5206\u8bf7\u6c42\u90fd miss\uff0c\u68c0\u67e5\u4e1a\u52a1\u903b\u8f91\n- Misses \u6301\u7eed\u9ad8: key \u4e0d\u5b58\u5728\uff0c\u53ef\u80fd\u539f\u56e0\uff1a\u6570\u636e\u4ece\u672a\u5199\u5165\u3001\u5df2\u8fc7\u671f\u3001\u88ab\u5220\u9664\n- Misses \u7a81\u589e: \u53ef\u80fd\u6709\u6279\u91cf\u5220\u9664\u3001\u5927\u91cf key \u8fc7\u671f\u3001\u6216\u7f13\u5b58\u7a7f\u900f\u653b\u51fb",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hit Ratio"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "palette-classic"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "percentunit"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Misses"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "palette-classic"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 26
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(redis_keyspace_hits_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])",
+          "legendFormat": "Hits",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(redis_keyspace_misses_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])",
+          "legendFormat": "Misses",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(redis_keyspace_hits_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval]) / (rate(redis_keyspace_hits_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval]) + rate(redis_keyspace_misses_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval]))",
+          "legendFormat": "Hit Ratio",
+          "refId": "C"
+        }
+      ],
+      "title": "Keyspace \u547d\u4e2d\u7387",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- \u8bfb\u53d6\u901f\u7387 (\u84dd\u8272): \u78c1\u76d8\u6bcf\u79d2\u8bfb\u53d6\u5b57\u8282\u6570\n- \u5199\u5165\u901f\u7387 (\u6a59\u8272): \u78c1\u76d8\u6bcf\u79d2\u5199\u5165\u5b57\u8282\u6570\n\n**\u6570\u636e\u6765\u6e90**:\n- node_exporter \u91c7\u96c6\u81ea /proc/diskstats\n\n**\u8ba1\u7b97\u516c\u5f0f**:\n- \u8bfb\u53d6\u901f\u7387: `rate(node_disk_read_bytes_total[$__rate_interval])`\n- \u5199\u5165\u901f\u7387: `rate(node_disk_written_bytes_total[$__rate_interval])`",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Read"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Write"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 35
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "rate(node_disk_read_bytes_total{job=\"node-exporter\"}[$__rate_interval])",
+          "legendFormat": "Read {{device}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "rate(node_disk_written_bytes_total{job=\"node-exporter\"}[$__rate_interval])",
+          "legendFormat": "Write {{device}}",
+          "refId": "B"
+        }
+      ],
+      "title": "\u78c1\u76d8 I/O \u901f\u7387",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- \u8bfb\u53d6 IOPS (\u84dd\u8272): \u78c1\u76d8\u6bcf\u79d2\u8bfb\u53d6\u6b21\u6570\n- \u5199\u5165 IOPS (\u6a59\u8272): \u78c1\u76d8\u6bcf\u79d2\u5199\u5165\u6b21\u6570\n\n**\u6570\u636e\u6765\u6e90**:\n- node_exporter \u91c7\u96c6\u81ea /proc/diskstats\n\n**\u8ba1\u7b97\u516c\u5f0f**:\n- \u8bfb\u53d6 IOPS: `rate(node_disk_reads_completed_total[$__rate_interval])`\n- \u5199\u5165 IOPS: `rate(node_disk_writes_completed_total[$__rate_interval])`",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Read"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Write"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 35
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "rate(node_disk_reads_completed_total{job=\"node-exporter\"}[$__rate_interval])",
+          "legendFormat": "Read {{device}}",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "rate(node_disk_writes_completed_total{job=\"node-exporter\"}[$__rate_interval])",
+          "legendFormat": "Write {{device}}",
+          "refId": "B"
+        }
+      ],
+      "title": "\u78c1\u76d8 IOPS",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n\u663e\u793a\u5404\u7c7b\u578b\u547d\u4ee4\u7684\u6bcf\u79d2\u8c03\u7528\u6b21\u6570\n\n**\u6570\u636e\u6765\u6e90**:\n- `redis_commands_total{cmd=\"...\"}` \u6765\u81ea redis_exporter\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u67d0\u7c7b\u547d\u4ee4\u5360\u6bd4\u8fc7\u9ad8 \u2192 \u8003\u8651\u6279\u91cf\u64cd\u4f5c\u4f18\u5316\n- SET/GET \u6bd4\u4f8b\u5f02\u5e38 \u2192 \u68c0\u67e5\u4e1a\u52a1\u6a21\u5f0f",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "rate(redis_commands_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])",
+          "legendFormat": "{{cmd}}",
+          "refId": "A"
+        }
+      ],
+      "title": "\u547d\u4ee4\u7c7b\u578b\u5206\u5e03 (QPS by cmd)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u6570\u503c\u542b\u4e49**: \u9009\u4e2d\u65f6\u95f4\u8303\u56f4\u5185\u5404\u547d\u4ee4\u7684\u603b\u6267\u884c\u6b21\u6570\n\n**\u6570\u636e\u6765\u6e90**: `increase(redis_commands_total[$__range])`\n\n**\u56fe\u4f8b\u8bf4\u660e**:\n- \u6247\u533a\u5927\u5c0f = \u8be5\u547d\u4ee4\u5360\u603b\u6b21\u6570\u7684\u767e\u5206\u6bd4\n- \u6570\u503c = \u8be5\u547d\u4ee4\u5728\u65f6\u95f4\u8303\u56f4\u5185\u7684\u603b\u6267\u884c\u6b21\u6570\uff08\u4f30\u7b97\uff09\n\n**\u8c03\u4f18\u573a\u666f**: \u67d0\u7c7b\u547d\u4ee4\u5360\u6bd4\u8fc7\u9ad8 \u2192 \u8003\u8651\u6279\u91cf\u64cd\u4f5c\u4f18\u5316",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            }
+          },
+          "mappings": [],
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 44
+      },
+      "id": 13,
+      "options": {
+        "displayLabels": [
+          "name",
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "name",
+            "value",
+            "percent"
+          ]
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "sort": "desc",
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "increase(redis_commands_total{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__range])",
+          "legendFormat": "{{cmd}}",
+          "refId": "A"
+        }
+      ],
+      "title": "\u547d\u4ee4\u7c7b\u578b\u5360\u6bd4 (\u997c\u56fe)",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- P50 (\u84dd\u8272): 50% \u8bf7\u6c42\u7684\u5ef6\u8fdf\u4f4e\u4e8e\u6b64\u503c\n- P95 (\u6a59\u8272): 95% \u8bf7\u6c42\u7684\u5ef6\u8fdf\u4f4e\u4e8e\u6b64\u503c\n- P99 (\u7eff\u8272): 99% \u8bf7\u6c42\u7684\u5ef6\u8fdf\u4f4e\u4e8e\u6b64\u503c\n\n**\u6570\u636e\u6765\u6e90**:\n- `redis_commands_latencies_usec_bucket{le=\"...\"}` \u901a\u8fc7 histogram_quantile \u8ba1\u7b97\n\n**\u8c03\u4f18\u573a\u666f**:\n- P99 \u8fdc\u9ad8\u4e8e P50 \u2192 \u5b58\u5728\u5c11\u91cf\u6162\u8bf7\u6c42\uff0c\u6392\u67e5\u5927 key \u6216\u7f51\u7edc\u95ee\u9898\n- P95/P99 \u7a81\u7136\u5347\u9ad8 \u2192 \u7cfb\u7edf\u51fa\u73b0\u5f02\u5e38\uff0c\u53ef\u80fd\u6709\u963b\u585e\u64cd\u4f5c\n- \u5404\u5206\u4f4d\u6570\u90fd\u9ad8 \u2192 \u7cfb\u7edf\u6574\u4f53\u8d1f\u8f7d\u9ad8\uff0c\u8003\u8651\u6269\u5bb9",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "\u00b5s"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "P50"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "P95"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "P99"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 53
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.50, sum(rate(redis_commands_latencies_usec_bucket{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])) by (le))",
+          "legendFormat": "P50",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum(rate(redis_commands_latencies_usec_bucket{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])) by (le))",
+          "legendFormat": "P95",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum(rate(redis_commands_latencies_usec_bucket{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])) by (le))",
+          "legendFormat": "P99",
+          "refId": "C"
+        }
+      ],
+      "title": "\u547d\u4ee4\u5ef6\u8fdf P50/P95/P99",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n\u5c55\u793a\u5404\u547d\u4ee4\u7c7b\u578b\u7684 P50 \u5ef6\u8fdf\n\n**\u6570\u636e\u6765\u6e90**:\n- `redis_commands_latencies_usec_bucket{cmd=\\\"get\\\", le=\\\"...\\\"}`\n\n**\u8c03\u4f18\u573a\u666f**:\n- GET \u5ef6\u8fdf\u9ad8 \u2192 \u68c0\u67e5\u5b58\u50a8\u5c42\u8bfb\u53d6\u6027\u80fd\n- SET \u5ef6\u8fdf\u9ad8 \u2192 \u68c0\u67e5\u5199\u5165\u548c\u6301\u4e45\u5316\u6027\u80fd\n- \u67d0\u547d\u4ee4\u5ef6\u8fdf\u7a81\u589e \u2192 \u8be5\u547d\u4ee4\u7c7b\u578b\u51fa\u73b0\u6027\u80fd\u95ee\u9898",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "\u00b5s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 53
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "sortBy": "Max",
+          "sortDesc": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "histogram_quantile(0.50, sum(rate(redis_commands_latencies_usec_bucket{job=\"aikv-cluster-exporter\", node=\"$node\"}[$__rate_interval])) by (le, cmd))",
+          "legendFormat": "{{cmd}}",
+          "refId": "A"
+        }
+      ],
+      "title": "\u547d\u4ee4\u7c7b\u578b\u5ef6\u8fdf\u5206\u5e03",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- MemTable: \u6d3b\u8dc3\u5185\u5b58\u8868\u5927\u5c0f\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u6301\u7eed\u589e\u957f \u2192 \u5199\u5165\u538b\u529b\u5927\uff0c\u8003\u8651\u8c03\u5927 memtable_size\n- \u5468\u671f\u6027\u5347\u964d \u2192 \u6b63\u5e38 flush \u884c\u4e3a",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 0,
+        "y": 62
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aidb_memtable_bytes{job=\"aidb-cluster-exporter\", node=\"$node\"}",
+          "legendFormat": "MemTable",
+          "refId": "A"
+        }
+      ],
+      "title": "AiDb MemTable",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- WAL: Write-Ahead Log \u6587\u4ef6\u5927\u5c0f\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u6301\u7eed\u589e\u957f \u2192 \u5237\u65b0\u4e0d\u53ca\u65f6\uff0c\u68c0\u67e5 flush \u914d\u7f6e\n- \u5468\u671f\u6027\u4e0b\u964d \u2192 \u6b63\u5e38 flush \u5230\u78c1\u76d8",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 8,
+        "y": 62
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aidb_wal_bytes{job=\"aidb-cluster-exporter\", node=\"$node\"}",
+          "legendFormat": "WAL",
+          "refId": "A"
+        }
+      ],
+      "title": "AiDb WAL",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- Block Cache \u4f7f\u7528\u7387 (%)\n\n**\u989c\u8272\u9608\u503c**:\n- \u7eff\u8272 (0-70%): \u6b63\u5e38\n- \u9ec4\u8272 (70-90%): \u8b66\u544a\uff0c\u7f13\u5b58\u63a5\u8fd1\u9971\u548c\n- \u7ea2\u8272 (>90%): \u5371\u9669\uff0c\u7f13\u5b58\u9971\u548c\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u4f7f\u7528\u7387\u6301\u7eed >80% \u2192 \u8003\u8651\u6269\u5bb9 Block Cache",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "yellow",
+                "value": 0.7
+              },
+              {
+                "color": "red",
+                "value": 0.9
+              }
+            ]
+          },
+          "unit": "percentunit"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 62
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "aidb_block_cache_bytes{job=\"aidb-cluster-exporter\", node=\"$node\"} / aidb_block_cache_capacity_bytes{job=\"aidb-cluster-exporter\", node=\"$node\"}",
+          "legendFormat": "Block Cache \u4f7f\u7528\u7387",
+          "refId": "A"
+        }
+      ],
+      "title": "AiDb Block Cache",
+      "type": "timeseries"
+    }
+  ],
+  "preload": false,
+  "refresh": "5s",
+  "schemaVersion": 42,
+  "tags": [
+    "aikv",
+    "aidb",
+    "node"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "master-1",
+          "value": "master-1"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "definition": "label_values(up{job=~\"aikv-cluster-exporter|aidb-cluster-exporter\"}, node)",
+        "description": "aikv \u96c6\u7fa4\u8282\u70b9",
+        "label": "node",
+        "name": "node",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(up{job=~\"aikv-cluster-exporter|aidb-cluster-exporter\"}, node)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "AiKv Node",
+  "uid": "aikv-node",
+  "version": 1,
+  "weekStart": ""
+}

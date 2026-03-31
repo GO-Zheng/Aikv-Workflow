@@ -31,6 +31,11 @@ scrape_configs:
           - "aikv-exporter-replica-1:9121"
           - "aikv-exporter-replica-2:9121"
           - "aikv-exporter-replica-3:9121"
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: 'aikv-exporter-(.+):\d+'
+        replacement: '${1}'
+        target_label: node
 
   - job_name: "aidb-cluster-exporter"
     static_configs:
@@ -41,3 +46,8 @@ scrape_configs:
           - "aidb-exporter-replica-1:9120"
           - "aidb-exporter-replica-2:9120"
           - "aidb-exporter-replica-3:9120"
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: 'aidb-exporter-(.+):\d+'
+        replacement: '${1}'
+        target_label: node
