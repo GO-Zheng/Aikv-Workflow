@@ -202,7 +202,7 @@ if [ ${MASTER_COUNT} -gt 2 ]; then
 fi
 echo
 
-# Step 4: Promote learners to voters
+# Step 4: 晋升 learner 为 voter
 print_info "Step 4: Promoting learners to voters..."
 sleep 2
 bs_host="${MASTERS[0]%:*}"

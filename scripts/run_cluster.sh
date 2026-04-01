@@ -154,7 +154,7 @@ if [[ "$DO_INIT" == "true" ]]; then
 
     echo ""
     echo "=== 运行集群功能测试 ==="
-    "$SCRIPT_DIR/test/test_cluster_functional.sh"
+    "$PROJECT_DIR/tests/test_cluster_functional.sh"
 else
     echo "跳过集群初始化。如需手动初始化，请运行:"
     echo "  ./scripts/init_cluster.sh"
