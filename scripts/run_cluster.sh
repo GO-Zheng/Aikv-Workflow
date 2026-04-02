@@ -24,6 +24,16 @@ ACTION="start"
 DO_INIT=true
 WITH_CLUSTER_MONITOR=false
 IMAGE_NAME="aikv:latest"
+BOOTSTRAP_MODIFIED=false
+
+# 意外退出时恢复配置
+restore_bootstrap() {
+    if [[ "$BOOTSTRAP_MODIFIED" == "true" && -f "$BOOTSTRAP_BACKUP" ]]; then
+        echo "意外退出，恢复 is_bootstrap 为 false..."
+        mv "$BOOTSTRAP_BACKUP" "$BOOTSTRAP_CONFIG"
+    fi
+}
+trap 'restore_bootstrap' EXIT
 
 # 解析参数
 while [[ $# -gt 0 ]]; do
@@ -101,6 +111,23 @@ if ! docker image inspect "$IMAGE_NAME" >/dev/null 2>&1; then
     exit 1
 fi
 
+# 检查并设置 is_bootstrap 配置
+BOOTSTRAP_CONFIG="$PROJECT_DIR/config/aikv-master-1.toml"
+BOOTSTRAP_BACKUP="$PROJECT_DIR/config/aikv-master-1.toml.bak"
+
+if [[ -f "$BOOTSTRAP_CONFIG" ]]; then
+    if grep -q 'is_bootstrap = true' "$BOOTSTRAP_CONFIG"; then
+        echo "is_bootstrap 已为 true，无需修改"
+    else
+        echo "is_bootstrap 为 false，修改为 true..."
+        cp "$BOOTSTRAP_CONFIG" "$BOOTSTRAP_BACKUP"
+        sed -i 's/is_bootstrap = false/is_bootstrap = true/' "$BOOTSTRAP_CONFIG"
+        BOOTSTRAP_MODIFIED=true
+    fi
+else
+    echo "警告: 配置文件 $BOOTSTRAP_CONFIG 不存在，跳过 bootstrap 检查"
+fi
+
 # 启动集群容器
 echo "启动 AiKv 集群..."
 docker compose -p aikv-cluster -f "$CLUSTER_COMPOSE" up -d
@@ -154,7 +181,14 @@ if [[ "$DO_INIT" == "true" ]]; then
 
     echo ""
     echo "=== 运行集群功能测试 ==="
-    "$PROJECT_DIR/tests/test_cluster_functional.sh"
+    if "$PROJECT_DIR/tests/test_cluster_functional.sh"; then
+        echo ""
+        echo "=== 功能测试通过 ==="
+    else
+        echo ""
+        echo "=== 功能测试失败 ==="
+        exit 1
+    fi
 else
     echo "跳过集群初始化。如需手动初始化，请运行:"
     echo "  ./scripts/init_cluster.sh"

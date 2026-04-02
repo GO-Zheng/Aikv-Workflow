@@ -29,33 +29,33 @@ user-invocable: true
 ### build
 构建 AiKv 二进制（使用本地 AiDb）
 ```bash
-./scripts/build_bin.sh
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/build_bin.sh
 ```
 
 ### docker-build
 构建 AiKv Docker 镜像（使用本地 AiDb）
 ```bash
-./scripts/build_docker.sh --cluster  # 集群模式镜像
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/build_docker.sh --cluster  # 集群模式镜像
 ```
 
 ### docker-run-single
 启动 AiKv 单节点 Docker 容器
 ```bash
-./scripts/run_docker.sh
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/run_docker.sh
 ```
 
 ### docker-run-cluster
 启动 AiKv 集群（3主3从 Docker 容器，默认会初始化并测试）
 ```bash
-./scripts/run_cluster.sh           # 启动并初始化 + 功能测试（默认）
-./scripts/run_cluster.sh --no-init # 仅启动（不初始化）
-./scripts/run_cluster.sh --stop    # 停止
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/run_cluster.sh           # 启动并初始化 + 功能测试（默认）
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/run_cluster.sh --no-init # 仅启动（不初始化）
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/run_cluster.sh --stop    # 停止
 ```
 
 ### cluster-init
 初始化 AiKv 集群（启动集群后必须执行）
 ```bash
-./scripts/init_cluster.sh
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/init_cluster.sh
 ```
 
 ### cluster-status
@@ -68,15 +68,15 @@ redis-cli -p 6379 CLUSTER NODES
 ### monitor
 启动监控栈（Prometheus + Grafana + node-exporter + aikv-exporter + Loki + Promtail）
 ```bash
-docker compose -f docker-compose-monitor.yaml up -d
+cd /root/code/wiqun/Aikv-Workflow/docker && docker compose -f docker-compose-monitor.yaml up -d
 ```
 
 ### cleanup
 清理 AiKv 资源
 ```bash
-./scripts/cleanup.sh --force            # 仅清理 AiKv（保留 Monitor）
-./scripts/cleanup.sh --cluster --force  # 清理集群
-./scripts/cleanup.sh --all --force      # 清理全部（包括 Monitor）
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/cleanup.sh --force            # 仅清理 AiKv（保留 Monitor）
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/cleanup.sh --cluster --force  # 清理集群
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/cleanup.sh --all --force      # 清理全部（包括 Monitor）
 ```
 
 ## 集群模式说明

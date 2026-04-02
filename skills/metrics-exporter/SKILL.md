@@ -26,43 +26,43 @@ user-invocable: true
 
 ### 列出可用指标
 ```bash
-./scripts/export_metrics.sh --list
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --list
 ```
 
 ### 导出单个指标（相对时间）
 ```bash
 # 导出最近 5 分钟的 User CPU
-./scripts/export_metrics.sh --metric=redis_cpu_user_seconds_total --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=redis_cpu_user_seconds_total --duration=5m
 
 # 导出最近 1 小时
-./scripts/export_metrics.sh --metric=redis_cpu_sys_seconds_total --duration=1h
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=redis_cpu_sys_seconds_total --duration=1h
 ```
 
 ### 导出单个指标（绝对时间）
 ```bash
 # 导出今天 11:30 - 12:00 的 OPS
-./scripts/export_metrics.sh --metric=ops --start=11:30 --end=12:00
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=ops --start=11:30 --end=12:00
 
 # 导出指定日期时间范围
-./scripts/export_metrics.sh --metric=all --start="2026-03-26 11:30" --end="2026-03-26 12:00"
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all --start="2026-03-26 11:30" --end="2026-03-26 12:00"
 
 # 也支持 ISO 格式
-./scripts/export_metrics.sh --metric=ops --start="2026-03-26T11:30" --end="2026-03-26T12:00"
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=ops --start="2026-03-26T11:30" --end="2026-03-26T12:00"
 ```
 
 ### 导出所有 CPU 指标
 ```bash
-./scripts/export_metrics.sh --metric=all_cpu --duration=30m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all_cpu --duration=30m
 ```
 
 ### 导出所有 AiKv 指标
 ```bash
-./scripts/export_metrics.sh --metric=all --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all --duration=5m
 ```
 
 ### 输出 CSV 格式
 ```bash
-./scripts/export_metrics.sh --metric=all_cpu --duration=1h --format=csv
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all_cpu --duration=1h --format=csv
 ```
 
 ## 常用指标
@@ -116,7 +116,7 @@ user-invocable: true
 
 1. 导出数据：
 ```bash
-./scripts/export_metrics.sh --metric=all_cpu --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all_cpu --duration=5m
 ```
 
 2. 将 JSON 输出发送给 AI 分析
@@ -126,11 +126,11 @@ user-invocable: true
 1. 导出数据：
 ```bash
 # 导出 QPS 和 OPS
-./scripts/export_metrics.sh --metric=qps --duration=5m
-./scripts/export_metrics.sh --metric=ops --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=qps --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=ops --duration=5m
 
 # 导出指定时间范围
-./scripts/export_metrics.sh --metric=ops --start=11:30 --end=12:00
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=ops --start=11:30 --end=12:00
 ```
 
 2. 将 JSON 输出发送给 AI 分析
@@ -140,10 +140,10 @@ user-invocable: true
 1. 导出各命令类型的 QPS：
 ```bash
 # 导出所有命令类型的趋势
-./scripts/export_metrics.sh --metric=redis_commands_total --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=redis_commands_total --duration=5m
 
 # 导出指定时间范围
-./scripts/export_metrics.sh --metric=redis_commands_total --start=11:30 --end=12:00
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=redis_commands_total --start=11:30 --end=12:00
 ```
 
 2. 将 JSON 输出发送给 AI 分析
@@ -153,10 +153,10 @@ user-invocable: true
 1. 导出各命令占比（已计算好百分比）：
 ```bash
 # 导出当前各命令占比
-./scripts/export_metrics.sh --metric=command_ratio --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=command_ratio --duration=5m
 
 # 导出指定时间范围
-./scripts/export_metrics.sh --metric=command_ratio --start=11:30 --end=12:00
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=command_ratio --start=11:30 --end=12:00
 ```
 
 2. 直接返回每个命令的占比 (0-1) 发送给 AI 分析
@@ -166,14 +166,14 @@ user-invocable: true
 1. 导出数据：
 ```bash
 # 导出命中率趋势
-./scripts/export_metrics.sh --metric=keyspace_ratio --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=keyspace_ratio --duration=5m
 
 # 导出命中和未命中次数
-./scripts/export_metrics.sh --metric=keyspace_hits --duration=5m
-./scripts/export_metrics.sh --metric=keyspace_misses --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=keyspace_hits --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=keyspace_misses --duration=5m
 
 # 导出指定时间范围
-./scripts/export_metrics.sh --metric=keyspace_ratio --start=11:30 --end=12:00
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=keyspace_ratio --start=11:30 --end=12:00
 ```
 
 2. 将 JSON 输出发送给 AI 分析
@@ -183,15 +183,15 @@ user-invocable: true
 1. 导出数据：
 ```bash
 # 导出 P50/P95/P99 延迟
-./scripts/export_metrics.sh --metric=latency_p50 --duration=5m
-./scripts/export_metrics.sh --metric=latency_p95 --duration=5m
-./scripts/export_metrics.sh --metric=latency_p99 --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=latency_p50 --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=latency_p95 --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=latency_p99 --duration=5m
 
 # 导出各命令类型延迟
-./scripts/export_metrics.sh --metric=latency_by_cmd --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=latency_by_cmd --duration=5m
 
 # 导出指定时间范围
-./scripts/export_metrics.sh --metric=latency_p99 --start=11:30 --end=12:00
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=latency_p99 --start=11:30 --end=12:00
 ```
 
 2. 将 JSON 输出发送给 AI 分析
@@ -201,14 +201,14 @@ user-invocable: true
 1. 导出数据：
 ```bash
 # 导出网络输入/输出速率
-./scripts/export_metrics.sh --metric=net_input_rate --duration=5m
-./scripts/export_metrics.sh --metric=net_output_rate --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=net_input_rate --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=net_output_rate --duration=5m
 
 # 导出所有网络 I/O 指标
-./scripts/export_metrics.sh --metric=all_net --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all_net --duration=5m
 
 # 导出指定时间范围
-./scripts/export_metrics.sh --metric=net_input_rate --start=11:30 --end=12:00
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=net_input_rate --start=11:30 --end=12:00
 ```
 
 2. 将 JSON 输出发送给 AI 分析
@@ -218,18 +218,18 @@ user-invocable: true
 1. 导出数据：
 ```bash
 # 导出磁盘读取/写入速率
-./scripts/export_metrics.sh --metric=disk_read_rate --duration=5m
-./scripts/export_metrics.sh --metric=disk_write_rate --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=disk_read_rate --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=disk_write_rate --duration=5m
 
 # 导出磁盘 IOPS
-./scripts/export_metrics.sh --metric=disk_read_iops --duration=5m
-./scripts/export_metrics.sh --metric=disk_write_iops --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=disk_read_iops --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=disk_write_iops --duration=5m
 
 # 导出所有磁盘 I/O 指标
-./scripts/export_metrics.sh --metric=all_disk --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all_disk --duration=5m
 
 # 导出指定时间范围
-./scripts/export_metrics.sh --metric=disk_read_rate --start=11:30 --end=12:00
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=disk_read_rate --start=11:30 --end=12:00
 ```
 
 2. 将 JSON 输出发送给 AI 分析

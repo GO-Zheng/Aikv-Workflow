@@ -92,26 +92,26 @@ AiKv 使用 Raft consensus（通过 AiDb），不同于 Redis gossip protocol。
 
 ### 启动单节点
 ```bash
-./scripts/build_docker.sh
-./scripts/run_docker.sh
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/build_docker.sh
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/run_docker.sh
 ```
 
 ### 启动集群
 ```bash
-./scripts/build_docker.sh --cluster
-./scripts/run_cluster.sh  # 自动初始化 + 功能测试
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/build_docker.sh --cluster
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/run_cluster.sh  # 自动初始化 + 功能测试
 ```
 
 ### 启动监控栈
 ```bash
-docker compose -f docker-compose-monitor.yaml up -d
+cd /root/code/wiqun/Aikv-Workflow/docker && docker compose -f docker-compose-monitor.yaml up -d
 ```
 
 ### 清理环境
 ```bash
-./scripts/cleanup.sh --force            # 清理 AiKv（保留 Monitor）
-./scripts/cleanup.sh --cluster --force  # 清理集群
-./scripts/cleanup.sh --all --force      # 清理全部
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/cleanup.sh --force            # 清理 AiKv（保留 Monitor）
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/cleanup.sh --cluster --force  # 清理集群
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/cleanup.sh --all --force      # 清理全部
 ```
 
 ### 检查集群状态
@@ -137,12 +137,12 @@ tail -f logs/cluster/aikv-m1.log
 
 **metrics-exporter Skill：**
 ```bash
-./scripts/export_metrics.sh --metric=all --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all --duration=5m
 ```
 
 **logs-exporter Skill：**
 ```bash
-./scripts/export_logs.sh --service=aikv --duration=5m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --service=aikv --duration=5m
 ```
 
 ## 触发条件

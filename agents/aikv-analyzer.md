@@ -67,7 +67,7 @@ z'z'z'z'zent 是**测试调优工作流**的最后一环：
 
 ```bash
 # 导出测试时间范围内的所有指标
-./scripts/export_metrics.sh --metric=all --start="测试开始时间" --end="测试结束时间"
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all --start="测试开始时间" --end="测试结束时间"
 ```
 
 ### 2. 合理性分析
