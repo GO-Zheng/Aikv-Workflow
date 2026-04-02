@@ -8,7 +8,7 @@ port = 6379
 [cluster]
 enabled = true
 raft_address = "aikv-master-1:50051"
-is_bootstrap = false
+is_bootstrap = true
 
 [storage]
 engine = "aidb"
