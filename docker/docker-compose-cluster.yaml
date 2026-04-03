@@ -11,13 +11,15 @@
 # 启动后需要运行初始化脚本:
 #   docker compose -f docker-compose-cluster.yaml up -d
 #   ./scripts/init_cluster.sh
+#
+# 镜像由环境变量 AIKV_CLUSTER_IMAGE 指定（默认 aikv:cluster），run_cluster.sh 启动前会导出。
 
 services:
   # ============================================================
   # Master-1 (Bootstrap Node)
   # ============================================================
   aikv-master-1:
-    image: aikv:cluster
+    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
     container_name: aikv-master-1
     hostname: aikv-master-1
     user: root
@@ -26,8 +28,8 @@ services:
       - "6379:6379"   # Redis protocol
       - "50051:50051" # Raft gRPC
     volumes:
-      - ../data/aikv-cluster/master-1:/app/data
-      - ../logs/cluster:/app/logs
+      # - ../data/aikv-cluster/master-1:/app/data
+      # - ../logs/cluster:/app/logs
       - ../config/aikv-master-1.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
@@ -49,7 +51,7 @@ services:
   # Replica-1 (of Master-1)
   # ============================================================
   aikv-replica-1:
-    image: aikv:cluster
+    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
     container_name: aikv-replica-1
     hostname: aikv-replica-1
     user: root
@@ -58,8 +60,8 @@ services:
       - "6380:6379"
       - "50052:50051"
     volumes:
-      - ../data/aikv-cluster/replica-1:/app/data
-      - ../logs/cluster:/app/logs
+      # - ../data/aikv-cluster/replica-1:/app/data
+      # - ../logs/cluster:/app/logs
       - ../config/aikv-replica-1.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
@@ -79,7 +81,7 @@ services:
   # Master-2
   # ============================================================
   aikv-master-2:
-    image: aikv:cluster
+    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
     container_name: aikv-master-2
     hostname: aikv-master-2
     user: root
@@ -88,8 +90,8 @@ services:
       - "6381:6379"
       - "50053:50051"
     volumes:
-      - ../data/aikv-cluster/master-2:/app/data
-      - ../logs/cluster:/app/logs
+      # - ../data/aikv-cluster/master-2:/app/data
+      # - ../logs/cluster:/app/logs
       - ../config/aikv-master-2.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
@@ -109,7 +111,7 @@ services:
   # Replica-2 (of Master-2)
   # ============================================================
   aikv-replica-2:
-    image: aikv:cluster
+    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
     container_name: aikv-replica-2
     hostname: aikv-replica-2
     user: root
@@ -118,8 +120,8 @@ services:
       - "6382:6379"
       - "50054:50051"
     volumes:
-      - ../data/aikv-cluster/replica-2:/app/data
-      - ../logs/cluster:/app/logs
+      # - ../data/aikv-cluster/replica-2:/app/data
+      # - ../logs/cluster:/app/logs
       - ../config/aikv-replica-2.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
@@ -139,7 +141,7 @@ services:
   # Master-3
   # ============================================================
   aikv-master-3:
-    image: aikv:cluster
+    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
     container_name: aikv-master-3
     hostname: aikv-master-3
     user: root
@@ -148,8 +150,8 @@ services:
       - "6383:6379"
       - "50055:50051"
     volumes:
-      - ../data/aikv-cluster/master-3:/app/data
-      - ../logs/cluster:/app/logs
+      # - ../data/aikv-cluster/master-3:/app/data
+      # - ../logs/cluster:/app/logs
       - ../config/aikv-master-3.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
@@ -169,7 +171,7 @@ services:
   # Replica-3 (of Master-3)
   # ============================================================
   aikv-replica-3:
-    image: aikv:cluster
+    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
     container_name: aikv-replica-3
     hostname: aikv-replica-3
     user: root
@@ -178,8 +180,8 @@ services:
       - "6384:6379"
       - "50056:50051"
     volumes:
-      - ../data/aikv-cluster/replica-3:/app/data
-      - ../logs/cluster:/app/logs
+      # - ../data/aikv-cluster/replica-3:/app/data
+      # - ../logs/cluster:/app/logs
       - ../config/aikv-replica-3.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug

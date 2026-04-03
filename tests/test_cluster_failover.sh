@@ -48,6 +48,13 @@ info "Replica $REPLICA_PORT 状态: $replica_info"
 replica_master_id=$(echo "$replica_info" | awk '{print4}' | tr -d '\r')
 info "Replica 的 master ID: $replica_master_id"
 
+# 检查 MetaRaft 投票者/学习者状态
+echo -e "${BLUE}[步骤 1.5] MetaRaft 投票者/学习者状态${NC}"
+info "检查 $MASTER_PORT 的 MetaRaft 成员状态..."
+redis-cli -h 127.0.0.1 -p $MASTER_PORT CLUSTER METARAFT MEMBERS 2>/dev/null || warn "无法获取 MetaRaft 成员状态"
+info "检查 $REPLICA_PORT 的 MetaRaft 成员状态..."
+redis-cli -h 127.0.0.1 -p $REPLICA_PORT CLUSTER METARAFT MEMBERS 2>/dev/null || warn "无法获取 MetaRaft 成员状态"
+
 echo ""
 
 # --- 2. 写入测试数据 ---
@@ -98,6 +105,11 @@ info "已分配 slots: $cluster_slots_assigned"
 # 检查 replica 是否接管了原来 master 的 slots
 replica_slots=$(redis-cli -h 127.0.0.1 -p $REPLICA_PORT CLUSTER NODES 2>/dev/null | grep "master" | head -1 | awk '{print9}' | tr -d '\r' || echo "")
 info "Replica 接管 slots: ${replica_slots:-无}"
+
+# 检查 MetaRaft 投票者/学习者状态（故障后）
+echo -e "${BLUE}[步骤 4.5] MetaRaft 投票者/学习者状态（故障后）${NC}"
+info "检查 $REPLICA_PORT 的 MetaRaft 成员状态..."
+redis-cli -h 127.0.0.1 -p $REPLICA_PORT CLUSTER METARAFT MEMBERS 2>/dev/null || warn "无法获取 MetaRaft 成员状态"
 
 echo ""
 

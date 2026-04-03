@@ -8,8 +8,8 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ../data/aikv:/app/data
-      - ../logs:/app/logs
+      # - ../data/aikv:/app/data
+      # - ../logs:/app/logs
       - ../config/aikv.toml:/app/aikv.toml:ro
     environment:
       - RUST_LOG=debug

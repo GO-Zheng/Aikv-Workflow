@@ -7,7 +7,7 @@ port = 6379
 
 [cluster]
 enabled = true
-raft_address = "aikv-replica-2:50054"
+raft_address = "aikv-replica-2:50051"
 is_bootstrap = false
 peers = []
 

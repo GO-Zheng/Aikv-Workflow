@@ -311,6 +311,96 @@ for i in "${!REPLICAS[@]}"; do
 done
 echo
 
+# 步骤 7.5: 添加 replicas 到 MetaRaft 并提升为 voters
+# 这是自动故障转移的关键 - replicas 必须是 MetaRaft voter 才能参与 leader 选举
+print_info "Step 7.5: Adding replicas to MetaRaft and promoting to voters..."
+
+bs_host="${MASTERS[0]%:*}"
+bs_port="${MASTERS[0]#*:}"
+
+# 获取当前的 MetaRaft members
+print_info "Current MetaRaft members:"
+${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER METARAFT MEMBERS 2>/dev/null || true
+echo ""
+
+# 首先获取 replicas 的实际 node IDs（从 CLUSTER MYID 获取）
+# 这些是 replica 节点通过 generate_node_id_from_addr() 生成的真实 ID
+declare -A REPLICA_RAFT_IDS
+declare -a REPLICA_RAFT_HOSTNAMES=("aikv-replica-1" "aikv-replica-2" "aikv-replica-3")
+
+print_info "Getting actual node IDs for replicas from CLUSTER MYID..."
+for i in "${!REPLICAS[@]}"; do
+    replica="${REPLICAS[$i]}"
+    raft_hostname="${REPLICA_RAFT_HOSTNAMES[$i]}"
+    IFS=':' read -r r_host r_port <<< "${replica}"
+
+    # Get actual node ID from the replica itself (this is the hash-based ID)
+    replica_node_id=$(get_node_id ${r_host} ${r_port})
+    if [ -z "${replica_node_id}" ] || [ "${replica_node_id}" == "(nil)" ]; then
+        print_error "Failed to get node ID for replica ${replica}"
+        exit 1
+    fi
+    REPLICA_RAFT_IDS["${replica}"]="${replica_node_id}"
+    print_info "  Replica ${replica} -> Node ID ${replica_node_id}"
+done
+
+# 构建晋升列表
+promotion_list=""
+for replica in "${REPLICAS[@]}"; do
+    raft_id="${REPLICA_RAFT_IDS[$replica]}"
+    if [ -n "${promotion_list}" ]; then
+        promotion_list="${promotion_list} "
+    fi
+    promotion_list="${promotion_list}${raft_id}"
+done
+
+# 添加 replicas 作为 MetaRaft learners
+# 注意：地址使用 Docker 主机名和内部端口（50051），不是 127.0.0.1
+# 因为 Raft leader 在容器内运行，必须用容器间可访问的地址
+for i in "${!REPLICAS[@]}"; do
+    replica="${REPLICAS[$i]}"
+    raft_id="${REPLICA_RAFT_IDS[$replica]}"
+    raft_hostname="${REPLICA_RAFT_HOSTNAMES[$i]}"
+    # 内部端口 50051（每个容器的 gRPC 监听端口）
+    raft_addr="${raft_hostname}:50051"
+
+    print_info "Adding ${replica} (Raft ID: ${raft_id}, addr: ${raft_addr}) as MetaRaft learner..."
+    add_output=$(${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER METARAFT ADDLEARNER ${raft_id} ${raft_addr} 2>&1)
+    if echo "${add_output}" | grep -q "OK"; then
+        print_success "Added ${replica} as learner"
+    else
+        print_warn "Failed to add ${replica} as learner: ${add_output}"
+    fi
+done
+
+# 等待 learners 被添加
+sleep 2
+
+# 获取当前的 voters 和 learners
+# Parse the output of METARAFT MEMBERS - format is: ID, role, ID, role, etc.
+voters_output=$(${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER METARAFT MEMBERS 2>/dev/null || echo "")
+print_info "MetaRaft members after adding learners:"
+echo "${voters_output}"
+
+print_info "Promoting to voters: ${promotion_list}"
+
+# 执行晋升 - 注意 promotion_list 是空格分隔的参数
+promo_output=$(${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER METARAFT PROMOTE ${promotion_list} 2>&1)
+if echo "${promo_output}" | grep -q "OK"; then
+    print_success "Replicas promoted to MetaRaft voters"
+else
+    print_warn "Failed to promote replicas: ${promo_output}"
+    print_warn "Automatic failover may not work"
+fi
+
+# 等待晋升传播
+sleep 2
+
+# 验证晋升结果
+print_info "MetaRaft members after promotion:"
+${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER METARAFT MEMBERS 2>/dev/null || true
+echo ""
+
 # 步骤 8: 验证集群状态
 print_info "Step 8: Verifying cluster status..."
 sleep 2

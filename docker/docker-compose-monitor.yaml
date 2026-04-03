@@ -69,7 +69,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
-      - ../data/prometheus:/prometheus
+      # - ../data/prometheus:/prometheus
     restart: unless-stopped
     networks:
       - aikv-workflow
@@ -89,7 +89,7 @@ services:
       - "3100:3100"
     volumes:
       - ./loki.yaml:/etc/loki/loki.yaml:ro
-      - ../data/loki:/loki
+      # - ../data/loki:/loki
     restart: unless-stopped
     networks:
       - aikv-workflow
@@ -104,7 +104,7 @@ services:
       - "9081:9081"
     volumes:
       - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
-      - ../logs:/var/log/aikv:ro
+      # - ../logs:/var/log/aikv:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
     networks:
@@ -120,7 +120,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ../data/grafana:/var/lib/grafana
+      # - ../data/grafana:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
     restart: unless-stopped
     networks:

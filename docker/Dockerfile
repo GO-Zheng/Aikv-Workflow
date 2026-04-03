@@ -36,7 +36,7 @@ RUN sed -i 's|aidb = { .*git.*github.com/wiqun/AiDb.* }|aidb = { path = "./AiDb"
 
 # 编译
 ARG FEATURES=""
-RUN cargo build --release ${FEATURES:+--features $FEATURES} --bin aikv
+RUN cargo build --release --features "$FEATURES" --bin aikv
 
 # 移除调试符号
 RUN strip target/release/aikv
