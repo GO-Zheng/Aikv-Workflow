@@ -19,8 +19,8 @@ CLI="redis-cli -h $HOST -p $PORT"
 CLI_CLUSTER="redis-cli -c -h $HOST -p $PORT"  # 集群模式
 
 # 集群节点配置
-MASTER_PORTS=(6379 6380 6381)
-REPLICA_PORTS=(6382 6383 6384)
+MASTER_PORTS=(6379 6381 6383)
+REPLICA_PORTS=(6380 6382 6384)
 ALL_PORTS=(6379 6380 6381 6382 6383 6384)
 
 RED='\033[0;31m'
@@ -127,8 +127,13 @@ echo -e "\n${YELLOW}[路由] 跨节点数据操作${NC}"
 test_key="{cluster_test}:key1"
 test_value="value_from_port_$PORT"
 
-# 写入
-$CLI_CLUSTER SET "$test_key" "$test_value" >/dev/null 2>&1 && ok "SET $test_key" || fail "SET $test_key"
+# 写入（检查实际响应，redis-cli 返回 ERR 时 exit code 也为 0）
+set_result=$($CLI_CLUSTER SET "$test_key" "$test_value" 2>&1)
+if [ "$set_result" = "OK" ]; then
+    ok "SET $test_key"
+else
+    fail "SET $test_key (got: $set_result)"
+fi
 
 # 读取（可能路由到其他节点）
 result=$($CLI_CLUSTER GET "$test_key" 2>/dev/null)
@@ -177,7 +182,7 @@ echo -e "\n${YELLOW}[复制] 验证主从关系${NC}"
 master_6379_role=$($CLI CLUSTER NODES 2>/dev/null | grep "127.0.0.1:6379" | grep "master" | head -1)
 if echo "$master_6379_role" | grep -q "slave"; then
     # 6379 是 slave，找到它的 master
-    master_of_6379=$(echo "$master_6379_role" | awk '{print4}' | tr -d '\r')
+    master_of_6379=$(echo "$master_6379_role" | awk '{print $4}' | tr -d '\r')
     info "6379 是 replica of $master_of_6379"
 else
     ok "6379 是 master 或独立节点"

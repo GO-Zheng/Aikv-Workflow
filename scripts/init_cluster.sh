@@ -160,54 +160,49 @@ done
 echo
 
 # 步骤 3: 通过 MetaRaft 将非 bootstrap 的 master 添加为 learner
+# 使用每个 master 的 **实际 node_id**（由 CLUSTER MYID 返回），而不是硬编码整数。
+# 这样 MetaRaft membership 中的 node_id 与数据 Raft 组使用的 node_id 一致，
+# 从而允许 peer_raft_grpc_addr() 通过 MetaRaft membership 查找正确的 gRPC 地址。
 print_info "Step 3: Adding masters as MetaRaft learners..."
-# Node 1 (bootstrap) 已经是 voter，将节点 2 和 3 添加为 learner
-if [ ${MASTER_COUNT} -gt 1 ]; then
-    node2="${MASTERS[1]}"
-    node2_id="${MASTER_IDS[$node2]}"
-    IFS=':' read -r host2 port2 <<< "${node2}"
-    # Get Raft address for node 2 (port 50053 for second master)
-    raft_port2=$((50051 + (${port2#127.0.0.1:} - 6379) + 50051 - 6379 + 1))
-    # Actually, calculate raft port based on container hostname pattern
-    # master-1 -> 50051, master-2 -> 50053, master-3 -> 50055
-    if [[ ${node2} == *"6381"* ]]; then
-        raft_addr="aikv-master-2:50053"
-    elif [[ ${node2} == *"6383"* ]]; then
-        raft_addr="aikv-master-3:50055"
+# Docker 容器内部 gRPC 端口映射: master-N 使用 raft_address 中配置的端口
+declare -A RAFT_ADDRS
+RAFT_ADDRS["127.0.0.1:6379"]="aikv-master-1:50051"
+RAFT_ADDRS["127.0.0.1:6381"]="aikv-master-2:50053"
+RAFT_ADDRS["127.0.0.1:6383"]="aikv-master-3:50055"
+
+bs_host="${MASTERS[0]%:*}"
+bs_port="${MASTERS[0]#*:}"
+
+# 构建待晋升列表（实际 node_id）
+promotion_master_ids=""
+
+for i in "${!MASTERS[@]}"; do
+    # 跳过 bootstrap（它已经是 voter）
+    [ $i -eq 0 ] && continue
+
+    node="${MASTERS[$i]}"
+    node_id="${MASTER_IDS[$node]}"
+    raft_addr="${RAFT_ADDRS[$node]}"
+
+    if [ -z "${raft_addr}" ]; then
+        print_error "No Raft address mapping for ${node}"
+        exit 1
     fi
 
-    print_info "Adding ${node2} as learner..."
-    if ! ${REDIS_CLI} -h ${host2} -p ${port2} CLUSTER METARAFT ADDLEARNER 2 ${raft_addr} 2>&1 | grep -q "OK"; then
-        # Try from bootstrap node
-        bs_host="${MASTERS[0]%:*}"
-        bs_port="${MASTERS[0]#*:}"
-        ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER METARAFT ADDLEARNER 2 ${raft_addr} 2>&1
-    fi
-fi
+    print_info "Adding ${node} (ID: ${node_id}) as learner at ${raft_addr}..."
+    ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER METARAFT ADDLEARNER ${node_id} ${raft_addr} 2>&1
 
-if [ ${MASTER_COUNT} -gt 2 ]; then
-    node3="${MASTERS[2]}"
-    node3_id="${MASTER_IDS[$node3]}"
-    IFS=':' read -r host3 port3 <<< "${node3}"
-    if [[ ${node3} == *"6381"* ]]; then
-        raft_addr="aikv-master-2:50053"
-    elif [[ ${node3} == *"6383"* ]]; then
-        raft_addr="aikv-master-3:50055"
+    if [ -n "${promotion_master_ids}" ]; then
+        promotion_master_ids="${promotion_master_ids} "
     fi
-
-    print_info "Adding ${node3} as learner..."
-    bs_host="${MASTERS[0]%:*}"
-    bs_port="${MASTERS[0]#*:}"
-    ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER METARAFT ADDLEARNER 3 ${raft_addr} 2>&1
-fi
+    promotion_master_ids="${promotion_master_ids}${node_id}"
+done
 echo
 
 # Step 4: 晋升 learner 为 voter
 print_info "Step 4: Promoting learners to voters..."
 sleep 2
-bs_host="${MASTERS[0]%:*}"
-bs_port="${MASTERS[0]#*:}"
-promote_output=$(${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER METARAFT PROMOTE 2 3 2>&1)
+promote_output=$(${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER METARAFT PROMOTE ${promotion_master_ids} 2>&1)
 if echo "${promote_output}" | grep -q "OK"; then
     print_success "Learners promoted to voters"
 else

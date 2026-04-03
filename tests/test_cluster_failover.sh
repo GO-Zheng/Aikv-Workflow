@@ -9,7 +9,7 @@
 set -e
 
 MASTER_PORT="${1:-6379}"
-REPLICA_PORT="${2:-6382}"
+REPLICA_PORT="${2:-6380}"
 MASTER_CONTAINER="aikv-master-1"
 REPLICA_CONTAINER="aikv-replica-1"
 
@@ -45,7 +45,7 @@ replica_info=$(redis-cli -h 127.0.0.1 -p $REPLICA_PORT CLUSTER NODES 2>/dev/null
 info "Replica $REPLICA_PORT 状态: $replica_info"
 
 # 查找 replica 对应的 master
-replica_master_id=$(echo "$replica_info" | awk '{print4}' | tr -d '\r')
+replica_master_id=$(echo "$replica_info" | awk '{print $4}' | tr -d '\r')
 info "Replica 的 master ID: $replica_master_id"
 
 # 检查 MetaRaft 投票者/学习者状态
@@ -92,7 +92,7 @@ echo ""
 echo -e "${YELLOW}[步骤 4] 检查 replica 是否提升为 master${NC}"
 
 # 检查 replica 的角色变化
-replica_role=$(redis-cli -h 127.0.0.1 -p $REPLICA_PORT CLUSTER NODES 2>/dev/null | grep -v "myself" | grep "$REPLICA_PORT" | awk '{print3}' | tr -d '\r' || echo "unknown")
+replica_role=$(redis-cli -h 127.0.0.1 -p $REPLICA_PORT CLUSTER NODES 2>/dev/null | grep "myself" | awk '{print $3}' | tr -d '\r' || echo "unknown")
 info "Replica $REPLICA_PORT 当前角色: $replica_role"
 
 # 检查集群状态
@@ -103,7 +103,7 @@ info "集群状态: $cluster_state"
 info "已分配 slots: $cluster_slots_assigned"
 
 # 检查 replica 是否接管了原来 master 的 slots
-replica_slots=$(redis-cli -h 127.0.0.1 -p $REPLICA_PORT CLUSTER NODES 2>/dev/null | grep "master" | head -1 | awk '{print9}' | tr -d '\r' || echo "")
+replica_slots=$(redis-cli -h 127.0.0.1 -p $REPLICA_PORT CLUSTER NODES 2>/dev/null | grep "myself" | awk '{print $9}' | tr -d '\r' || echo "")
 info "Replica 接管 slots: ${replica_slots:-无}"
 
 # 检查 MetaRaft 投票者/学习者状态（故障后）
