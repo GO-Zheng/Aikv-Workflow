@@ -34,12 +34,16 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKER_ENV="$(dirname "$SCRIPT_DIR")/docker/.env"
-if [[ -f "$DOCKER_ENV" ]]; then
-  set -a
-  # shellcheck disable=SC1090
-  source "$DOCKER_ENV"
-  set +a
+if [[ ! -f "$DOCKER_ENV" ]]; then
+  echo "错误: 缺少环境文件 $DOCKER_ENV" >&2
+  echo "请先复制 docker/.env.example 为 docker/.env 并设置 MONITOR_HOST" >&2
+  exit 1
 fi
+set -a
+# shellcheck disable=SC1090
+source "$DOCKER_ENV"
+set +a
+: "${MONITOR_HOST:?错误: docker/.env 中缺少 MONITOR_HOST}"
 LOKI_URL="http://${MONITOR_HOST}:3100"
 
 # 解析参数
