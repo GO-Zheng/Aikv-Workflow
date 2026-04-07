@@ -1,35 +1,36 @@
 # AiKv monitor
 
+name: aikv-monitor
 services:
-  node-exporter:
-    image: prom/node-exporter:v1.10.2
-    container_name: node-exporter
-    command:
-      - "--path.procfs=/host/proc"
-      - "--path.sysfs=/host/sys"
-      - "--path.rootfs=/host"
-      # 排除易重复的挂载点 (WSL2/Docker 下 /run/user 等会重复采集导致 ERROR)
-      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
-    ports:
-      - "9100:9100"
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/host:ro
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9100"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
+  # node-exporter:
+  #   image: prom/node-exporter:v1.10.2
+  #   container_name: node-exporter
+  #   command:
+  #     - "--path.procfs=/host/proc"
+  #     - "--path.sysfs=/host/sys"
+  #     - "--path.rootfs=/host"
+  #     # 排除易重复的挂载点 (WSL2/Docker 下 /run/user 等会重复采集导致 ERROR)
+  #     - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+  #   ports:
+  #     - "9100:9100"
+  #   volumes:
+  #     - /proc:/host/proc:ro
+  #     - /sys:/host/sys:ro
+  #     - /:/host:ro
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
+  #   healthcheck:
+  #     test: ["CMD", "wget", "-q", "--spider", "http://localhost:9100"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
 
   aikv-exporter:
     image: oliver006/redis_exporter:v1.80.1
     container_name: aikv-exporter
     environment:
-      - REDIS_ADDR=redis://aikv:6379
+      - REDIS_ADDR=redis://${SERVER_HOST}:6379
     ports:
       - "9121:9121"
     restart: unless-stopped
@@ -42,7 +43,7 @@ services:
     image: aidb-exporter:v0.0.2
     container_name: aidb-exporter
     environment:
-      - AIDB_TARGET=redis://aikv:6379
+      - AIDB_TARGET=redis://${SERVER_HOST}:6379
       - EXPORTER_PORT=9120
     ports:
       - "9120:9120"
@@ -61,14 +62,14 @@ services:
       - "--storage.tsdb.path=/prometheus"
       # 存储保留策略
       - "--storage.tsdb.retention.time=15d"
-      - "--storage.tsdb.retention.size=10GB"
+      - "--storage.tsdb.retention.size=5GB"
       # 热加载: curl -X POST http://localhost:9090/-/reload
       - "--web.enable-lifecycle"
       - "--web.enable-remote-write-receiver"
     ports:
       - "9090:9090"
     volumes:
-      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      - ./prometheus.runtime.yaml:/etc/prometheus/prometheus.yaml:ro
       # - ../data/prometheus:/prometheus
     restart: unless-stopped
     networks:
@@ -94,21 +95,21 @@ services:
     networks:
       - aikv-workflow
 
-  promtail:
-    image: grafana/promtail:3.6.8
-    container_name: aikv-promtail
-    user: "0:0"
-    command:
-      - "-config.file=/etc/promtail/promtail.yaml"
-    ports:
-      - "9081:9081"
-    volumes:
-      - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
-      # - ../logs:/var/log/aikv:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # promtail:
+  #   image: grafana/promtail:3.6.8
+  #   container_name: aikv-promtail
+  #   user: "0:0"
+  #   command:
+  #     - "-config.file=/etc/promtail/promtail.yaml"
+  #   ports:
+  #     - "9081:9081"
+  #   volumes:
+  #     - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
+  #     # - ../logs:/var/log/aikv:ro
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
   grafana:
     image: grafana/grafana:12.4.1

@@ -74,7 +74,15 @@
 
 set -e
 
-PROMETHEUS_URL="http://localhost:9090"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOCKER_ENV="$(dirname "$SCRIPT_DIR")/docker/.env"
+if [[ -f "$DOCKER_ENV" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$DOCKER_ENV"
+  set +a
+fi
+PROMETHEUS_URL="http://${MONITOR_HOST}:9090"
 
 # 解析参数
 METRIC=""

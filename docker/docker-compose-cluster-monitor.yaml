@@ -1,11 +1,12 @@
 # AiKv Cluster Monitor
 
+name: aikv-monitor
 services:
   aikv-exporter-replica-1:
     image: oliver006/redis_exporter:v1.80.1
     container_name: aikv-exporter-replica-1
     environment:
-      - REDIS_ADDR=redis://aikv-replica-1:6379
+      - REDIS_ADDR=redis://${SERVER_HOST}:6380
     ports:
       - "9221:9121"
     restart: unless-stopped
@@ -16,7 +17,7 @@ services:
     image: aidb-exporter:v0.0.2
     container_name: aidb-exporter-replica-1
     environment:
-      - AIDB_TARGET=redis://aikv-replica-1:6379
+      - AIDB_TARGET=redis://${SERVER_HOST}:6380
       - EXPORTER_PORT=9120
     ports:
       - "9220:9120"
@@ -28,7 +29,7 @@ services:
     image: oliver006/redis_exporter:v1.80.1
     container_name: aikv-exporter-master-2
     environment:
-      - REDIS_ADDR=redis://aikv-master-2:6379
+      - REDIS_ADDR=redis://${SERVER_HOST}:6381
     ports:
       - "9321:9121"
     restart: unless-stopped
@@ -39,7 +40,7 @@ services:
     image: aidb-exporter:v0.0.2
     container_name: aidb-exporter-master-2
     environment:
-      - AIDB_TARGET=redis://aikv-master-2:6379
+      - AIDB_TARGET=redis://${SERVER_HOST}:6381
       - EXPORTER_PORT=9120
     ports:
       - "9320:9120"
@@ -51,7 +52,7 @@ services:
     image: oliver006/redis_exporter:v1.80.1
     container_name: aikv-exporter-replica-2
     environment:
-      - REDIS_ADDR=redis://aikv-replica-2:6379
+      - REDIS_ADDR=redis://${SERVER_HOST}:6382
     ports:
       - "9421:9121"
     restart: unless-stopped
@@ -62,7 +63,7 @@ services:
     image: aidb-exporter:v0.0.2
     container_name: aidb-exporter-replica-2
     environment:
-      - AIDB_TARGET=redis://aikv-replica-2:6379
+      - AIDB_TARGET=redis://${SERVER_HOST}:6382
       - EXPORTER_PORT=9120
     ports:
       - "9420:9120"
@@ -74,7 +75,7 @@ services:
     image: oliver006/redis_exporter:v1.80.1
     container_name: aikv-exporter-master-3
     environment:
-      - REDIS_ADDR=redis://aikv-master-3:6379
+      - REDIS_ADDR=redis://${SERVER_HOST}:6383
     ports:
       - "9521:9121"
     restart: unless-stopped
@@ -85,7 +86,7 @@ services:
     image: aidb-exporter:v0.0.2
     container_name: aidb-exporter-master-3
     environment:
-      - AIDB_TARGET=redis://aikv-master-3:6379
+      - AIDB_TARGET=redis://${SERVER_HOST}:6383
       - EXPORTER_PORT=9120
     ports:
       - "9520:9120"
@@ -97,7 +98,7 @@ services:
     image: oliver006/redis_exporter:v1.80.1
     container_name: aikv-exporter-replica-3
     environment:
-      - REDIS_ADDR=redis://aikv-replica-3:6379
+      - REDIS_ADDR=redis://${SERVER_HOST}:6384
     ports:
       - "9621:9121"
     restart: unless-stopped
@@ -108,7 +109,7 @@ services:
     image: aidb-exporter:v0.0.2
     container_name: aidb-exporter-replica-3
     environment:
-      - AIDB_TARGET=redis://aikv-replica-3:6379
+      - AIDB_TARGET=redis://${SERVER_HOST}:6384
       - EXPORTER_PORT=9120
     ports:
       - "9620:9120"

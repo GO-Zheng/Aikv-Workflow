@@ -3,3 +3,5 @@ logs
 target
 .claude.json
 .claude
+.env
+prometheus.runtime.yaml

@@ -3,13 +3,13 @@
 # 运行 AiKv 集群模式 Docker 镜像 (3主3从)
 #
 # 用法：
-#   ./run_cluster.sh                                # 启动集群（默认初始化）
-#   ./run_cluster.sh --no-init                      # 启动集群（不初始化）
-#   ./run_cluster.sh --with-cluster-monitor         # 启动集群 + 集群监控 exporters
-#   ./run_cluster.sh --no-init --with-cluster-monitor  # 启动（不初始化）+ 监控
-#   ./run_cluster.sh --stop                         # 停止集群
-#   ./run_cluster.sh --stop --with-cluster-monitor  # 停止集群 + 集群监控
-#   ./run_cluster.sh --help                         # 查看帮助
+#   ./run_cluster.sh                                  # 启动集群(默认初始化)
+#   ./run_cluster.sh --no-init                        # 启动集群(不初始化)
+#   ./run_cluster.sh --with-cluster-monitor           # 启动集群 + 集群监控 exporters
+#   ./run_cluster.sh --no-init --with-cluster-monitor # 启动(不初始化)+ 监控
+#   ./run_cluster.sh --stop                           # 停止集群
+#   ./run_cluster.sh --stop --with-cluster-monitor    # 停止集群 + 集群监控
+#   ./run_cluster.sh --help                           # 查看帮助
 
 set -e
 
@@ -43,7 +43,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --cluster)
-            # 与 build_docker.sh --cluster 产物一致；若已通过 -t 指定镜像则不覆盖
+            # 与 build_docker.sh --cluster 产物一致; 若已通过 -t 指定镜像则不覆盖
             if [[ "$IMAGE_EXPLICIT" != "true" ]]; then
                 IMAGE_NAME="aikv:cluster"
             fi
@@ -61,14 +61,14 @@ while [[ $# -gt 0 ]]; do
             echo "  --no-init                 跳过集群初始化"
             echo "  --stop                    停止集群"
             echo "  --with-cluster-monitor, -m  同时启动/停止集群监控 exporters"
-            echo "  --cluster                 使用集群镜像 aikv:cluster（默认即此, 与 -t 互斥于自定义）"
-            echo "  -t IMAGE                  镜像名和标签（覆盖默认 aikv:cluster）"
+            echo "  --cluster                 使用集群镜像 aikv:cluster(默认即此, 与 -t 互斥于自定义)"
+            echo "  -t IMAGE                  镜像名和标签(覆盖默认 aikv:cluster)"
             echo ""
             echo "示例:"
             echo "  $0                                # 启动集群并初始化"
-            echo "  $0 --no-init                      # 启动集群（不初始化）"
+            echo "  $0 --no-init                      # 启动集群(不初始化)"
             echo "  $0 --with-cluster-monitor         # 启动集群 + 集群监控"
-            echo "  $0 --no-init --with-cluster-monitor  # 启动（不初始化）+ 监控"
+            echo "  $0 --no-init --with-cluster-monitor  # 启动(不初始化)+ 监控"
             echo "  $0 --stop                         # 停止集群"
             echo "  $0 --stop --with-cluster-monitor  # 停止集群 + 集群监控"
             echo "  $0 -t myregistry/aikv:v1          # 使用自定义镜像"
@@ -83,11 +83,11 @@ done
 
 if [[ "$ACTION" == "stop" ]]; then
     echo "停止集群..."
-    docker compose -p aikv-cluster -f "$CLUSTER_COMPOSE" down -v --remove-orphans 2>/dev/null || true
+    docker compose -p aikv-cluster -f "$CLUSTER_COMPOSE" --project-directory "$DOCKER_DIR" down -v --remove-orphans 2>/dev/null || true
 
     if [[ "$WITH_CLUSTER_MONITOR" == "true" ]]; then
         echo "停止集群监控 exporters..."
-        docker compose -p aikv-cluster-monitor -f "$CLUSTER_MONITOR_COMPOSE" down 2>/dev/null || true
+        docker compose -p aikv-cluster-monitor -f "$CLUSTER_MONITOR_COMPOSE" --project-directory "$DOCKER_DIR" down 2>/dev/null || true
     fi
 
     echo "已停止"
@@ -99,14 +99,14 @@ mkdir -p "$PROJECT_DIR/data/aikv-cluster"
 
 # 清理旧容器和网络
 echo "清理旧环境..."
-docker compose -p aikv-cluster -f "$CLUSTER_COMPOSE" down -v --remove-orphans 2>/dev/null || true
+docker compose -p aikv-cluster -f "$CLUSTER_COMPOSE" --project-directory "$DOCKER_DIR" down -v --remove-orphans 2>/dev/null || true
 rm -rf "$PROJECT_DIR/data/aikv-cluster"/*
 
 if [[ "$WITH_CLUSTER_MONITOR" == "true" ]]; then
-    docker compose -p aikv-cluster-monitor -f "$CLUSTER_MONITOR_COMPOSE" down 2>/dev/null || true
+    docker compose -p aikv-cluster-monitor -f "$CLUSTER_MONITOR_COMPOSE" --project-directory "$DOCKER_DIR" down 2>/dev/null || true
 fi
 
-# 检查即将由 compose 使用的镜像是否存在（默认 aikv:cluster, 或由 -t 指定）
+# 检查即将由 compose 使用的镜像是否存在(默认 aikv:cluster, 或由 -t 指定)
 if ! docker image inspect "$IMAGE_NAME" >/dev/null 2>&1; then
     echo "错误: 集群镜像不存在: $IMAGE_NAME"
     if [[ "$IMAGE_EXPLICIT" == "true" ]]; then
@@ -129,10 +129,10 @@ else
     echo "警告: 配置文件 $BOOTSTRAP_CONFIG 不存在, 跳过 bootstrap 检查"
 fi
 
-# 启动集群容器（与 compose 中 image 一致）
+# 启动集群容器(与 compose 中 image 一致)
 export AIKV_CLUSTER_IMAGE="$IMAGE_NAME"
-echo "启动 AiKv 集群（镜像: $AIKV_CLUSTER_IMAGE）..."
-docker compose -p aikv-cluster -f "$CLUSTER_COMPOSE" up -d
+echo "启动 AiKv 集群(镜像: $AIKV_CLUSTER_IMAGE)..."
+docker compose -p aikv-cluster -f "$CLUSTER_COMPOSE" --project-directory "$DOCKER_DIR" up -d
 
 echo ""
 echo "=== 集群启动成功 ==="
@@ -149,7 +149,7 @@ echo "  Replica-3: 127.0.0.1:6384 (Raft: 50056)"
 if [[ "$WITH_CLUSTER_MONITOR" == "true" ]]; then
     echo ""
     echo "启动集群监控 exporters..."
-    docker compose -p aikv-cluster-monitor -f "$CLUSTER_MONITOR_COMPOSE" up -d
+    docker compose -p aikv-cluster-monitor -f "$CLUSTER_MONITOR_COMPOSE" --project-directory "$DOCKER_DIR" up -d
 
     echo ""
     echo "=== 集群监控端口 ==="
@@ -175,7 +175,7 @@ echo ""
 echo "等待节点就绪..."
 sleep 5
 
-# 初始化集群（默认执行）
+# 初始化集群(默认执行)
 if [[ "$DO_INIT" == "true" ]]; then
     echo ""
     echo "=== 初始化集群 ==="

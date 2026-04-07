@@ -52,7 +52,7 @@ done
 
 if [[ "$ACTION" == "stop" ]]; then
     echo "停止容器..."
-    docker compose -p aikv -f "$DOCKER_DIR/docker-compose.yaml" down -v --remove-orphans
+    docker compose -p aikv -f "$DOCKER_DIR/docker-compose.yaml" --project-directory "$DOCKER_DIR" down -v --remove-orphans
     echo "已停止"
     exit 0
 fi
@@ -62,7 +62,7 @@ mkdir -p "$PROJECT_DIR/data"
 
 # 清理旧容器和网络（确保环境干净）
 echo "清理旧环境..."
-docker compose -p aikv -f "$DOCKER_DIR/docker-compose.yaml" down -v --remove-orphans 2>/dev/null || true
+docker compose -p aikv -f "$DOCKER_DIR/docker-compose.yaml" --project-directory "$DOCKER_DIR" down -v --remove-orphans 2>/dev/null || true
 rm -rf "$PROJECT_DIR/data/aikv"/*
 
 # 检查镜像是否存在
@@ -74,7 +74,7 @@ fi
 
 # 启动容器
 echo "启动 AiKv..."
-docker compose -p aikv -f "$DOCKER_DIR/docker-compose.yaml" up -d
+docker compose -p aikv -f "$DOCKER_DIR/docker-compose.yaml" --project-directory "$DOCKER_DIR" up -d
 
 echo ""
 echo "=== 启动成功 ==="

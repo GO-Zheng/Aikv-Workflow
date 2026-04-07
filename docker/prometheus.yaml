@@ -4,50 +4,70 @@ global:
   scrape_timeout: 5s
 
 scrape_configs:
-  # Prometheus 自身
   - job_name: "prometheus"
     static_configs:
       - targets: ["localhost:9090"]
 
-  # Node Exporter - 节点指标
   - job_name: "node-exporter"
     static_configs:
-      - targets: ["node-exporter:9100"]
+      - targets: ["${SERVER_HOST}:9100"]
 
   - job_name: "aikv-exporter"
     static_configs:
-      - targets: ["aikv-exporter:9121"]
+      - targets: ["${MONITOR_HOST}:9121"]
 
   - job_name: "aidb-exporter"
     static_configs:
-      - targets: ["aidb-exporter:9120"]
+      - targets: ["${MONITOR_HOST}:9120"]
 
   - job_name: "aikv-cluster-exporter"
     static_configs:
-      - targets:
-          - "aikv-exporter-master-1:9121"
-          - "aikv-exporter-master-2:9121"
-          - "aikv-exporter-master-3:9121"
-          - "aikv-exporter-replica-1:9121"
-          - "aikv-exporter-replica-2:9121"
-          - "aikv-exporter-replica-3:9121"
+      - targets: ["${MONITOR_HOST}:9121"]
+        labels:
+          node: master-1
+      - targets: ["${MONITOR_HOST}:9221"]
+        labels:
+          node: replica-1
+      - targets: ["${MONITOR_HOST}:9321"]
+        labels:
+          node: master-2
+      - targets: ["${MONITOR_HOST}:9421"]
+        labels:
+          node: replica-2
+      - targets: ["${MONITOR_HOST}:9521"]
+        labels:
+          node: master-3
+      - targets: ["${MONITOR_HOST}:9621"]
+        labels:
+          node: replica-3
     relabel_configs:
-      - source_labels: [__address__]
-        regex: 'aikv-exporter-(.+):\d+'
-        replacement: '${1}'
-        target_label: node
+      - source_labels: [node]
+        regex: (.*)
+        replacement: "aikv-exporter-$1:9121"
+        target_label: instance
 
   - job_name: "aidb-cluster-exporter"
     static_configs:
-      - targets:
-          - "aidb-exporter-master-1:9120"
-          - "aidb-exporter-master-2:9120"
-          - "aidb-exporter-master-3:9120"
-          - "aidb-exporter-replica-1:9120"
-          - "aidb-exporter-replica-2:9120"
-          - "aidb-exporter-replica-3:9120"
+      - targets: ["${MONITOR_HOST}:9120"]
+        labels:
+          node: master-1
+      - targets: ["${MONITOR_HOST}:9220"]
+        labels:
+          node: replica-1
+      - targets: ["${MONITOR_HOST}:9320"]
+        labels:
+          node: master-2
+      - targets: ["${MONITOR_HOST}:9420"]
+        labels:
+          node: replica-2
+      - targets: ["${MONITOR_HOST}:9520"]
+        labels:
+          node: master-3
+      - targets: ["${MONITOR_HOST}:9620"]
+        labels:
+          node: replica-3
     relabel_configs:
-      - source_labels: [__address__]
-        regex: 'aidb-exporter-(.+):\d+'
-        replacement: '${1}'
-        target_label: node
+      - source_labels: [node]
+        regex: (.*)
+        replacement: "aidb-exporter-$1:9120"
+        target_label: instance

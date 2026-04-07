@@ -32,7 +32,15 @@
 
 set -e
 
-LOKI_URL="http://localhost:3100"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOCKER_ENV="$(dirname "$SCRIPT_DIR")/docker/.env"
+if [[ -f "$DOCKER_ENV" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$DOCKER_ENV"
+  set +a
+fi
+LOKI_URL="http://${MONITOR_HOST}:3100"
 
 # 解析参数
 DURATION="5m"
