@@ -5,13 +5,17 @@
 # 诊断字段说明（便于用 --diag-event / --contains 拉链路）:
 #   AiKv 当前默认定宽文本 tracing：diag_event 出现在行内，请优先 --contains=diag_event=...
 #   若 AiKv 改回 JSON 且 Promtail 能解析，可用 --diag-event（走 | json | diag_event=...）
-#   历史上/JSON 模式下的 diag_event 名：
-#     cluster_node_listen_ready          节点启动完成（含 advertise_host / auto_failover）
+#   AiKv tracing diag_event（与源码一致，优先 --contains=diag_event=...）：
+#     redis_listen_bound                 Redis 协议监听就绪（含 redis_listen 地址）
+#     cluster_init_complete_before_redis_bind  集群初始化完成、尚未绑定 Redis 端口
 #     cluster_raft_forward_to_moved      ForwardToLeader 已映射为 MOVED
 #     cluster_raft_forward_unparsed      ForwardToLeader 无法解析 leader 地址
 #     cluster_raft_no_local_group        写入路由到本机不存在的 Raft group
+#     cluster_client_moved               客户端 MOVED 类重定向相关（多为 debug）
 #     cluster_command_storage_err        命令返回 ERR…Storage（含客户端、命令名）
 #     cluster_command_internal_err       命令返回 Internal
+#     cluster_command_io_protocol_err    I/O 或协议类错误
+#     cluster_command_err_other          其他命令错误
 #   AiDb 文本日志（用 --contains=diag_event=...）:
 #     diag_event=db_write_batch_resync_retry
 #     diag_event=db_write_batch_no_group_after_sync

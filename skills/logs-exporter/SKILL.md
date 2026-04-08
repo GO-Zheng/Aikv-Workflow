@@ -128,8 +128,8 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --level=error --du
 tracing 会在行内或 JSON 中携带稳定语义字段 **`diag_event`**（便于和指标时间段对齐）。**当前 AiKv 默认定宽文本日志时，请用下面「等价」的 `--contains=diag_event=...`**；若日后恢复 JSON 输出，可再用 `--diag-event`。
 
 ```bash
-# 节点启动完成（文本日志用 contains）
-cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --contains=diag_event=cluster_node_listen_ready --duration=30m
+# Redis 监听就绪（文本日志用 contains；与源码 diag_event 一致）
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --contains=diag_event=redis_listen_bound --duration=30m
 
 # 客户端收到 ERR Storage / 写入失败链
 cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --contains=diag_event=cluster_command_storage_err --duration=30m
@@ -146,13 +146,15 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --host=aikv-master
 
 | `diag_event` | 含义 |
 |--------------|------|
-| `cluster_node_listen_ready` | 集群节点 Redis 侧就绪；含 `advertise_host`、`auto_failover` |
+| `redis_listen_bound` | Redis 协议已绑定监听（含 `redis_listen`） |
+| `cluster_init_complete_before_redis_bind` | 集群初始化完成、尚未绑定 Redis 端口 |
 | `cluster_raft_forward_to_moved` | AiDb `ForwardToLeader` 已映射为 Redis `MOVED` |
 | `cluster_raft_forward_unparsed` | 含 ForwardToLeader 但未能解析 leader 地址 |
 | `cluster_raft_no_local_group` | 路由到的 Raft group 在本机无存储/实例 |
 | `cluster_command_storage_err` | 命令路径返回 Storage 类错误（含 `command`、`client`、`error`） |
 | `cluster_command_internal_err` | Internal 类错误 |
 | `cluster_command_io_protocol_err` | Persistence / Protocol 错误 |
+| `cluster_command_err_other` | 其他未单独分类的命令错误 |
 | `cluster_client_moved` | 返回 MOVED（一般为 **debug**，量大时别开太久窗口） |
 
 ### 按行子串 `--contains`（AiDb 等文本日志）

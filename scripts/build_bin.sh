@@ -21,7 +21,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKFLOW_DIR="$(dirname "$SCRIPT_DIR")"
 AIKV_DIR="$(dirname "$WORKFLOW_DIR")/AiKv"
 
-AIDB_GIT="aidb = { git = \"https://github.com/wiqun/AiDb\", tag = \"v0.7.0\" }"
+# 与 AiDb 发布 tag 对齐（恢复 git 依赖时用此行；若上游无对应 tag 请改 tag 或改用 branch/rev）
+AIDB_GIT='aidb = { git = "https://github.com/wiqun/AiDb", tag = "v0.7.2" }'
 AIDB_PATH='aidb = { path = "../AiDb" }'
 CARGO_TOML="$AIKV_DIR/Cargo.toml"
 
@@ -69,10 +70,10 @@ if grep -q 'aidb = { path = "../AiDb" }' "$CARGO_TOML"; then
     # 已经是本地路径依赖，直接构建
     echo "检测到 Cargo.toml 已使用本地 AiDb 路径依赖"
     NEED_SWAP=false
-elif grep -q 'aidb = { git = "https://github.com/wiqun/AiDb"' "$CARGO_TOML"; then
-    # 使用 Git 依赖，需要切换到本地
+elif grep -qE 'aidb = \{ git = "https://github.com/wiqun/AiDb"' "$CARGO_TOML"; then
+    # 使用 Git 依赖（任意 tag/branch/rev），切换到本地路径
     echo "切换 Cargo.toml: Git 依赖 -> 本地路径依赖..."
-    sed -i "s|$AIDB_GIT|$AIDB_PATH|" "$CARGO_TOML"
+    sed -i -E 's|^aidb = \{ git = "https://github.com/wiqun/AiDb"[^}]*\}|'"$AIDB_PATH"'|' "$CARGO_TOML"
     NEED_SWAP=true
 else
     echo "警告: 无法识别 aidb 依赖类型，跳过依赖切换"
@@ -87,7 +88,7 @@ eval "$BUILD_CMD"
 # 3. 如果之前切换了依赖，则恢复原始状态
 if $NEED_SWAP; then
     echo "恢复 Cargo.toml: 本地路径依赖 -> Git 依赖..."
-    sed -i "s|$AIDB_PATH|$AIDB_GIT|" "$CARGO_TOML"
+    sed -i 's#^aidb = { path = "../AiDb" }#'"$AIDB_GIT"'#' "$CARGO_TOML"
 fi
 
 # 4. 复制产物到 Aikv-Workflow/target

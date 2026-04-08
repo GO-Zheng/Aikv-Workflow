@@ -45,6 +45,7 @@ install_claude_code() {
 install_cursor() {
     echo "安装到 Cursor..."
     mkdir -p ~/.cursor/skills
+    mkdir -p ~/.cursor/agents
 
     # 复制 skills
     if [[ -d "$PROJECT_DIR/skills" ]]; then
@@ -57,6 +58,16 @@ install_cursor() {
         done
     fi
 
+    # 复制 agents（与 Claude 侧一致，便于 Cursor 引用同一套说明）
+    if [[ -d "$PROJECT_DIR/agents" ]]; then
+        for agent in "$PROJECT_DIR/agents"/*.md; do
+            [[ -e "$agent" ]] || continue
+            agent_name=$(basename "$agent" .md)
+            cp "$agent" ~/.cursor/agents/
+            echo "  安装 agent: $agent_name"
+        done
+    fi
+
     echo "Cursor 安装完成！"
 }
 
@@ -64,11 +75,14 @@ uninstall() {
     echo "卸载 AiKv Skill/Agent..."
 
     # Claude Code
-    rm -rf ~/.claude/skills/aikv-deployer
-    rm -rf ~/.claude/agents/aikv-deployer.md
+    rm -rf ~/.claude/skills/aikv-deployer ~/.claude/skills/logs-exporter ~/.claude/skills/metrics-exporter
+    rm -f ~/.claude/agents/aikv-deployer.md ~/.claude/agents/aikv-analyzer.md
 
     # Cursor
     rm -rf ~/.cursor/skills/aikv-deployer
+    rm -rf ~/.cursor/skills/logs-exporter
+    rm -rf ~/.cursor/skills/metrics-exporter
+    rm -f ~/.cursor/agents/aikv-deployer.md ~/.cursor/agents/aikv-analyzer.md
 
     echo "卸载完成！"
 }

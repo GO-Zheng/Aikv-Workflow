@@ -376,3 +376,14 @@
 | 缓存压力 | 使用率持续上升 | 缓存未命中增加，命中率下降 |
 | 缓存饱和 | 使用率超过 90% | 考虑扩容 Block Cache |
 
+---
+
+## Prometheus 与面板 job 对齐
+
+与仓库内 [docker/prometheus.yaml](../../prometheus.yaml) 一致：
+
+- **单机监控**：`job="aikv-exporter"`、`job="aidb-exporter"`（见 `aikv.json` 等）。
+- **集群监控**：`job="aikv-cluster-exporter"`、`job="aidb-cluster-exporter"`，Grafana 变量 `node`（如 `master-1`）与 scrape 中 `labels.node` 及 `relabel_configs` 生成的 `instance` 一致（见 `aikv-node.json`、`aikv-cluster.json`）。
+
+**说明**：AiDb 库内可选 Prometheus 指标（如 `aidb_wal_size_bytes`，见 AiDb `monitoring`）与 **aidb-exporter 镜像** 暴露的 `aidb_wal_bytes`、`aidb_memtable_bytes` 等命名可能不同；本目录下 Grafana 面板依赖 **redis_exporter + aidb-exporter** 采集链路，升级 AiDb 时若面板无数据，应核对 aidb-exporter 是否与当前 AiKv INFO / 存储统计契约一致。
+

@@ -104,7 +104,7 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --host=aikv-master
 | 延迟升高、写失败、客户端 ERR | `cluster_command_storage_err`，必要时 `cluster_command_internal_err` |
 | 集群模式、重定向异常 | `cluster_raft_forward_unparsed`、`cluster_client_moved`（多为 debug，窗口宜短） |
 | 分片/本地 Raft 缺失怀疑 | `cluster_raft_no_local_group`；AiDb 层 `--contains=diag_event=db_write_batch` |
-| 启动后立刻异常 | `cluster_node_listen_ready`（核对 `advertise_host`、`redis_listen`） |
+| 启动后立刻异常 | `redis_listen_bound`（核对 `redis_listen`）；更早阶段可看 `cluster_init_complete_before_redis_bind` |
 
 详细参数与速查表见 **`Aikv-Workflow/skills/logs-exporter/SKILL.md`**。
 
