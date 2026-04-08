@@ -41,17 +41,22 @@ agentType: general-purpose
 
 AiKv 使用 Raft consensus（通过 AiDb），不同于 Redis gossip protocol。
 
-**节点规划（3主3从）：**
-| 节点 | 端口 | Raft 端口 | 角色 |
-|------|------|-----------|------|
-| m1 | 6379 | 50051 | Master (bootstrap) |
-| m2 | 6380 | 50052 | Master |
-| m3 | 6381 | 50053 | Master |
-| r1 | 6382 | 50054 | Replica of m1 |
-| r2 | 6383 | 50055 | Replica of m2 |
-| r3 | 6384 | 50056 | Replica of m3 |
+**节点规划（3 主 3 从，与 `docker/docker-compose-cluster.yaml` 一致）：**
+
+| 容器 / 角色 | 宿主机 Redis | 宿主机 Raft(gRPC) | 说明 |
+|-------------|-------------|-------------------|------|
+| aikv-master-1 (bootstrap) | 6379 | 50051 | 主 1 |
+| aikv-replica-1 | 6380 | 50052 | 从，跟主 1 |
+| aikv-master-2 | 6381 | 50053 | 主 2 |
+| aikv-replica-2 | 6382 | 50054 | 从，跟主 2 |
+| aikv-master-3 | 6383 | 50055 | 主 3 |
+| aikv-replica-3 | 6384 | 50056 | 从，跟主 3 |
+
+容器内 Redis 均为 6379、Raft 均为 50051；`CLUSTER METARAFT ADDLEARNER` 等须使用 **Docker 网络主机名 + 容器内端口**（如 `aikv-master-2:50051`），不要用宿主机映射端口。初始化见 `scripts/init_cluster.sh`（已与 compose 对齐）。
 
 **Docker Compose：** `docker/docker-compose-cluster.yaml`
+
+**可观测性 / 排障：** 不维护独立 `docs/`；Loki/Promtail/健康检查与导出命令以 **`skills/logs-exporter/SKILL.md`**、**`skills/metrics-exporter/SKILL.md`** 为准（随脚本迭代更新）。
 
 ## 强制流程：部署前必须询问模式
 
@@ -104,7 +109,10 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/run_cluster.sh  # 自动初始化
 
 ### 启动监控栈
 ```bash
-cd /root/code/wiqun/Aikv-Workflow/docker && docker compose -f docker-compose-monitor.yaml up -d
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/config.sh
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/run_monitor.sh          # 主栈
+# 可选：./scripts/run_monitor.sh -c   # + 集群 exporter
+# 可选：./scripts/run_monitor.sh -p   # 在 SERVER_HOST 上部署 Promtail
 ```
 
 ### 清理环境
@@ -126,9 +134,8 @@ redis-cli -c -p 6380 GET test  # 验证跨节点访问
 ```bash
 # 检查 Docker 容器
 docker ps -a --filter "name=aikv"
-# 检查日志
-docker logs aikv-m1
-tail -f logs/cluster/aikv-m1.log
+# 检查日志（集群示例容器名）
+docker logs --tail 80 aikv-master-1
 ```
 
 ## 监控与数据导出

@@ -18,6 +18,34 @@ user-invocable: true
 - **必须**存在 `Aikv-Workflow/docker/.env`，且包含 **`MONITOR_HOST`**（Loki 所在机，如 `192.168.1.112`）。脚本会 `source` 该文件并访问 `http://${MONITOR_HOST}:3100`。
 - 无 `.env` 或缺少 `MONITOR_HOST` 时脚本会直接报错退出（不设默认值，避免拉到错误环境）。
 
+## 架构、日志格式与健康检查（原 `docs/` 已撤销，以本 Skill 与脚本为准）
+
+工作流处于高频迭代期，**不单独维护 `docs/`**，可观测性与排障说明集中在本 Skill、**metrics-exporter** Skill 以及 **aikv-deployer** Agent。
+
+### 拓扑与约定
+
+- `docker/.env`：**`MONITOR_HOST`**（如 112）部署 Loki / Grafana / Prometheus；**`SERVER_HOST`**（如 113）部署 AiKv 与（可选）Promtail。`export_logs.sh`、`export_metrics.sh` 通过 `MONITOR_HOST` 访问监控面。
+- Promtail：`docker/promtail.yaml` 用 Docker SD 采集 `app=aikv` 容器日志，推送到 `MONITOR_HOST:3100`。
+- 流水线里仍有 **`json`** 解析阶段；**AiKv 当前默认 `tracing_subscriber::fmt()` 输出为带时间戳/级别的文本行，不是 JSON**。因此 Loki 里由 JSON 提取的 **`level`、`request_id` 等标签常常为空**；`export_logs.sh` 的 **`--diag-event` 使用 `| json | diag_event=...`，在纯文本模式下往往查不到 AiKv 行**——对 AiKv 排障请优先 **`--contains=diag_event=...`**（或 `docker logs <容器名>`）。AiDb 侧 `log::` 本即为文本，继续用 **`--contains`**。
+
+### 启停（与监控栈）
+
+- 生成 Prometheus 运行时配置：`./scripts/config.sh`（在 `Aikv-Workflow` 下）。
+- 拉起监控主栈，可选集群 exporter、远端 Promtail：`./scripts/run_monitor.sh`，可加 `-c` / `--cluster`、`-p` / `--promtail`（详见该脚本注释）。
+
+### 最小健康检查
+
+- Promtail 配置/解析：`docker logs aikv-promtail 2>&1 | rg "Unable to parse|invalid character"`（容器名以实际为准）。
+- Loki：`curl -s "http://${MONITOR_HOST}:3100/loki/api/v1/labels"`。
+- Prometheus：`curl -s "http://${MONITOR_HOST}:9090/api/v1/targets"`（看 `activeTargets` 是否大量 down）。
+
+### 排障顺序（建议）
+
+1. Promtail 自身日志是否报错、能否连上 Loki。  
+2. Loki `labels` / `query_range` 是否正常。  
+3. Prometheus `targets` 是否健康。  
+4. 核对 `.env` 中 `MONITOR_HOST`、`SERVER_HOST` 与真实机器 IP 是否一致。
+
 ## 功能
 
 - 导出指定时间范围内的 Loki 日志（`query_range`）
@@ -97,24 +125,24 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --level=error --du
 
 ### 按诊断事件 `diag_event` 过滤（推荐：排障时优先用）
 
-AiKv 在 tracing JSON 中会写入稳定字段 **`diag_event`**，便于和指标异常时间段对齐，避免只靠全文搜索猜原因。
+tracing 会在行内或 JSON 中携带稳定语义字段 **`diag_event`**（便于和指标时间段对齐）。**当前 AiKv 默认定宽文本日志时，请用下面「等价」的 `--contains=diag_event=...`**；若日后恢复 JSON 输出，可再用 `--diag-event`。
 
 ```bash
-# 节点启动完成（核对 advertise_host、auto_failover、监听地址）
-cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --diag-event=cluster_node_listen_ready --duration=30m
+# 节点启动完成（文本日志用 contains）
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --contains=diag_event=cluster_node_listen_ready --duration=30m
 
 # 客户端收到 ERR Storage / 写入失败链
-cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --diag-event=cluster_command_storage_err --duration=30m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --contains=diag_event=cluster_command_storage_err --duration=30m
 
 # Raft 写路径：本机缺少对应 data group / ForwardToLeader 未解析
-cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --diag-event=cluster_raft_no_local_group --duration=30m
-cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --diag-event=cluster_raft_forward_unparsed --duration=30m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --contains=diag_event=cluster_raft_no_local_group --duration=30m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --contains=diag_event=cluster_raft_forward_unparsed --duration=30m
 
 # 指定容器 + 诊断事件
-cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --host=aikv-master-1 --diag-event=cluster_command_storage_err --duration=30m
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --host=aikv-master-1 --contains=diag_event=cluster_command_storage_err --duration=30m
 ```
 
-**`diag_event` 速查表（AiKv / JSON）**
+**`diag_event` 速查表（AiKv tracing，文本行内子串）**
 
 | `diag_event` | 含义 |
 |--------------|------|
@@ -152,7 +180,7 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --request-id=<id> 
 |------|------|
 | 查看最近所有日志 | `cd .../Aikv-Workflow && ./scripts/export_logs.sh --duration=5m` |
 | 查看 aikv 服务日志 | `cd .../Aikv-Workflow && ./scripts/export_logs.sh --service=aikv --duration=30m` |
-| 集群写入/ERR Storage 排障 | `cd .../Aikv-Workflow && ./scripts/export_logs.sh --diag-event=cluster_command_storage_err --duration=30m` |
+| 集群写入/ERR Storage 排障 | `cd .../Aikv-Workflow && ./scripts/export_logs.sh --contains=diag_event=cluster_command_storage_err --duration=30m` |
 | AiDb Raft 组缺失 | `cd .../Aikv-Workflow && ./scripts/export_logs.sh --contains=diag_event=db_write_batch --duration=30m` |
 | 导出 CSV 给 AI 分析 | `cd .../Aikv-Workflow && ./scripts/export_logs.sh --service=aikv --duration=1h --format=csv` |
 
@@ -171,7 +199,7 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --service=aikv --d
 
 ### 日志级别过滤 (`--level`)
 
-当前流水线里 AiKv 容器日志为 **tracing JSON**，Promtail 会解析出 **`level` 标签**。`--level=error,warn` 会生成标签正则过滤（与正文 ANSI 颜色无关）。若某条日志不是 JSON 或未带 `level` 字段，可能不会被 `--level` 命中，可改用 **`--contains`** 或放宽时间窗口后人工看原始 JSON。
+**AiKv 当前默认定宽文本日志**，Promtail 的 JSON 阶段往往**抽不到** `level` 标签，`--level` **可能基本无效**。请优先 **`--contains=ERROR`** / **`WARN`**（大小写与格式以实际行为准）或缩小 `--duration` 后看导出原文。若将来改回 JSON 日志且 Promtail 能解析，`--level` 会重新可用。
 
 ## 分析日志时关注点
 
@@ -205,6 +233,6 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --start=14:30 --en
 
 1. 用 **metrics-exporter** 确定异常时间段（例如延迟尖刺、QPS 掉底）。
 2. 用 **相同起止时间** 拉日志：`--start` / `--end` 或 `--duration` 覆盖该窗口。
-3. 先 **`--level=error,warn`**，再 **`--diag-event=...`** 缩小到具体链路；若怀疑 AiDb 层，加 **`--contains=diag_event=db_write_batch`**。
+3. 对 AiKv 优先 **`--contains=diag_event=...`** 或 **`--contains=ERROR`**；AiDb 层继续 **`--contains=diag_event=db_write_batch`**。
 4. 分节点：`--host=aikv-master-1` 等与 Prometheus 上 `instance`/`node` 对应，便于和单点指标对齐。
 5. **宿主脚本**（如 `init_cluster.sh`） stdout **默认不进 Loki**；初始化问题以 **容器内 AiKv 日志** + 终端输出一起对。

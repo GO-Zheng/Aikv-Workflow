@@ -66,9 +66,11 @@ redis-cli -p 6379 CLUSTER NODES
 ```
 
 ### monitor
-启动监控栈（Prometheus + Grafana + node-exporter + aikv-exporter + Loki + Promtail）
+启动监控栈（Prometheus + Grafana + node-exporter + aikv-exporter + Loki；Promtail 见 `-p`）
 ```bash
-cd /root/code/wiqun/Aikv-Workflow/docker && docker compose -f docker-compose-monitor.yaml up -d
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/config.sh
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/run_monitor.sh
+# 可选：-c 集群 exporter；-p 在 SERVER_HOST 部署 Promtail
 ```
 
 ### cleanup
@@ -81,13 +83,13 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/cleanup.sh --all --force      # �
 
 ## 集群模式说明
 
-集群模式部署 6 节点 AiKv：
-- Master 1: 127.0.0.1:6379
-- Master 2: 127.0.0.1:6380
-- Master 3: 127.0.0.1:6381
-- Replica 1: 127.0.0.1:6382 (of m1)
-- Replica 2: 127.0.0.1:6383 (of m2)
-- Replica 3: 127.0.0.1:6384 (of m3)
+集群模式 6 节点（宿主机端口，与 `docker-compose-cluster.yaml` 一致）：
+- Master-1: 127.0.0.1:6379（Raft 宿主机 50051）
+- Replica-1: 127.0.0.1:6380（50052）
+- Master-2: 127.0.0.1:6381（50053）
+- Replica-2: 127.0.0.1:6382（50054）
+- Master-3: 127.0.0.1:6383（50055）
+- Replica-3: 127.0.0.1:6384（50056）
 
 **集群部署流程：**
 1. 构建集群镜像：`./scripts/build_docker.sh --cluster`

@@ -3,7 +3,9 @@
 # 导出 AiKv 日志
 #
 # 诊断字段说明（便于用 --diag-event / --contains 拉链路）:
-#   AiKv tracing JSON 字段 diag_event:
+#   AiKv 当前默认定宽文本 tracing：diag_event 出现在行内，请优先 --contains=diag_event=...
+#   若 AiKv 改回 JSON 且 Promtail 能解析，可用 --diag-event（走 | json | diag_event=...）
+#   历史上/JSON 模式下的 diag_event 名：
 #     cluster_node_listen_ready          节点启动完成（含 advertise_host / auto_failover）
 #     cluster_raft_forward_to_moved      ForwardToLeader 已映射为 MOVED
 #     cluster_raft_forward_unparsed      ForwardToLeader 无法解析 leader 地址
