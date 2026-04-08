@@ -19,9 +19,31 @@ scrape_configs:
         filters:
           - name: label
             values: ["app=aikv"]
+    pipeline_stages:
+      - docker: {}
+      - json:
+          expressions:
+            level: level
+            msg: msg
+            message: message
+            node: node
+            service_name: service
+            request_id: request_id
+            ts: ts
+            diag_event: diag_event
+      - timestamp:
+          source: ts
+          format: RFC3339Nano
+          action_on_failure: skip
+      - labels:
+          level:
+          node:
+          service_name:
     relabel_configs:
       - replacement: "aikv"
         target_label: job
+      - replacement: "json"
+        target_label: log_format
       - replacement: "${SERVER_HOST}"
         target_label: cluster_host
       - source_labels: [__meta_docker_container_name]

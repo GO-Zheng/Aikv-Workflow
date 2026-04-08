@@ -27,6 +27,27 @@ IMAGE_NAME="aikv:cluster"
 IMAGE_EXPLICIT=false
 BOOTSTRAP_CONFIG="$PROJECT_DIR/config/aikv-master-1.toml"
 
+# 从 docker/.env 加载环境变量(仅当当前环境未定义时)
+load_env_file() {
+    local env_file="$DOCKER_DIR/.env"
+    if [[ -f "$env_file" ]]; then
+        local existing_server_host="${SERVER_HOST-}"
+        set -a
+        # shellcheck disable=SC1090
+        source "$env_file"
+        set +a
+        if [[ -n "$existing_server_host" ]]; then
+            SERVER_HOST="$existing_server_host"
+        fi
+    fi
+}
+
+build_cluster_nodes_from_host() {
+    local host="$1"
+    CLUSTER_MASTERS="${host}:6379,${host}:6381,${host}:6383"
+    CLUSTER_REPLICAS="${host}:6380,${host}:6382,${host}:6384"
+}
+
 # 解析参数
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -72,6 +93,15 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 --stop                         # 停止集群"
             echo "  $0 --stop --with-cluster-monitor  # 停止集群 + 集群监控"
             echo "  $0 -t myregistry/aikv:v1          # 使用自定义镜像"
+            echo ""
+            echo "若手动执行 docker compose: 必须与脚本使用相同 project 名, 否则 down 删不掉本脚本创建的容器,"
+            echo "  随后 up 会报 container name already in use。推荐停止用:"
+            echo "  $0 --stop"
+            echo "或在 Aikv-Workflow 目录执行:"
+            echo "  docker compose -p aikv-cluster -f docker/docker-compose-cluster.yaml --project-directory docker down -v --remove-orphans"
+            echo ""
+            echo "环境变量:"
+            echo "  AIKV_CLUSTER_READY_SECONDS  启动后等待 bootstrap 可 PING 的超时秒数(默认 180)"
             exit 0
             ;;
         *)
@@ -100,6 +130,10 @@ mkdir -p "$PROJECT_DIR/data/aikv-cluster"
 # 清理旧容器和网络
 echo "清理旧环境..."
 docker compose -p aikv-cluster -f "$CLUSTER_COMPOSE" --project-directory "$DOCKER_DIR" down -v --remove-orphans 2>/dev/null || true
+# 强制删除可能残留的同名容器（无论属于哪个 compose project）
+for c in aikv-master-1 aikv-master-2 aikv-master-3 aikv-replica-1 aikv-replica-2 aikv-replica-3; do
+    docker rm -f "$c" 2>/dev/null || true
+done
 rm -rf "$PROJECT_DIR/data/aikv-cluster"/*
 
 if [[ "$WITH_CLUSTER_MONITOR" == "true" ]]; then
@@ -177,9 +211,64 @@ sleep 5
 
 # 初始化集群(默认执行)
 if [[ "$DO_INIT" == "true" ]]; then
+    load_env_file
+
+    # AiKv 主流程：先 await initialize_cluster()，完成后才在 run() 里 TcpListener::bind。
+    # 因此容器已「Started」后的数秒～数分钟内，宿主机 6379 仍可能 Connection refused，并非 hairpin/init 脚本坏了。
+    BOOT_WAIT_HOST="127.0.0.1"
+    if [[ -n "${SERVER_HOST:-}" ]] && timeout 2 redis-cli -h "$SERVER_HOST" -p 6379 ping 2>/dev/null | grep -q PONG; then
+        BOOT_WAIT_HOST="$SERVER_HOST"
+    fi
+    READY_WAIT="${AIKV_CLUSTER_READY_SECONDS:-180}"
+    echo ""
+    echo "等待 bootstrap 监听 ${BOOT_WAIT_HOST}:6379（最多 ${READY_WAIT}s，可调环境变量 AIKV_CLUSTER_READY_SECONDS）..."
+    _ready=0
+    for ((_i = 0; _i < READY_WAIT; _i++)); do
+        if redis-cli -h "$BOOT_WAIT_HOST" -p 6379 ping 2>/dev/null | grep -q PONG; then
+            echo "Bootstrap 已就绪: ${BOOT_WAIT_HOST}:6379（等待了 ${_i}s）"
+            _ready=1
+            break
+        fi
+        if ((_i % 30 == 0)) && ((_i > 0)); then
+            echo "  仍在等待 ${BOOT_WAIT_HOST}:6379 ... ${_i}/${READY_WAIT}s"
+        fi
+        sleep 1
+    done
+    if [[ "$_ready" != "1" ]]; then
+        echo "错误: ${READY_WAIT}s 内 ${BOOT_WAIT_HOST}:6379 仍无 PONG。"
+        echo "含义: 进程尚未执行到 Redis 监听（卡在 initialize_cluster）、或反复崩溃退出。"
+        echo ""
+        echo "=== aikv-master-1 容器状态 ==="
+        docker ps -a --filter name=aikv-master-1 --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' 2>/dev/null || true
+        echo ""
+        echo "=== docker logs aikv-master-1（最后 120 行）==="
+        docker logs aikv-master-1 --tail 120 2>&1 || true
+        exit 1
+    fi
+
     echo ""
     echo "=== 初始化集群 ==="
-    "$SCRIPT_DIR/init_cluster.sh"
+    if [[ -n "${SERVER_HOST:-}" ]]; then
+        build_cluster_nodes_from_host "$SERVER_HOST"
+        echo "检测到 SERVER_HOST=$SERVER_HOST，使用该地址初始化集群..."
+        INIT_CONNECT_HOST=""
+        if ! timeout 3 redis-cli -h "$SERVER_HOST" -p 6379 ping 2>/dev/null | grep -q PONG; then
+            INIT_CONNECT_HOST="127.0.0.1"
+            echo "提示: 本机无法通过 ${SERVER_HOST}:6379 访问（常见于在 SERVER 上用局域网 IP 访问 Docker 端口映射 / hairpin）。"
+            echo "      将用 CLUSTER_REDIS_CONNECT_HOST=127.0.0.1 连各端口；CLUSTER MEET 仍使用 ${SERVER_HOST}，外网 redis-cli -c 不受影响。"
+        fi
+        # 显式 export，避免个别 shell/包装下前缀赋值未传入子进程
+        if [[ -n "$INIT_CONNECT_HOST" ]]; then
+            export CLUSTER_REDIS_CONNECT_HOST="$INIT_CONNECT_HOST"
+        else
+            unset CLUSTER_REDIS_CONNECT_HOST 2>/dev/null || true
+        fi
+        "$SCRIPT_DIR/init_cluster.sh" -m "$CLUSTER_MASTERS" -r "$CLUSTER_REPLICAS"
+        unset CLUSTER_REDIS_CONNECT_HOST 2>/dev/null || true
+    else
+        echo "未检测到 SERVER_HOST，使用 init_cluster.sh 默认地址(127.0.0.1)..."
+        "$SCRIPT_DIR/init_cluster.sh"
+    fi
 
     # 初始化完成后, 将 is_bootstrap 改回 false
     if [[ -f "$BOOTSTRAP_CONFIG" ]]; then

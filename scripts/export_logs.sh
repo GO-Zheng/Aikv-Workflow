@@ -2,10 +2,24 @@
 
 # 导出 AiKv 日志
 #
+# 诊断字段说明（便于用 --diag-event / --contains 拉链路）:
+#   AiKv tracing JSON 字段 diag_event:
+#     cluster_node_listen_ready          节点启动完成（含 advertise_host / auto_failover）
+#     cluster_raft_forward_to_moved      ForwardToLeader 已映射为 MOVED
+#     cluster_raft_forward_unparsed      ForwardToLeader 无法解析 leader 地址
+#     cluster_raft_no_local_group        写入路由到本机不存在的 Raft group
+#     cluster_command_storage_err        命令返回 ERR…Storage（含客户端、命令名）
+#     cluster_command_internal_err       命令返回 Internal
+#   AiDb 文本日志（用 --contains=diag_event=...）:
+#     diag_event=db_write_batch_resync_retry
+#     diag_event=db_write_batch_no_group_after_sync
+#
 # 用法: 
 #   ./export_logs.sh [--duration=<duration>] [--format=json|csv]
 #   ./export_logs.sh --start=<start_time> --end=<end_time> [--level=<level>] [--service=<service>] [--format=json|csv]
 #   ./export_logs.sh --list
+#   ./export_logs.sh --diag-event=cluster_command_storage_err --duration=15m
+#   ./export_logs.sh --contains=diag_event=db_write_batch --duration=15m
 #
 # 参数: 
 #   --duration    时间范围, 如: 5m, 1h, 30m, 24h (默认: 5m)
@@ -18,6 +32,9 @@
 #   --level       日志级别过滤: error, warn, info, debug (可选, 多个用逗号分隔)
 #   --service     服务名过滤, 如: aikv (对应 Promtail 的 job 标签)
 #   --host        节点名过滤 (service 标签), 如: aikv-master-1, aikv-replica-1
+#   --request-id  请求 ID 过滤 (JSON 字段)
+#   --diag-event  诊断事件名 (JSON 字段 diag_event, 与 AiKv tracing 一致)
+#   --contains    行级子串过滤 (LogQL |=, 适用于 aidb log:: 文本中的 diag_event=...)
 #   --limit       最大返回条数 (默认: 1000, 上限 5000)
 #   --format      输出格式: json (默认) 或 csv
 #   --list        列出所有可用标签和值
@@ -54,6 +71,9 @@ END_TIME=""
 LEVEL=""
 SERVICE=""
 HOST=""
+REQUEST_ID=""
+DIAG_EVENT=""
+CONTAINS=""
 LIMIT="1000"
 
 while [[ $# -gt 0 ]]; do
@@ -82,6 +102,18 @@ while [[ $# -gt 0 ]]; do
             HOST="${1#*=}"
             shift
             ;;
+        --request-id=*)
+            REQUEST_ID="${1#*=}"
+            shift
+            ;;
+        --diag-event=*)
+            DIAG_EVENT="${1#*=}"
+            shift
+            ;;
+        --contains=*)
+            CONTAINS="${1#*=}"
+            shift
+            ;;
         --limit=*)
             LIMIT="${1#*=}"
             shift
@@ -104,7 +136,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         --help|-h)
-            echo "用法: $0 [--duration=<duration>] [--start=<start>] [--end=<end>] [--level=<level>] [--service=<service>] [--host=<host>] [--limit=<n>] [--format=json|csv] [--list]"
+            echo "用法: $0 [--duration=...] [--start=...] [--end=...] [--level=...] [--service=...] [--host=...] [--request-id=...] [--diag-event=...] [--contains=...] [--limit=...] [--format=json|csv] [--list]"
             echo ""
             echo "参数:"
             echo "  --duration    时间范围, 如: 5m, 1h, 30m, 24h (默认: 5m)"
@@ -114,6 +146,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --level       日志级别过滤: error, warn, info, debug (逗号分隔多个)"
             echo "  --service     服务名过滤 (job 标签)"
             echo "  --host        节点名过滤 (service 标签), 如: aikv-master-1, aikv-replica-1"
+            echo "  --request-id  请求 ID 过滤 (JSON 字段)"
+            echo "  --diag-event  诊断事件 (JSON 字段 diag_event)"
+            echo "  --contains    行子串 (LogQL |=)"
             echo "  --limit       最大返回条数 (默认: 1000, 上限 5000)"
             echo "  --format      输出格式: json 或 csv (默认: json)"
             echo "  --list        列出所有可用标签"
@@ -122,6 +157,8 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 --duration=5m"
             echo "  $0 --level=error --duration=1h"
             echo "  $0 --service=aikv --level=error,warn --start=11:30 --end=12:00"
+            echo "  $0 --diag-event=cluster_command_storage_err --duration=30m"
+            echo "  $0 --contains=diag_event=db_write_batch_no_group --duration=30m"
             exit 0
             ;;
         *)
@@ -205,36 +242,44 @@ else
     TIME_DESC="最近 $DURATION"
 fi
 
-# 构建 LogQL 查询
+# 构建 LogQL 查询（标签选择 + JSON 字段过滤）
 build_logql() {
-    local query=""
+    local selector='job="aikv"'
+    local query
 
     # 服务过滤 (job 标签)
-    local job_filter
     if [[ -n "$SERVICE" ]]; then
-        job_filter="{job=\"$SERVICE\"}"
-    else
-        job_filter="{job=~\".+\"}"
+        selector="job=\"$SERVICE\""
     fi
 
-    # 主机过滤 (service 标签, 对应 Promtail 的 service label)
+    # 容器名过滤 (service 标签)
     if [[ -n "$HOST" ]]; then
-        if [[ -n "$SERVICE" ]]; then
-            query="{job=\"$SERVICE\", service=\"$HOST\"}"
-        else
-            query="{job=\"aikv\", service=\"$HOST\"}"
-        fi
-    else
-        query="$job_filter"
+        selector="$selector, service=\"$HOST\""
     fi
 
-    # 级别过滤 (使用 |= 过滤日志内容中的 level 字段)
+    # 级别过滤（Promtail 已提取为 label，转为小写做正则）
     if [[ -n "$LEVEL" ]]; then
-        IFS=',' read -ra LEVELS <<< "$LEVEL"
-        for lvl in "${LEVELS[@]}"; do
-            lvl=$(echo "$lvl" | tr '[:lower:]' '[:upper:]')
-            query="$query |= \"$lvl\""
-        done
+        local level_regex
+        level_regex="$(echo "$LEVEL" | sed 's/,/|/g')"
+        selector="$selector, level=~\"(?i)$level_regex\""
+    fi
+
+    query="{$selector}"
+
+    # request_id 过滤（JSON 字段）
+    if [[ -n "$REQUEST_ID" ]]; then
+        query="$query | json | request_id=\"$REQUEST_ID\""
+    fi
+
+    # diag_event（AiKv tracing JSON）
+    if [[ -n "$DIAG_EVENT" ]]; then
+        query="$query | json | diag_event=\"$DIAG_EVENT\""
+    fi
+
+    # 行级子串（如 aidb log:: 输出的 diag_event=...）；勿含双引号
+    if [[ -n "$CONTAINS" ]]; then
+        local esc="${CONTAINS//\"/\\\"}"
+        query="$query |= \"$esc\""
     fi
 
     echo "$query"
@@ -245,6 +290,8 @@ QUERY=$(build_logql)
 echo "导出日志"
 echo "时间范围: $TIME_DESC"
 echo "查询条件: $QUERY"
+[[ -n "$DIAG_EVENT" ]] && echo "diag_event: $DIAG_EVENT"
+[[ -n "$CONTAINS" ]] && echo "行子串(contains): $CONTAINS"
 echo "限制: $LIMIT 条"
 echo ""
 
@@ -253,31 +300,36 @@ echo ""
 START_S=$((START_NS / 1000000000))
 END_S=$((END_NS / 1000000000))
 
+RESP="$(curl -s "$LOKI_URL/loki/api/v1/query_range" \
+    -G \
+    --data-urlencode "query=$QUERY" \
+    -d "start=$START_NS" \
+    -d "end=$END_NS" \
+    -d "limit=$LIMIT" \
+    -d "direction=backward")"
+
+STATUS="$(echo "$RESP" | jq -r '.status // "error"' 2>/dev/null || echo "error")"
+if [[ "$STATUS" != "success" ]]; then
+    echo "Loki 查询失败:" >&2
+    echo "$RESP" | jq -r '.error // .message // "unknown error"' 2>/dev/null >&2 || echo "$RESP" >&2
+    exit 1
+fi
+
+RESULT_COUNT="$(echo "$RESP" | jq '.data.result | length')"
+if [[ "$RESULT_COUNT" -eq 0 ]]; then
+    echo "未查询到日志（可能时间窗口过短或过滤条件过严）"
+    exit 0
+fi
+
 if [[ "$FORMAT" == "csv" ]]; then
-    curl -s "$LOKI_URL/loki/api/v1/query_range" \
-        -G \
-        --data-urlencode "query=$QUERY" \
-        -d "start=$START_NS" \
-        -d "end=$END_NS" \
-        -d "limit=$LIMIT" \
-        -d "direction=backward" | jq -r '
-            if .status == "success" then
-                .data.result[] |
-                .stream as $stream |
-                .values[] |
-                (($stream | to_entries | map("\(.key)=\(.value)") | join(" | ")) // ""),
-                (.[0] | tonumber / 1e9 | todateiso8601),
-                .[1]
-            else
-                .error
-            end
-        '
+    echo "$RESP" | jq -r '
+        .data.result[] |
+        .stream as $stream |
+        .values[] |
+        (($stream | to_entries | map("\(.key)=\(.value)") | join(" | ")) // ""),
+        (.[0] | tonumber / 1e9 | todateiso8601),
+        .[1]
+    '
 else
-    curl -s "$LOKI_URL/loki/api/v1/query_range" \
-        -G \
-        --data-urlencode "query=$QUERY" \
-        -d "start=$START_NS" \
-        -d "end=$END_NS" \
-        -d "limit=$LIMIT" \
-        -d "direction=backward"
+    echo "$RESP"
 fi

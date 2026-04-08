@@ -33,6 +33,8 @@ services:
       - ../config/aikv-master-1.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
+      - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
+      - AIKV_AUTO_FAILOVER=false
     restart: unless-stopped
     labels:
       - app=aikv
@@ -65,6 +67,8 @@ services:
       - ../config/aikv-replica-1.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
+      - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
+      - AIKV_AUTO_FAILOVER=false
     restart: unless-stopped
     labels:
       - app=aikv
@@ -95,6 +99,8 @@ services:
       - ../config/aikv-master-2.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
+      - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
+      - AIKV_AUTO_FAILOVER=false
     restart: unless-stopped
     labels:
       - app=aikv
@@ -125,6 +131,8 @@ services:
       - ../config/aikv-replica-2.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
+      - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
+      - AIKV_AUTO_FAILOVER=false
     restart: unless-stopped
     labels:
       - app=aikv
@@ -155,6 +163,8 @@ services:
       - ../config/aikv-master-3.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
+      - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
+      - AIKV_AUTO_FAILOVER=false
     restart: unless-stopped
     labels:
       - app=aikv
@@ -185,6 +195,8 @@ services:
       - ../config/aikv-replica-3.toml:/app/aikv-cluster.toml:ro
     environment:
       - RUST_LOG=debug
+      - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
+      - AIKV_AUTO_FAILOVER=false
     restart: unless-stopped
     labels:
       - app=aikv

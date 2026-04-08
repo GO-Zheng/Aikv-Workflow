@@ -34,9 +34,36 @@ fail() { echo -e "${RED}[FAIL]${NC} $1"; exit 1; }
 info() { echo -e "${BLUE}[INFO]${NC} $1"; }
 warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
+run_with_timeout() {
+    local seconds="$1"
+    shift
+    timeout "$seconds" "$@"
+}
+
+check_client_tcp_capacity() {
+    local range tw_count width
+    range="$(sysctl -n net.ipv4.ip_local_port_range 2>/dev/null || true)"
+    tw_count="$(ss -ant state time-wait 2>/dev/null | wc -l | tr -d ' ')"
+
+    if [[ -n "$range" ]]; then
+        local start end
+        start="$(echo "$range" | awk '{print $1}')"
+        end="$(echo "$range" | awk '{print $2}')"
+        if [[ -n "$start" && -n "$end" ]]; then
+            width=$((end - start + 1))
+            if [[ "$width" -lt 10000 && "$tw_count" -ge "$width" ]]; then
+                fail "客户端 TCP 临时端口疑似耗尽 (range=$start-$end, timewait=$tw_count)。请先扩容端口范围后重试: sysctl -w net.ipv4.ip_local_port_range='10240 65535'"
+            fi
+        fi
+    fi
+}
+
 echo "=============================================="
 echo " AiKv 集群功能测试 (host=$HOST port=$PORT)"
 echo "=============================================="
+
+# --- 客户端网络容量检查 ---
+check_client_tcp_capacity
 
 # --- 前置检查 ---
 echo -e "\n${YELLOW}[前置检查] 集群状态验证${NC}"
@@ -128,7 +155,7 @@ test_key="{cluster_test}:key1"
 test_value="value_from_port_$PORT"
 
 # 写入（检查实际响应，redis-cli 返回 ERR 时 exit code 也为 0）
-set_result=$($CLI_CLUSTER SET "$test_key" "$test_value" 2>&1)
+set_result=$(run_with_timeout 8 redis-cli -c -h "$HOST" -p "$PORT" SET "$test_key" "$test_value" 2>&1 || true)
 if [ "$set_result" = "OK" ]; then
     ok "SET $test_key"
 else
@@ -136,7 +163,7 @@ else
 fi
 
 # 读取（可能路由到其他节点）
-result=$($CLI_CLUSTER GET "$test_key" 2>/dev/null)
+result=$(run_with_timeout 8 redis-cli -c -h "$HOST" -p "$PORT" GET "$test_key" 2>/dev/null || true)
 if [ "$result" = "$test_value" ]; then
     ok "GET $test_key -> $result"
 else
@@ -157,7 +184,7 @@ done
 # --- 多节点健康检查 ---
 echo -e "\n${YELLOW}[多节点] 检查所有 Master 节点${NC}"
 for port in "${MASTER_PORTS[@]}"; do
-    r=$(redis-cli -h 127.0.0.1 -p $port PING 2>/dev/null)
+    r=$(run_with_timeout 5 redis-cli -h "$HOST" -p $port PING 2>/dev/null || true)
     if [ "$r" = "PONG" ]; then
         ok "Master port $port 正常"
     else
@@ -167,7 +194,7 @@ done
 
 echo -e "\n${YELLOW}[多节点] 检查所有 Replica 节点${NC}"
 for port in "${REPLICA_PORTS[@]}"; do
-    r=$(redis-cli -h 127.0.0.1 -p $port PING 2>/dev/null)
+    r=$(run_with_timeout 5 redis-cli -h "$HOST" -p $port PING 2>/dev/null || true)
     if [ "$r" = "PONG" ]; then
         ok "Replica port $port 正常"
     else
@@ -179,7 +206,7 @@ done
 echo -e "\n${YELLOW}[复制] 验证主从关系${NC}"
 
 # 找到 master 节点
-master_6379_role=$($CLI CLUSTER NODES 2>/dev/null | grep "127.0.0.1:6379" | grep "master" | head -1)
+master_6379_role=$($CLI CLUSTER NODES 2>/dev/null | grep ":6379" | grep "master" | head -1)
 if echo "$master_6379_role" | grep -q "slave"; then
     # 6379 是 slave，找到它的 master
     master_of_6379=$(echo "$master_6379_role" | awk '{print $4}' | tr -d '\r')
@@ -204,7 +231,10 @@ consistency_key="{consistency_test}:data"
 consistency_value="test_$(date +%s)"
 
 # 写入（使用集群模式，自动路由到正确节点）
-$CLI_CLUSTER SET "$consistency_key" "$consistency_value" >/dev/null 2>&1
+consistency_set_result=$(run_with_timeout 8 redis-cli -c -h "$HOST" -p "$PORT" SET "$consistency_key" "$consistency_value" 2>&1 || true)
+if [ "$consistency_set_result" != "OK" ]; then
+    fail "一致性写入失败或超时: $consistency_set_result"
+fi
 sleep 0.5
 
 # 获取 key 所属的 slot
@@ -226,7 +256,7 @@ if [ -n "$slot_info" ]; then
     info "该 slot 属于 master port: $master_port"
 
     # 只在正确的 master 上验证
-    val=$(redis-cli -h 127.0.0.1 -p $master_port GET "$consistency_key" 2>/dev/null || echo "ERROR")
+    val=$(run_with_timeout 5 redis-cli -h "$HOST" -p $master_port GET "$consistency_key" 2>/dev/null || echo "ERROR")
     if [ "$val" = "$consistency_value" ]; then
         ok "Master port $master_port 数据一致"
     else
@@ -234,7 +264,7 @@ if [ -n "$slot_info" ]; then
     fi
 else
     # 回退：在当前节点使用集群模式读取
-    val=$($CLI_CLUSTER GET "$consistency_key" 2>/dev/null)
+    val=$(run_with_timeout 8 redis-cli -c -h "$HOST" -p "$PORT" GET "$consistency_key" 2>/dev/null || true)
     if [ "$val" = "$consistency_value" ]; then
         ok "集群模式读取一致"
     else

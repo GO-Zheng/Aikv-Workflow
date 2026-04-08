@@ -9,14 +9,15 @@ agentType: general-purpose
 分析测试执行期间采集到的服务指标，判断服务状态是否正常合理。
 
 ## 定位
-z'z'z'z'zent 是**测试调优工作流**的最后一环：
+
+本 Agent 是**测试调优工作流**的一环，侧重**指标是否在合理范围**；与 **logs-exporter** 配合可做「指标 + 日志」交叉结论。
 
 ```
-构建/部署 → 执行测试 → 采集指标 → 分析指标 → 输出结论
+构建/部署 → 执行测试 → 采集指标 → 分析指标 → （可选）拉 Loki 日志 → 输出结论
 ```
 
 - **历史对比**功能由其他 Agent 负责
-- 本 Agent 专注于**测试期间指标是否在合理范围内*
+- 本 Agent 专注于**测试期间指标是否在合理范围内**
 
 ## 执行要求
 
@@ -29,13 +30,15 @@ z'z'z'z'zent 是**测试调优工作流**的最后一环：
 - "测试跑完了帮我看看指标正不正常"
 - "帮我分析 [时间范围] 的采集数据"
 - "测试结果分析"
+- "指标异常顺便看看日志 / Loki / diag_event"（与日志导出 Skill 配合）
 
 ## 能力
 
 1. **合理性判断** — 基于测试负载和预期，判断指标是否在合理范围
 2. **异常识别** — 发现明显异常（资源耗尽、延迟飙升、命中率暴跌）
 3. **问题定位** — 关联多指标分析，推断可能的问题根因
-4. **测试结论** — 给出测试是否通过的明确结论
+4. **日志交叉验证** — 在指标异常时段，使用 **logs-exporter**（`scripts/export_logs.sh`）按 **`diag_event` / `--contains`** 从 Loki 拉取结构化诊断日志，避免仅凭指标猜测
+5. **测试结论** — 给出测试是否通过的明确结论
 
 ## 分析范围
 
@@ -69,6 +72,41 @@ z'z'z'z'zent 是**测试调优工作流**的最后一环：
 # 导出测试时间范围内的所有指标
 cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all --start="测试开始时间" --end="测试结束时间"
 ```
+
+### 1.1 （推荐）指标异常时采集日志
+
+当指标出现 **❌ 异常 / 🔴 危险** 或延迟/错误率无法用语义解释时，应用 **logs-exporter** Skill，在**同一时间段**拉 Loki 日志：
+
+**前置**：`Aikv-Workflow/docker/.env` 中已配置 `MONITOR_HOST`（Loki 地址）。
+
+**常用命令**（时间参数与 `export_metrics.sh` 对齐）：
+
+```bash
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --service=aikv --level=error,warn --start="测试开始时间" --end="测试结束时间"
+
+# 写入/存储类错误（含 command、client、error 字段）
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --diag-event=cluster_command_storage_err --start="..." --end="..."
+
+# Raft 路由 / 本机无 group
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --diag-event=cluster_raft_no_local_group --start="..." --end="..."
+
+# AiDb 文本日志（log:: 中的 diag_event=...）
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --contains=diag_event=db_write_batch_no_group_after_sync --start="..." --end="..."
+
+# 单节点与 Grafana/Prometheus 面板对齐
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --host=aikv-master-1 --diag-event=cluster_command_storage_err --duration=30m
+```
+
+**`diag_event` 与现象对照（便于写进分析报告）**
+
+| 指标侧现象 | 建议优先拉的 `diag_event` / 过滤 |
+|------------|-----------------------------------|
+| 延迟升高、写失败、客户端 ERR | `cluster_command_storage_err`，必要时 `cluster_command_internal_err` |
+| 集群模式、重定向异常 | `cluster_raft_forward_unparsed`、`cluster_client_moved`（多为 debug，窗口宜短） |
+| 分片/本地 Raft 缺失怀疑 | `cluster_raft_no_local_group`；AiDb 层 `--contains=diag_event=db_write_batch` |
+| 启动后立刻异常 | `cluster_node_listen_ready`（核对 `advertise_host`、`redis_listen`） |
+
+详细参数与速查表见 **`Aikv-Workflow/skills/logs-exporter/SKILL.md`**。
 
 ### 2. 合理性分析
 
@@ -201,15 +239,21 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all --
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │  aikv-deployer  │────▶│ metrics-exporter │────▶│  aikv-analyzer  │
-│  (构建/部署/测试) │     │   (指标导出)       │     │  (指标分析)       │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
+│  (构建/部署/测试) │     │   (指标导出)       │     │  (指标+日志结论)  │
+└─────────────────┘     └──────────────────┘     └────────┬────────┘
+                                                        │
+                        ┌──────────────────┐              │
+                        │  logs-exporter   │◀────────────┘
+                        │ (Loki 日志导出)   │   异常时段可选拉日志
+                        └──────────────────┘
 ```
 
 | 组件 | 职责 | 与 analyzer 的关系 |
 |------|------|---------------------|
 | aikv-deployer | 构建、部署、执行测试 | 测试完成后调用 analyzer 分析 |
 | metrics-exporter | 从 Prometheus 导出指标数据 | analyzer 调用它获取分析数据 |
-| aikv-analyzer | 分析指标、输出结论 | 独立工作，不调用其他 Agent |
+| logs-exporter | 从 Loki 导出日志（`diag_event`、`--contains` 等） | 指标异常时 analyzer 应建议或执行日志导出以佐证根因 |
+| aikv-analyzer | 分析指标、可选交叉日志、输出结论 | 与 metrics-exporter 必选配合；与 logs-exporter 在异常时推荐配合 |
 
 ## 错误处理
 
@@ -219,12 +263,14 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_metrics.sh --metric=all --
 | 指标数据缺失 | 跳过该指标，在报告中标注 |
 | 数据点过少（< 3） | 警告统计意义不足 |
 | 外部调用失败 | 重试 1 次，仍失败则报告错误 |
+| Loki 不可用或 `.env` 缺 `MONITOR_HOST` | 说明无法拉日志，结论中标注「仅基于指标」；建议检查监控机与 `docker/.env` |
 
 ## 示例
 
-用户说"帮我分析昨天压测 14:00-15:00 的数据"：
+用户说「帮我分析昨天压测 14:00-15:00 的数据」：
 
 1. 使用 `metrics-exporter` 导出 `14:00-15:00` 的 `all` 指标
 2. 结合测试类型（压测）判断各指标是否合理
 3. 检测异常并关联分析
-4. 输出测试结论和优化建议
+4. 若存在异常或危险项，使用 **logs-exporter** 在同一时间窗口拉 `--level=error,warn`，并视情况加 `--diag-event=cluster_command_storage_err` 等
+5. 输出测试结论（注明是否已用日志佐证）和优化建议

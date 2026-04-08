@@ -24,6 +24,25 @@ MASTERS=("127.0.0.1:6379" "127.0.0.1:6381" "127.0.0.1:6383")
 REPLICAS=("127.0.0.1:6380" "127.0.0.1:6382" "127.0.0.1:6384")
 REDIS_CLI="${REDIS_CLI:-redis-cli}"
 
+# redis-cli 实际连接地址：默认同节点列表中的 host:port。
+# 若设置 CLUSTER_REDIS_CONNECT_HOST（如 127.0.0.1），则主机用该值、端口仍取自列表，
+# 用于「在 SERVER 本机跑初始化」时本机访问 192.168.x.x 失败（hairpin）而回环可通的情况。
+# CLUSTER MEET 等仍使用列表中的对外地址，不影响 redis-cli -c 从其他机器连接。
+redis_cli_host_port() {
+    local node="$1"
+    local announce_host="${node%:*}"
+    local data_port="${node#*:}"
+    if [[ -n "${CLUSTER_REDIS_CONNECT_HOST:-}" ]]; then
+        echo "${CLUSTER_REDIS_CONNECT_HOST} ${data_port}"
+    else
+        echo "${announce_host} ${data_port}"
+    fi
+}
+
+bootstrap_redis_cli() {
+    redis_cli_host_port "${MASTERS[0]}"
+}
+
 # 打印函数
 print_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -41,6 +60,18 @@ print_warn() {
     echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
+# 根据 Redis 端口推导对应 master 的容器内 Raft 地址
+# 这里必须使用容器可达地址，而不是外部访问 IP。
+get_master_raft_addr() {
+    local redis_port="$1"
+    case "${redis_port}" in
+        6379) echo "aikv-master-1:50051" ;;
+        6381) echo "aikv-master-2:50051" ;;
+        6383) echo "aikv-master-3:50051" ;;
+        *) echo "" ;;
+    esac
+}
+
 # 使用说明
 usage() {
     cat << EOF
@@ -52,6 +83,10 @@ Options:
     -m, --masters HOSTS     Comma-separated list of master nodes (host:port)
     -r, --replicas HOSTS    Comma-separated list of replica nodes (host:port)
     -h, --help              Show this help message
+
+Environment:
+    CLUSTER_REDIS_CONNECT_HOST   Optional. If set, redis-cli uses this host with ports from -m/-r
+                                 (for init on the same machine as SERVER_HOST when LAN IP hairpin fails).
 
 Example:
     $0 -m 127.0.0.1:6379,127.0.0.1:6381,127.0.0.1:6383 \\
@@ -106,38 +141,66 @@ for i in "${!REPLICAS[@]}"; do
 done
 echo
 
+if [[ -n "${CLUSTER_REDIS_CONNECT_HOST:-}" ]]; then
+    print_info "redis-cli 实际连接: ${CLUSTER_REDIS_CONNECT_HOST}:<端口>（与上表端口对应）；CLUSTER MEET 仍使用上表中的对外地址"
+fi
+
 if [ ${MASTER_COUNT} -lt 3 ]; then
     print_error "At least 3 master nodes are required for a cluster"
     exit 1
 fi
 
-# 获取节点 ID 的函数
+# 获取节点 ID 的函数（参数为 host:port 列表中的单项）
 get_node_id() {
-    local host=$1
-    local port=$2
-    ${REDIS_CLI} -h ${host} -p ${port} CLUSTER MYID 2>&1
+    local node=$1
+    read -r h p <<< "$(redis_cli_host_port "$node")"
+    ${REDIS_CLI} -h "${h}" -p "${p}" CLUSTER MYID 2>&1
 }
 
-# Function to check if node is reachable
-check_node() {
-    local host=$1
-    local port=$2
-    if ${REDIS_CLI} -h ${host} -p ${port} PING 2>&1 | grep -q "PONG"; then
+# Function to check if node is reachable（单次探测）
+check_node_once() {
+    local node=$1
+    read -r h p <<< "$(redis_cli_host_port "$node")"
+    if ${REDIS_CLI} -h "${h}" -p "${p}" PING 2>&1 | grep -q "PONG"; then
         return 0
     else
         return 1
     fi
 }
 
+# 等待节点就绪（容器刚起时 5s 往往不够）
+wait_for_node() {
+    local node=$1
+    local max_wait="${2:-60}"
+    local i=0
+    read -r h p <<< "$(redis_cli_host_port "$node")"
+    while [ "$i" -lt "$max_wait" ]; do
+        if check_node_once "${node}"; then
+            return 0
+        fi
+        sleep 1
+        i=$((i + 1))
+    done
+    local out
+    out="$(${REDIS_CLI} -h "${h}" -p "${p}" PING 2>&1 || true)"
+    print_error "节点 ${node} 在 ${max_wait}s 内不可达"
+    print_error "  已尝试: redis-cli -h ${h} -p ${p} PING"
+    print_error "  返回: ${out}"
+    if [[ -z "${CLUSTER_REDIS_CONNECT_HOST:-}" ]] && [[ "${node}" == *:* ]]; then
+        print_warn "若在 SERVER 本机初始化且 hairpin 不通，请同步最新 init_cluster.sh 后重试，或手动:"
+        print_warn "  CLUSTER_REDIS_CONNECT_HOST=127.0.0.1 $0 -m ... -r ..."
+    fi
+    return 1
+}
+
 # 步骤 1: 检查所有节点是否可达
 print_info "Step 1: Checking node connectivity..."
 ALL_NODES=("${MASTERS[@]}" "${REPLICAS[@]}")
 for node in "${ALL_NODES[@]}"; do
-    IFS=':' read -r host port <<< "${node}"
-    if check_node ${host} ${port}; then
-        print_success "Node ${node} is reachable"
+    if wait_for_node "${node}" 60; then
+        read -r h p <<< "$(redis_cli_host_port "$node")"
+        print_success "Node ${node} is reachable (via ${h}:${p})"
     else
-        print_error "Node ${node} is not reachable"
         exit 1
     fi
 done
@@ -148,8 +211,7 @@ print_info "Step 2: Retrieving master node IDs..."
 declare -A MASTER_IDS
 for i in "${!MASTERS[@]}"; do
     node="${MASTERS[$i]}"
-    IFS=':' read -r host port <<< "${node}"
-    node_id=$(get_node_id ${host} ${port})
+    node_id=$(get_node_id "${node}")
     if [ -z "${node_id}" ] || [ "${node_id}" == "(nil)" ]; then
         print_error "Failed to get node ID for ${node}"
         exit 1
@@ -165,13 +227,8 @@ echo
 # 从而允许 peer_raft_grpc_addr() 通过 MetaRaft membership 查找正确的 gRPC 地址。
 print_info "Step 3: Adding masters as MetaRaft learners..."
 # Docker 容器内部 gRPC 端口映射: master-N 使用 raft_address 中配置的端口
-declare -A RAFT_ADDRS
-RAFT_ADDRS["127.0.0.1:6379"]="aikv-master-1:50051"
-RAFT_ADDRS["127.0.0.1:6381"]="aikv-master-2:50053"
-RAFT_ADDRS["127.0.0.1:6383"]="aikv-master-3:50055"
 
-bs_host="${MASTERS[0]%:*}"
-bs_port="${MASTERS[0]#*:}"
+read -r bs_host bs_port <<< "$(bootstrap_redis_cli)"
 
 # 构建待晋升列表（实际 node_id）
 promotion_master_ids=""
@@ -182,10 +239,11 @@ for i in "${!MASTERS[@]}"; do
 
     node="${MASTERS[$i]}"
     node_id="${MASTER_IDS[$node]}"
-    raft_addr="${RAFT_ADDRS[$node]}"
+    node_port="${node#*:}"
+    raft_addr="$(get_master_raft_addr "${node_port}")"
 
     if [ -z "${raft_addr}" ]; then
-        print_error "No Raft address mapping for ${node}"
+        print_error "No Raft address mapping for ${node} (port=${node_port})"
         exit 1
     fi
 
@@ -212,31 +270,29 @@ echo
 
 # 步骤 5: 连接所有节点
 print_info "Step 5: Meeting all nodes..."
-bs_host="${MASTERS[0]%:*}"
-bs_port="${MASTERS[0]#*:}"
+read -r bs_host bs_port <<< "$(bootstrap_redis_cli)"
 
 # 获取所有节点 ID
 declare -A ALL_NODE_IDS
 for node in "${ALL_NODES[@]}"; do
-    IFS=':' read -r host port <<< "${node}"
-    node_id=$(get_node_id ${host} ${port})
+    node_id=$(get_node_id "${node}")
     ALL_NODE_IDS["${node}"]="${node_id}"
 done
 
 # 首先连接所有 master（包括自身）
 for node in "${MASTERS[@]}"; do
     node_id="${ALL_NODE_IDS[$node]}"
-    IFS=':' read -r host port <<< "${node}"
+    IFS=':' read -r meet_host meet_port <<< "${node}"
     print_info "Meeting ${node} (ID: ${node_id})..."
-    ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER MEET ${host} ${port} ${node_id} 2>&1 | grep -q "OK" || true
+    ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER MEET ${meet_host} ${meet_port} ${node_id} 2>&1 | grep -q "OK" || true
 done
 
 # 连接 replicas
 for node in "${REPLICAS[@]}"; do
     node_id="${ALL_NODE_IDS[$node]}"
-    IFS=':' read -r host port <<< "${node}"
+    IFS=':' read -r meet_host meet_port <<< "${node}"
     print_info "Meeting ${node} (ID: ${node_id})..."
-    ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER MEET ${host} ${port} ${node_id} 2>&1 | grep -q "OK" || true
+    ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER MEET ${meet_host} ${meet_port} ${node_id} 2>&1 | grep -q "OK" || true
 done
 
 sleep 3
@@ -251,7 +307,7 @@ SLOTS_PER_MASTER=$((TOTAL_SLOTS / MASTER_COUNT))
 for i in "${!MASTERS[@]}"; do
     master="${MASTERS[$i]}"
     master_id="${ALL_NODE_IDS[$master]}"
-    IFS=':' read -r host port <<< "${master}"
+    read -r m_cli_host m_cli_port <<< "$(redis_cli_host_port "$master")"
 
     start_slot=$((i * SLOTS_PER_MASTER))
     if [ $i -eq $((MASTER_COUNT - 1)) ]; then
@@ -264,14 +320,13 @@ for i in "${!MASTERS[@]}"; do
 
     # 第一个 master (bootstrap) 不需要指定 node_id
     if [ $i -eq 0 ]; then
-        ${REDIS_CLI} -h ${host} -p ${port} CLUSTER ADDSLOTSRANGE ${start_slot} ${end_slot} 2>&1 | grep -q "OK" || {
+        ${REDIS_CLI} -h ${m_cli_host} -p ${m_cli_port} CLUSTER ADDSLOTSRANGE ${start_slot} ${end_slot} 2>&1 | grep -q "OK" || {
             print_error "Failed to assign slots to ${master}"
             exit 1
         }
     else
         # 其他 master 需要指定 node_id
-        bs_host="${MASTERS[0]%:*}"
-        bs_port="${MASTERS[0]#*:}"
+        read -r bs_host bs_port <<< "$(bootstrap_redis_cli)"
         ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER ADDSLOTSRANGE ${start_slot} ${end_slot} ${master_id} 2>&1 | grep -q "OK" || {
             print_error "Failed to assign slots to ${master}"
             exit 1
@@ -291,12 +346,9 @@ for i in "${!REPLICAS[@]}"; do
     master="${MASTERS[$i]}"
     master_id="${ALL_NODE_IDS[$master]}"
 
-    IFS=':' read -r r_host r_port <<< "${replica}"
-
     print_info "Setting ${replica} as replica of ${master}..."
 
-    bs_host="${MASTERS[0]%:*}"
-    bs_port="${MASTERS[0]#*:}"
+    read -r bs_host bs_port <<< "$(bootstrap_redis_cli)"
 
     if ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER ADDREPLICATION ${replica_id} ${master_id} 2>&1 | grep -q "OK"; then
         print_success "${replica} is now a replica of ${master}"
@@ -310,8 +362,7 @@ echo
 # 这是自动故障转移的关键 - replicas 必须是 MetaRaft voter 才能参与 leader 选举
 print_info "Step 7.5: Adding replicas to MetaRaft and promoting to voters..."
 
-bs_host="${MASTERS[0]%:*}"
-bs_port="${MASTERS[0]#*:}"
+read -r bs_host bs_port <<< "$(bootstrap_redis_cli)"
 
 # 获取当前的 MetaRaft members
 print_info "Current MetaRaft members:"
@@ -327,10 +378,9 @@ print_info "Getting actual node IDs for replicas from CLUSTER MYID..."
 for i in "${!REPLICAS[@]}"; do
     replica="${REPLICAS[$i]}"
     raft_hostname="${REPLICA_RAFT_HOSTNAMES[$i]}"
-    IFS=':' read -r r_host r_port <<< "${replica}"
 
     # Get actual node ID from the replica itself (this is the hash-based ID)
-    replica_node_id=$(get_node_id ${r_host} ${r_port})
+    replica_node_id=$(get_node_id "${replica}")
     if [ -z "${replica_node_id}" ] || [ "${replica_node_id}" == "(nil)" ]; then
         print_error "Failed to get node ID for replica ${replica}"
         exit 1
@@ -400,10 +450,10 @@ echo ""
 print_info "Step 8: Verifying cluster status..."
 sleep 2
 
-bs_host="${MASTERS[0]%:*}"
-bs_port="${MASTERS[0]#*:}"
+read -r bs_host bs_port <<< "$(bootstrap_redis_cli)"
+IFS=':' read -r pub_bs_host pub_bs_port <<< "${MASTERS[0]}"
 
-print_info "Cluster info from bootstrap node (${bs_host}:${bs_port}):"
+print_info "Cluster info from bootstrap node (${pub_bs_host}:${pub_bs_port}, redis-cli -> ${bs_host}:${bs_port}):"
 ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER INFO
 echo
 
@@ -414,4 +464,4 @@ echo
 print_success "Cluster initialization completed!"
 echo
 print_info "You can now connect to the cluster using:"
-echo "  redis-cli -c -h ${bs_host} -p ${bs_port}"
+echo "  redis-cli -c -h ${pub_bs_host} -p ${pub_bs_port}"

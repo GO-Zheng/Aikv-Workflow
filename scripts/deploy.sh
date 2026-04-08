@@ -16,6 +16,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DOCKER_DIR="$PROJECT_DIR/docker"
 ENV_FILE="$DOCKER_DIR/.env"
 REMOTE_DEST="/root/Aikv-Workflow"
+CONFIG_SCRIPT="$SCRIPT_DIR/config.sh"
 
 RED="\033[0;31m"
 GREEN="\033[0;32m"
@@ -34,7 +35,7 @@ usage() {
                  - Server : -r 时执行 run_cluster.sh（否则 run_docker.sh）
 
   -p, --promtail Monitor 部署: 本机镜像检查包含 docker-compose-promtail.yaml;
-                 与 -r 联用时远端执行 run_monitor.sh -p
+                 与 -r 联用时由本机直连 SERVER_HOST 执行 promtail compose up -d
 
   -r, --run      同步且镜像检查通过后 SSH 执行:
                  Monitor → run_monitor.sh(按需附加 --cluster/--promtail)
@@ -93,6 +94,16 @@ set +a
 
 : "${MONITOR_HOST:?请在 docker/.env 中设置 MONITOR_HOST}"
 : "${SERVER_HOST:?请在 docker/.env 中设置 SERVER_HOST}"
+
+if [[ ! -x "$CONFIG_SCRIPT" ]]; then
+  echo -e "${RED}缺少可执行脚本: $CONFIG_SCRIPT (请 chmod +x)${NC}" >&2
+  exit 1
+fi
+
+if [[ "$DO_MONITOR" -eq 1 || "$MONITOR_PROMTAIL" -eq 1 ]]; then
+  echo -e "${BLUE}生成 prometheus.runtime.yaml...${NC}"
+  "$CONFIG_SCRIPT"
+fi
 
 ssh_target() {
   local h="$1"
@@ -191,6 +202,8 @@ if [[ "$REMOTE_RUN" -eq 1 ]]; then
     fi
   fi
   if [[ "$MONITOR_PROMTAIL" -eq 1 ]]; then
+    echo -e "${BLUE}检查 Server 侧 promtail compose 文件...${NC}"
+    ssh "$SERVER_SSH" "test -f '$REMOTE_DEST/docker/docker-compose-promtail.yaml' && test -f '$REMOTE_DEST/docker/promtail.yaml'"
     echo -e "${BLUE}连接 Server 执行 promtail compose(up -d) …${NC}"
     ssh "$SERVER_SSH" "cd '$REMOTE_DEST/docker' && docker compose -p aikv-promtail -f docker-compose-promtail.yaml --project-directory '$REMOTE_DEST/docker' up -d"
   fi

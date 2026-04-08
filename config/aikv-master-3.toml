@@ -1,5 +1,5 @@
 # AiKv Master 3
-# 端口: 6379 (映射到宿主机 6381), Raft: 50051 (映射到宿主机 50053)
+# Redis: 容器 6379 -> 宿主机 6383；Raft: 容器 50051 -> 宿主机 50055
 
 [server]
 host = "0.0.0.0"
@@ -7,7 +7,7 @@ port = 6379
 
 [cluster]
 enabled = true
-raft_address = "aikv-master-3:50055"
+raft_address = "aikv-master-3:50051"
 is_bootstrap = false
 peers = []
 

@@ -14,6 +14,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 DOCKER_DIR="$PROJECT_DIR/docker"
+CONFIG_SCRIPT="$SCRIPT_DIR/config.sh"
 
 COMPOSE_MAIN="$DOCKER_DIR/docker-compose-monitor.yaml"
 COMPOSE_CLUSTER_MON="$DOCKER_DIR/docker-compose-cluster-monitor.yaml"
@@ -103,6 +104,14 @@ if [[ "$ACTION" == "stop" ]]; then
     echo "已停止"
     exit 0
 fi
+
+if [[ ! -x "$CONFIG_SCRIPT" ]]; then
+    echo "缺少可执行脚本: $CONFIG_SCRIPT" >&2
+    echo "请先执行: chmod +x $CONFIG_SCRIPT" >&2
+    exit 1
+fi
+echo "生成 Prometheus 运行时配置..."
+"$CONFIG_SCRIPT"
 
 echo "清理旧环境..."
 run_compose down -v --remove-orphans 2>/dev/null || true
