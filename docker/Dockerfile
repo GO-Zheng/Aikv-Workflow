@@ -1,4 +1,6 @@
-# syntax=docker/dockerfile:1
+# 未使用 `# syntax=docker/dockerfile:1`：该指令会从 registry 拉取 Dockerfile 前端镜像；
+# 在仅配置了 docker.io 镜像加速（如 USTC）且对 docker/dockerfile 返回 EOF 时会导致构建失败。
+# 使用 Docker 内置 BuildKit 前端即可，仍需 DOCKER_BUILDKIT=1（Docker 24+ 默认开启）。
 # ============================================================
 # AiKv Dockerfile - 使用本地 AiDb
 #

@@ -34,7 +34,10 @@ services:
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
-      - AIKV_AUTO_FAILOVER=false
+      - AIKV_AUTO_FAILOVER=true
+      - AIKV_AUTO_FAILOVER_REQUIRED_CHECKS=2
+      - AIKV_AUTO_FAILOVER_MIN_OFFLINE_SECS=10
+      - AIKV_AUTO_FAILOVER_COOLDOWN_SECS=30
     restart: unless-stopped
     labels:
       - app=aikv
@@ -68,7 +71,10 @@ services:
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
-      - AIKV_AUTO_FAILOVER=false
+      - AIKV_AUTO_FAILOVER=true
+      - AIKV_AUTO_FAILOVER_REQUIRED_CHECKS=2
+      - AIKV_AUTO_FAILOVER_MIN_OFFLINE_SECS=10
+      - AIKV_AUTO_FAILOVER_COOLDOWN_SECS=30
     restart: unless-stopped
     labels:
       - app=aikv
@@ -100,7 +106,10 @@ services:
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
-      - AIKV_AUTO_FAILOVER=false
+      - AIKV_AUTO_FAILOVER=true
+      - AIKV_AUTO_FAILOVER_REQUIRED_CHECKS=2
+      - AIKV_AUTO_FAILOVER_MIN_OFFLINE_SECS=10
+      - AIKV_AUTO_FAILOVER_COOLDOWN_SECS=30
     restart: unless-stopped
     labels:
       - app=aikv
@@ -132,7 +141,10 @@ services:
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
-      - AIKV_AUTO_FAILOVER=false
+      - AIKV_AUTO_FAILOVER=true
+      - AIKV_AUTO_FAILOVER_REQUIRED_CHECKS=2
+      - AIKV_AUTO_FAILOVER_MIN_OFFLINE_SECS=10
+      - AIKV_AUTO_FAILOVER_COOLDOWN_SECS=30
     restart: unless-stopped
     labels:
       - app=aikv
@@ -164,7 +176,10 @@ services:
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
-      - AIKV_AUTO_FAILOVER=false
+      - AIKV_AUTO_FAILOVER=true
+      - AIKV_AUTO_FAILOVER_REQUIRED_CHECKS=2
+      - AIKV_AUTO_FAILOVER_MIN_OFFLINE_SECS=10
+      - AIKV_AUTO_FAILOVER_COOLDOWN_SECS=30
     restart: unless-stopped
     labels:
       - app=aikv
@@ -196,7 +211,10 @@ services:
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
-      - AIKV_AUTO_FAILOVER=false
+      - AIKV_AUTO_FAILOVER=true
+      - AIKV_AUTO_FAILOVER_REQUIRED_CHECKS=2
+      - AIKV_AUTO_FAILOVER_MIN_OFFLINE_SECS=10
+      - AIKV_AUTO_FAILOVER_COOLDOWN_SECS=30
     restart: unless-stopped
     labels:
       - app=aikv
