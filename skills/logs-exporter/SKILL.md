@@ -105,8 +105,8 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --service=aikv --l
 # 只导出 aikv-master-1 节点的日志
 cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --host=aikv-master-1 --duration=30m
 
-# 只导出 aikv-replica-1 节点的日志
-cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --host=aikv-replica-1 --duration=30m
+# 只导出 aikv-replica-1a 节点的日志
+cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --host=aikv-replica-1a --duration=30m
 
 # 导出所有节点的日志 (默认 ) 
 cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --duration=30m
@@ -197,7 +197,7 @@ cd /root/code/wiqun/Aikv-Workflow && ./scripts/export_logs.sh --service=aikv --d
 ### 节点名 (--host)
 节点名对应 Promtail 的 `service` 标签, 值为容器名: 
 - 单机模式: `aikv`
-- 集群模式: `aikv-master-1`, `aikv-replica-1`, `aikv-master-2`, `aikv-replica-2`, `aikv-master-3`, `aikv-replica-3`
+- 集群模式: `aikv-master-1`, `aikv-replica-1a`, `aikv-replica-1b`, `aikv-master-2`, `aikv-replica-2a`, `aikv-replica-2b`
 
 ### 日志级别过滤 (`--level`)
 

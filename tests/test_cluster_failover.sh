@@ -4,7 +4,7 @@
 # 测试 master 节点故障后，replica 是否能自动提升为 master
 #
 # 用法: ./test_cluster_failover.sh [master_port] [replica_port]
-# 默认: master_port=6379 (aikv-master-1), replica_port=6380 (aikv-replica-1)
+# 默认: master_port=6379 (aikv-master-1), replica_port=6380 (aikv-replica-1a)
 #
 # 说明:
 #   - 步骤 0 会检查 master/replica 容器的 AIKV_AUTO_FAILOVER；未 true 时 WARN（仍可依赖 TAKEOVER）。
@@ -17,7 +17,7 @@ set -e
 MASTER_PORT="${1:-6379}"
 REPLICA_PORT="${2:-6380}"
 MASTER_CONTAINER="aikv-master-1"
-REPLICA_CONTAINER="aikv-replica-1"
+REPLICA_CONTAINER="aikv-replica-1a"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -110,10 +110,10 @@ test_key="{failover_test}:data"
 test_value="test_$(date +%s)"
 slot=$(redis-cli -h 127.0.0.1 -p $MASTER_PORT CLUSTER KEYSLOT "$test_key" 2>/dev/null | tr -d '\r' || echo "")
 if [[ -n "$slot" ]] && [[ "$slot" =~ ^[0-9]+$ ]]; then
-    if [ "$slot" -gt 5460 ]; then
-        warn "CLUSTER KEYSLOT $test_key -> $slot，不在 master-1 默认槽 0-5460；停 aikv-master-1 可能测不到该 key 的复制组"
+    if [ "$slot" -gt 8191 ]; then
+        warn "CLUSTER KEYSLOT $test_key -> $slot，不在 master-1 默认槽 0-8191（2 主均分）；停 aikv-master-1 可能测不到该 key 的复制组"
     else
-        info "CLUSTER KEYSLOT $test_key -> $slot（应在 master-1 / replica-1 分片）"
+        info "CLUSTER KEYSLOT $test_key -> $slot（应在 master-1 / replica-1a|1b 分片）"
     fi
 fi
 redis-cli -c -h 127.0.0.1 -p $MASTER_PORT SET "$test_key" "$test_value" >/dev/null 2>&1

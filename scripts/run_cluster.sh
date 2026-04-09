@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 运行 AiKv 集群模式 Docker 镜像 (3主3从)
+# 运行 AiKv 集群模式 Docker 镜像 (2 主 4 从，每分片 1 主 2 从)
 #
 # 用法：
 #   ./run_cluster.sh                                  # 启动集群(默认初始化)
@@ -44,8 +44,8 @@ load_env_file() {
 
 build_cluster_nodes_from_host() {
     local host="$1"
-    CLUSTER_MASTERS="${host}:6379,${host}:6381,${host}:6383"
-    CLUSTER_REPLICAS="${host}:6380,${host}:6382,${host}:6384"
+    CLUSTER_MASTERS="${host}:6379,${host}:6382"
+    CLUSTER_REPLICAS="${host}:6380,${host}:6381,${host}:6383,${host}:6384"
 }
 
 # 解析参数
@@ -131,7 +131,7 @@ mkdir -p "$PROJECT_DIR/data/aikv-cluster"
 echo "清理旧环境..."
 docker compose -p aikv-cluster -f "$CLUSTER_COMPOSE" --project-directory "$DOCKER_DIR" down -v --remove-orphans 2>/dev/null || true
 # 强制删除可能残留的同名容器（无论属于哪个 compose project）
-for c in aikv-master-1 aikv-master-2 aikv-master-3 aikv-replica-1 aikv-replica-2 aikv-replica-3; do
+for c in aikv-master-1 aikv-master-2 aikv-replica-1a aikv-replica-1b aikv-replica-2a aikv-replica-2b; do
     docker rm -f "$c" 2>/dev/null || true
 done
 rm -rf "$PROJECT_DIR/data/aikv-cluster"/*
@@ -172,12 +172,12 @@ echo ""
 echo "=== 集群启动成功 ==="
 echo ""
 echo "节点:"
-echo "  Master-1:  127.0.0.1:6379 (Raft: 50051)"
-echo "  Replica-1: 127.0.0.1:6380 (Raft: 50052)"
-echo "  Master-2:  127.0.0.1:6381 (Raft: 50053)"
-echo "  Replica-2: 127.0.0.1:6382 (Raft: 50054)"
-echo "  Master-3:  127.0.0.1:6383 (Raft: 50055)"
-echo "  Replica-3: 127.0.0.1:6384 (Raft: 50056)"
+echo "  Master-1:    127.0.0.1:6379 (Raft: 50051)"
+echo "  Replica-1a:  127.0.0.1:6380 (Raft: 50052)"
+echo "  Replica-1b:  127.0.0.1:6381 (Raft: 50053)"
+echo "  Master-2:    127.0.0.1:6382 (Raft: 50054)"
+echo "  Replica-2a:  127.0.0.1:6383 (Raft: 50055)"
+echo "  Replica-2b:  127.0.0.1:6384 (Raft: 50056)"
 
 # 启动集群监控 exporters
 if [[ "$WITH_CLUSTER_MONITOR" == "true" ]]; then
@@ -187,21 +187,23 @@ if [[ "$WITH_CLUSTER_MONITOR" == "true" ]]; then
 
     echo ""
     echo "=== 集群监控端口 ==="
+    echo "（master-1 的 9121/9120 由主监控栈 aikv-exporter/aidb-exporter 提供；"
+    echo " 若本机未起主监控栈，请用 ./scripts/run_monitor.sh -c 或自行暴露 9121/9120）"
     echo "Redis Exporters:"
-    echo "  master-1:  127.0.0.1:9121"
-    echo "  replica-1: 127.0.0.1:9221"
-    echo "  master-2:  127.0.0.1:9321"
-    echo "  replica-2: 127.0.0.1:9421"
-    echo "  master-3:  127.0.0.1:9521"
-    echo "  replica-3: 127.0.0.1:9621"
+    echo "  master-1:    127.0.0.1:9121"
+    echo "  replica-1a:  127.0.0.1:9221"
+    echo "  replica-1b:  127.0.0.1:9321"
+    echo "  master-2:    127.0.0.1:9421"
+    echo "  replica-2a:  127.0.0.1:9521"
+    echo "  replica-2b:  127.0.0.1:9621"
     echo ""
     echo "Aidb Exporters:"
-    echo "  master-1:  127.0.0.1:9120"
-    echo "  replica-1: 127.0.0.1:9220"
-    echo "  master-2:  127.0.0.1:9320"
-    echo "  replica-2: 127.0.0.1:9420"
-    echo "  master-3:  127.0.0.1:9520"
-    echo "  replica-3: 127.0.0.1:9620"
+    echo "  master-1:    127.0.0.1:9120"
+    echo "  replica-1a:  127.0.0.1:9220"
+    echo "  replica-1b:  127.0.0.1:9320"
+    echo "  master-2:    127.0.0.1:9420"
+    echo "  replica-2a:  127.0.0.1:9520"
+    echo "  replica-2b:  127.0.0.1:9620"
 fi
 
 # 等待节点就绪

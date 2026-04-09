@@ -7,7 +7,7 @@
 # 默认: host=127.0.0.1 port=6379
 #
 # 前置条件:
-#   1. 集群已启动（6节点：6379-6381 master, 6382-6384 replica）
+#   1. 集群已启动（6 节点：6379/6382 为 master，6380-6381、6383-6384 为 replica）
 #   2. 集群已初始化（slots 已分配）
 #   3. 各节点可正常访问
 
@@ -19,8 +19,8 @@ CLI="redis-cli -h $HOST -p $PORT"
 CLI_CLUSTER="redis-cli -c -h $HOST -p $PORT"  # 集群模式
 
 # 集群节点配置
-MASTER_PORTS=(6379 6381 6383)
-REPLICA_PORTS=(6380 6382 6384)
+MASTER_PORTS=(6379 6382)
+REPLICA_PORTS=(6380 6381 6383 6384)
 ALL_PORTS=(6379 6380 6381 6382 6383 6384)
 
 RED='\033[0;31m'

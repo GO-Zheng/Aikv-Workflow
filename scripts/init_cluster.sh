@@ -19,9 +19,9 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 默认配置
-MASTERS=("127.0.0.1:6379" "127.0.0.1:6381" "127.0.0.1:6383")
-REPLICAS=("127.0.0.1:6380" "127.0.0.1:6382" "127.0.0.1:6384")
+# 默认配置（2 主 × 每主 2 从；与 docker-compose-cluster.yaml 宿主机端口一致）
+MASTERS=("127.0.0.1:6379" "127.0.0.1:6382")
+REPLICAS=("127.0.0.1:6380" "127.0.0.1:6381" "127.0.0.1:6383" "127.0.0.1:6384")
 REDIS_CLI="${REDIS_CLI:-redis-cli}"
 
 # redis-cli 实际连接地址：默认同节点列表中的 host:port。
@@ -66,8 +66,7 @@ get_master_raft_addr() {
     local redis_port="$1"
     case "${redis_port}" in
         6379) echo "aikv-master-1:50051" ;;
-        6381) echo "aikv-master-2:50051" ;;
-        6383) echo "aikv-master-3:50051" ;;
+        6382) echo "aikv-master-2:50051" ;;
         *) echo "" ;;
     esac
 }
@@ -89,17 +88,16 @@ Environment:
                                  (for init on the same machine as SERVER_HOST when LAN IP hairpin fails).
 
 Example:
-    $0 -m 127.0.0.1:6379,127.0.0.1:6381,127.0.0.1:6383 \\
-       -r 127.0.0.1:6380,127.0.0.1:6382,127.0.0.1:6384
+    $0 -m 127.0.0.1:6379,127.0.0.1:6382 \\
+       -r 127.0.0.1:6380,127.0.0.1:6381,127.0.0.1:6383,127.0.0.1:6384
 
-    This creates a 6-node cluster with 3 masters and 3 replicas:
-    - Master 1: 127.0.0.1:6379 -> Replica: 127.0.0.1:6380
-    - Master 2: 127.0.0.1:6381 -> Replica: 127.0.0.1:6382
-    - Master 3: 127.0.0.1:6383 -> Replica: 127.0.0.1:6384
+    This creates a 6-node cluster with 2 masters and 4 replicas (2 per master):
+    - Master 1: 127.0.0.1:6379 -> Replicas: 127.0.0.1:6380, 127.0.0.1:6381
+    - Master 2: 127.0.0.1:6382 -> Replicas: 127.0.0.1:6383, 127.0.0.1:6384
 
 Default (when no options provided):
-    Masters: 127.0.0.1:6379, 127.0.0.1:6381, 127.0.0.1:6383
-    Replicas: 127.0.0.1:6380, 127.0.0.1:6382, 127.0.0.1:6384
+    Masters: 127.0.0.1:6379, 127.0.0.1:6382
+    Replicas: 127.0.0.1:6380, 127.0.0.1:6381, 127.0.0.1:6383, 127.0.0.1:6384
 
 EOF
     exit 0
@@ -145,8 +143,14 @@ if [[ -n "${CLUSTER_REDIS_CONNECT_HOST:-}" ]]; then
     print_info "redis-cli 实际连接: ${CLUSTER_REDIS_CONNECT_HOST}:<端口>（与上表端口对应）；CLUSTER MEET 仍使用上表中的对外地址"
 fi
 
-if [ ${MASTER_COUNT} -lt 3 ]; then
-    print_error "At least 3 master nodes are required for a cluster"
+if [ "${MASTER_COUNT}" -lt 2 ]; then
+    print_error "At least 2 master nodes are required for a cluster"
+    exit 1
+fi
+
+EXPECTED_REPLICAS=$((MASTER_COUNT * 2))
+if [ "${REPLICA_COUNT}" -ne "${EXPECTED_REPLICAS}" ]; then
+    print_error "Expected ${EXPECTED_REPLICAS} replicas (2 per master), got ${REPLICA_COUNT}"
     exit 1
 fi
 
@@ -339,22 +343,26 @@ echo
 # 步骤 7: 设置主从复制
 print_info "Step 7: Setting up replication..."
 
-# 按索引映射 replicas 到 masters
-for i in "${!REPLICAS[@]}"; do
-    replica="${REPLICAS[$i]}"
-    replica_id="${ALL_NODE_IDS[$replica]}"
+# 每主 2 从：replicas 顺序为 [m0_r0, m0_r1, m1_r0, m1_r1, ...]
+replica_idx=0
+for i in "${!MASTERS[@]}"; do
     master="${MASTERS[$i]}"
     master_id="${ALL_NODE_IDS[$master]}"
+    for _ in 1 2; do
+        replica="${REPLICAS[$replica_idx]}"
+        replica_id="${ALL_NODE_IDS[$replica]}"
 
-    print_info "Setting ${replica} as replica of ${master}..."
+        print_info "Setting ${replica} as replica of ${master}..."
 
-    read -r bs_host bs_port <<< "$(bootstrap_redis_cli)"
+        read -r bs_host bs_port <<< "$(bootstrap_redis_cli)"
 
-    if ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER ADDREPLICATION ${replica_id} ${master_id} 2>&1 | grep -q "OK"; then
-        print_success "${replica} is now a replica of ${master}"
-    else
-        print_warn "Failed to set up replication for ${replica}"
-    fi
+        if ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER ADDREPLICATION ${replica_id} ${master_id} 2>&1 | grep -q "OK"; then
+            print_success "${replica} is now a replica of ${master}"
+        else
+            print_warn "Failed to set up replication for ${replica}"
+        fi
+        replica_idx=$((replica_idx + 1))
+    done
 done
 echo
 
@@ -372,7 +380,7 @@ echo ""
 # 首先获取 replicas 的实际 node IDs（从 CLUSTER MYID 获取）
 # 这些是 replica 节点通过 generate_node_id_from_addr() 生成的真实 ID
 declare -A REPLICA_RAFT_IDS
-declare -a REPLICA_RAFT_HOSTNAMES=("aikv-replica-1" "aikv-replica-2" "aikv-replica-3")
+declare -a REPLICA_RAFT_HOSTNAMES=("aikv-replica-1a" "aikv-replica-1b" "aikv-replica-2a" "aikv-replica-2b")
 
 print_info "Getting actual node IDs for replicas from CLUSTER MYID..."
 for i in "${!REPLICAS[@]}"; do

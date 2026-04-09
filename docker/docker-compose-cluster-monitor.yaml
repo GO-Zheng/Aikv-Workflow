@@ -1,10 +1,14 @@
-# AiKv Cluster Monitor
+# AiKv Cluster Monitor（与 docker-compose-cluster.yaml 宿主机 Redis 端口对齐）
+#
+# master-1 的 9121/9120 由 docker-compose-monitor.yaml 中 aikv-exporter / aidb-exporter
+# 提供（同样连 SERVER_HOST:6379），避免与 run_monitor.sh -c 合并启动时重复绑定宿主机端口。
+# 若仅单独 up 本文件且无主监控栈，需自行为 master-1 暴露 9121/9120（或改用 run_monitor.sh -c）。
 
 name: aikv-monitor
 services:
-  aikv-exporter-replica-1:
+  aikv-exporter-replica-1a:
     image: oliver006/redis_exporter:v1.80.1
-    container_name: aikv-exporter-replica-1
+    container_name: aikv-exporter-replica-1a
     environment:
       - REDIS_ADDR=redis://${SERVER_HOST}:6380
     ports:
@@ -13,9 +17,9 @@ services:
     networks:
       - aikv-workflow
 
-  aidb-exporter-replica-1:
+  aidb-exporter-replica-1a:
     image: aidb-exporter:v0.0.2
-    container_name: aidb-exporter-replica-1
+    container_name: aidb-exporter-replica-1a
     environment:
       - AIDB_TARGET=redis://${SERVER_HOST}:6380
       - EXPORTER_PORT=9120
@@ -25,9 +29,9 @@ services:
     networks:
       - aikv-workflow
 
-  aikv-exporter-master-2:
+  aikv-exporter-replica-1b:
     image: oliver006/redis_exporter:v1.80.1
-    container_name: aikv-exporter-master-2
+    container_name: aikv-exporter-replica-1b
     environment:
       - REDIS_ADDR=redis://${SERVER_HOST}:6381
     ports:
@@ -36,9 +40,9 @@ services:
     networks:
       - aikv-workflow
 
-  aidb-exporter-master-2:
+  aidb-exporter-replica-1b:
     image: aidb-exporter:v0.0.2
-    container_name: aidb-exporter-master-2
+    container_name: aidb-exporter-replica-1b
     environment:
       - AIDB_TARGET=redis://${SERVER_HOST}:6381
       - EXPORTER_PORT=9120
@@ -48,9 +52,9 @@ services:
     networks:
       - aikv-workflow
 
-  aikv-exporter-replica-2:
+  aikv-exporter-master-2:
     image: oliver006/redis_exporter:v1.80.1
-    container_name: aikv-exporter-replica-2
+    container_name: aikv-exporter-master-2
     environment:
       - REDIS_ADDR=redis://${SERVER_HOST}:6382
     ports:
@@ -59,9 +63,9 @@ services:
     networks:
       - aikv-workflow
 
-  aidb-exporter-replica-2:
+  aidb-exporter-master-2:
     image: aidb-exporter:v0.0.2
-    container_name: aidb-exporter-replica-2
+    container_name: aidb-exporter-master-2
     environment:
       - AIDB_TARGET=redis://${SERVER_HOST}:6382
       - EXPORTER_PORT=9120
@@ -71,9 +75,9 @@ services:
     networks:
       - aikv-workflow
 
-  aikv-exporter-master-3:
+  aikv-exporter-replica-2a:
     image: oliver006/redis_exporter:v1.80.1
-    container_name: aikv-exporter-master-3
+    container_name: aikv-exporter-replica-2a
     environment:
       - REDIS_ADDR=redis://${SERVER_HOST}:6383
     ports:
@@ -82,9 +86,9 @@ services:
     networks:
       - aikv-workflow
 
-  aidb-exporter-master-3:
+  aidb-exporter-replica-2a:
     image: aidb-exporter:v0.0.2
-    container_name: aidb-exporter-master-3
+    container_name: aidb-exporter-replica-2a
     environment:
       - AIDB_TARGET=redis://${SERVER_HOST}:6383
       - EXPORTER_PORT=9120
@@ -94,9 +98,9 @@ services:
     networks:
       - aikv-workflow
 
-  aikv-exporter-replica-3:
+  aikv-exporter-replica-2b:
     image: oliver006/redis_exporter:v1.80.1
-    container_name: aikv-exporter-replica-3
+    container_name: aikv-exporter-replica-2b
     environment:
       - REDIS_ADDR=redis://${SERVER_HOST}:6384
     ports:
@@ -105,9 +109,9 @@ services:
     networks:
       - aikv-workflow
 
-  aidb-exporter-replica-3:
+  aidb-exporter-replica-2b:
     image: aidb-exporter:v0.0.2
-    container_name: aidb-exporter-replica-3
+    container_name: aidb-exporter-replica-2b
     environment:
       - AIDB_TARGET=redis://${SERVER_HOST}:6384
       - EXPORTER_PORT=9120

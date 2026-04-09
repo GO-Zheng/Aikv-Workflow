@@ -41,16 +41,16 @@ agentType: general-purpose
 
 AiKv 使用 Raft consensus（通过 AiDb），不同于 Redis gossip protocol。
 
-**节点规划（3 主 3 从，与 `docker/docker-compose-cluster.yaml` 一致）：**
+**节点规划（2 主 4 从、每分片 Raft 三副本，与 `docker/docker-compose-cluster.yaml` 一致）：**
 
 | 容器 / 角色 | 宿主机 Redis | 宿主机 Raft(gRPC) | 说明 |
 |-------------|-------------|-------------------|------|
-| aikv-master-1 (bootstrap) | 6379 | 50051 | 主 1 |
-| aikv-replica-1 | 6380 | 50052 | 从，跟主 1 |
-| aikv-master-2 | 6381 | 50053 | 主 2 |
-| aikv-replica-2 | 6382 | 50054 | 从，跟主 2 |
-| aikv-master-3 | 6383 | 50055 | 主 3 |
-| aikv-replica-3 | 6384 | 50056 | 从，跟主 3 |
+| aikv-master-1 (bootstrap) | 6379 | 50051 | 分片 1 主 |
+| aikv-replica-1a | 6380 | 50052 | 分片 1 从 |
+| aikv-replica-1b | 6381 | 50053 | 分片 1 从 |
+| aikv-master-2 | 6382 | 50054 | 分片 2 主 |
+| aikv-replica-2a | 6383 | 50055 | 分片 2 从 |
+| aikv-replica-2b | 6384 | 50056 | 分片 2 从 |
 
 容器内 Redis 均为 6379、Raft 均为 50051；`CLUSTER METARAFT ADDLEARNER` 等须使用 **Docker 网络主机名 + 容器内端口**（如 `aikv-master-2:50051`），不要用宿主机映射端口。初始化见 `scripts/init_cluster.sh`（已与 compose 对齐）。
 
@@ -74,7 +74,7 @@ AiKv 使用 Raft consensus（通过 AiDb），不同于 Redis gossip protocol。
 ```
 请问使用哪种模式？
 - single: 单节点模式
-- cluster: 集群模式（3主3从）
+- cluster: 集群模式（2 主 4 从）
 ```
 
 ### 执行流程（单节点）

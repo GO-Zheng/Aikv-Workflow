@@ -37,7 +37,7 @@
 #                  格式同上 (如 12:00)
 #   --level       日志级别过滤: error, warn, info, debug (可选, 多个用逗号分隔)
 #   --service     服务名过滤, 如: aikv (对应 Promtail 的 job 标签)
-#   --host        节点名过滤 (service 标签), 如: aikv-master-1, aikv-replica-1
+#   --host        节点名过滤 (service 标签), 如: aikv-master-1, aikv-replica-1a
 #   --request-id  请求 ID 过滤 (JSON 字段)
 #   --diag-event  诊断事件名 (JSON 字段 diag_event, 与 AiKv tracing 一致)
 #   --contains    行级子串过滤 (LogQL |=, 适用于 aidb log:: 文本中的 diag_event=...)
@@ -151,7 +151,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --end         结束时间 (与 --start 配合使用)"
             echo "  --level       日志级别过滤: error, warn, info, debug (逗号分隔多个)"
             echo "  --service     服务名过滤 (job 标签)"
-            echo "  --host        节点名过滤 (service 标签), 如: aikv-master-1, aikv-replica-1"
+            echo "  --host        节点名过滤 (service 标签), 如: aikv-master-1, aikv-replica-1a"
             echo "  --request-id  请求 ID 过滤 (JSON 字段)"
             echo "  --diag-event  诊断事件 (JSON 字段 diag_event)"
             echo "  --contains    行子串 (LogQL |=)"

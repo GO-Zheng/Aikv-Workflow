@@ -27,19 +27,19 @@ scrape_configs:
           node: master-1
       - targets: ["${MONITOR_HOST}:9221"]
         labels:
-          node: replica-1
+          node: replica-1a
       - targets: ["${MONITOR_HOST}:9321"]
         labels:
-          node: master-2
+          node: replica-1b
       - targets: ["${MONITOR_HOST}:9421"]
         labels:
-          node: replica-2
+          node: master-2
       - targets: ["${MONITOR_HOST}:9521"]
         labels:
-          node: master-3
+          node: replica-2a
       - targets: ["${MONITOR_HOST}:9621"]
         labels:
-          node: replica-3
+          node: replica-2b
     relabel_configs:
       - source_labels: [node]
         regex: (.*)
@@ -53,19 +53,19 @@ scrape_configs:
           node: master-1
       - targets: ["${MONITOR_HOST}:9220"]
         labels:
-          node: replica-1
+          node: replica-1a
       - targets: ["${MONITOR_HOST}:9320"]
         labels:
-          node: master-2
+          node: replica-1b
       - targets: ["${MONITOR_HOST}:9420"]
         labels:
-          node: replica-2
+          node: master-2
       - targets: ["${MONITOR_HOST}:9520"]
         labels:
-          node: master-3
+          node: replica-2a
       - targets: ["${MONITOR_HOST}:9620"]
         labels:
-          node: replica-3
+          node: replica-2b
     relabel_configs:
       - source_labels: [node]
         regex: (.*)
