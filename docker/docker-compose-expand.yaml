@@ -1,0 +1,51 @@
+# 第三分片 master（扩容）：与 docker-compose-cluster 同网 aikv-workflow，供 test_cluster_expand_master.sh 使用。
+#
+# 前置条件：必须先启动集群网络与已有节点，否则外部网络不存在：
+#   docker compose -f docker/docker-compose-cluster.yaml up -d
+#   ./scripts/init_cluster.sh
+#
+# 再启动本文件（或由 tests/test_cluster_expand_master.sh 在未检测到容器时自动执行）:
+#   docker compose -f docker/docker-compose-expand.yaml up -d
+#
+# 默认宿主机 Redis 6385、Raft 50057，与脚本示例一致；METARAFT 地址填 aikv-master-3:50051。
+#
+# 镜像与集群一致，由 AIKV_CLUSTER_IMAGE 指定。
+#
+# 监控：本文件附带 master-3 的 redis_exporter / aidb-exporter（宿主机 9721 / 9720），与
+# docker-compose-cluster-monitor.yaml 中 922x–962x 错开。Prometheus 抓取示例见
+# docker/prometheus.runtime.yaml（aikv-cluster-exporter / aidb-cluster-exporter 中 node: master-3）。
+
+services:
+  aikv-master-3:
+    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
+    container_name: aikv-master-3
+    hostname: aikv-master-3
+    user: root
+    command: ["--config", "/app/aikv-cluster.toml"]
+    ports:
+      - "6385:6379"
+      - "50057:50051"
+    volumes:
+      - ../config/aikv-master-3.toml:/app/aikv-cluster.toml:ro
+    environment:
+      - RUST_LOG=debug
+      - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
+      - AIKV_AUTO_FAILOVER=true
+      - AIKV_AUTO_FAILOVER_REQUIRED_CHECKS=2
+      - AIKV_AUTO_FAILOVER_MIN_OFFLINE_SECS=10
+      - AIKV_AUTO_FAILOVER_COOLDOWN_SECS=30
+    restart: unless-stopped
+    labels:
+      - app=aikv
+    networks:
+      - aikv-workflow
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  aikv-workflow:
+    external: true

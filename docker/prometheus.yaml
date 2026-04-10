@@ -40,6 +40,9 @@ scrape_configs:
       - targets: ["${MONITOR_HOST}:9621"]
         labels:
           node: replica-2b
+      - targets: ["${MONITOR_HOST}:9721"]
+        labels:
+          node: master-3
     relabel_configs:
       - source_labels: [node]
         regex: (.*)
@@ -66,6 +69,9 @@ scrape_configs:
       - targets: ["${MONITOR_HOST}:9620"]
         labels:
           node: replica-2b
+      - targets: ["${MONITOR_HOST}:9720"]
+        labels:
+          node: master-3
     relabel_configs:
       - source_labels: [node]
         regex: (.*)

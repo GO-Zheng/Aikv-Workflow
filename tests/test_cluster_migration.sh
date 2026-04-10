@@ -3,6 +3,17 @@
 # AiKv 在线槽迁移测试（Redis Cluster 流程）
 # 用法: ./test_cluster_migration.sh [host] [src_port] [dst_port]
 #
+# 环境变量: IMPORTING_WAIT_MS, MIGRATION_NOISE_SECONDS；
+#   MIGRATION_SET_RETRIES / MIGRATION_SET_RETRY_SEC（预写入 SET 遇 TRYAGAIN/converging 时重试，默认 40×1s）
+#
+# MIGRATE 目标地址（重要）:
+#   MIGRATE 由 **源 Redis/AiKv 进程所在网络** 向目标发 TCP，不是在你跑脚本的 shell 上连。
+#   源在 Docker 容器内时，不能用 127.0.0.1:宿主机映射端口（会连到容器自己）。
+#   请设 MIGRATE_DST_HOST / MIGRATE_DST_PORT，例如:
+#     MIGRATE_DST_HOST=aikv-master-3 MIGRATE_DST_PORT=6379
+#   （与其它 master 一样，容器内 Redis 恒为 6379；hostname 与 compose / raft 一致）
+#   test_cluster_expand_and_migrate.sh 会从 new_master_raft_addr 自动导出这两项（可被环境变量覆盖）。
+#
 # ---------------------------------------------------------------------------
 # 测试用的 key 是什么？
 # ---------------------------------------------------------------------------
@@ -28,6 +39,12 @@ SRC_PORT="${2:-6379}"
 DST_PORT="${3:-6382}"
 IMPORTING_WAIT_MS="${IMPORTING_WAIT_MS:-0}"
 MIGRATION_NOISE_SECONDS="${MIGRATION_NOISE_SECONDS:-0}"
+# 扩容/MEET 后数据组可能短暂 TRYAGAIN，预写入 SET 自动重试
+MIGRATION_SET_RETRIES="${MIGRATION_SET_RETRIES:-40}"
+MIGRATION_SET_RETRY_SEC="${MIGRATION_SET_RETRY_SEC:-1}"
+# 见文件头：MIGRATE 在源节点容器内连目标，默认与 redis-cli 的 HOST/DST_PORT 一致
+MIGRATE_HOST="${MIGRATE_DST_HOST:-$HOST}"
+MIGRATE_PORT="${MIGRATE_DST_PORT:-$DST_PORT}"
 
 CLI_SRC="redis-cli -h $HOST -p $SRC_PORT"
 CLI_DST="redis-cli -h $HOST -p $DST_PORT"
@@ -77,6 +94,9 @@ verify_slot_on_dst_master() {
 
 echo "=============================================="
 echo " AiKv 在线槽迁移测试 (source=$SRC_PORT target=$DST_PORT)"
+if [[ "$MIGRATE_HOST" != "$HOST" || "$MIGRATE_PORT" != "$DST_PORT" ]]; then
+  echo " MIGRATE 使用: ${MIGRATE_HOST}:${MIGRATE_PORT}（源进程侧连目标；与 redis-cli ${HOST}:${DST_PORT} 可不同）"
+fi
 echo "=============================================="
 
 src_id=$($CLI_SRC CLUSTER MYID 2>/dev/null | tr -d '\r')
@@ -115,7 +135,23 @@ done
 [ -n "$key" ] || fail "无法找到落在源节点槽范围内的测试 key"
 
 value="v_$(date +%s)"
-set_out=$($CLI_CLUSTER SET "$key" "$value" 2>&1 || true)
+set_out=""
+attempt=1
+while [ "$attempt" -le "$MIGRATION_SET_RETRIES" ]; do
+  set_out=$($CLI_CLUSTER SET "$key" "$value" 2>&1 || true)
+  if [ "$set_out" = "OK" ]; then
+    break
+  fi
+  if echo "$set_out" | grep -qiE 'TRYAGAIN|converging|retry'; then
+    if [ "$attempt" -eq 1 ]; then
+      info "预写入遇短暂收敛/重试提示，将最多重试 ${MIGRATION_SET_RETRIES} 次（间隔 ${MIGRATION_SET_RETRY_SEC}s）…"
+    fi
+    sleep "$MIGRATION_SET_RETRY_SEC"
+    attempt=$((attempt + 1))
+    continue
+  fi
+  break
+done
 [ "$set_out" = "OK" ] || fail "预写入失败: $set_out"
 info "测试 key=$key slot=$slot value=$value"
 info "手动确认示例: redis-cli -h $HOST -p $SRC_PORT CLUSTER KEYSLOT \"$key\""
@@ -153,7 +189,7 @@ if [ "$MIGRATION_NOISE_SECONDS" -gt 0 ] 2>/dev/null; then
   noise_pid=$!
 fi
 
-out=$($CLI_SRC MIGRATE "$HOST" "$DST_PORT" "" 0 5000 KEYS "$key" REPLACE 2>&1 || true)
+out=$($CLI_SRC MIGRATE "$MIGRATE_HOST" "$MIGRATE_PORT" "" 0 5000 KEYS "$key" REPLACE 2>&1 || true)
 if [ -n "$noise_pid" ]; then
   wait "$noise_pid" || true
 fi
