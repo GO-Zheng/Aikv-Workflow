@@ -311,7 +311,6 @@ SLOTS_PER_MASTER=$((TOTAL_SLOTS / MASTER_COUNT))
 for i in "${!MASTERS[@]}"; do
     master="${MASTERS[$i]}"
     master_id="${ALL_NODE_IDS[$master]}"
-    read -r m_cli_host m_cli_port <<< "$(redis_cli_host_port "$master")"
 
     start_slot=$((i * SLOTS_PER_MASTER))
     if [ $i -eq $((MASTER_COUNT - 1)) ]; then
@@ -322,21 +321,17 @@ for i in "${!MASTERS[@]}"; do
 
     print_info "Assigning slots ${start_slot}-${end_slot} to ${master} (ID: ${master_id})..."
 
-    # 第一个 master (bootstrap) 不需要指定 node_id
-    if [ $i -eq 0 ]; then
-        ${REDIS_CLI} -h ${m_cli_host} -p ${m_cli_port} CLUSTER ADDSLOTSRANGE ${start_slot} ${end_slot} 2>&1 | grep -q "OK" || {
-            print_error "Failed to assign slots to ${master}"
-            exit 1
-        }
+    # 始终经 bootstrap 节点执行，并显式传入目标 MYID（与 Redis 文档一致），避免「直连某 master 但该节点非 MetaRaft leader」时的转发/hairpin 差异。
+    read -r bs_host bs_port <<< "$(bootstrap_redis_cli)"
+    addslots_out="$(${REDIS_CLI} -h "${bs_host}" -p "${bs_port}" CLUSTER ADDSLOTSRANGE "${start_slot}" "${end_slot}" "${master_id}" 2>&1)" || true
+    if echo "${addslots_out}" | grep -q "OK"; then
+        print_success "Assigned slots ${start_slot}-${end_slot} to ${master}"
     else
-        # 其他 master 需要指定 node_id
-        read -r bs_host bs_port <<< "$(bootstrap_redis_cli)"
-        ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER ADDSLOTSRANGE ${start_slot} ${end_slot} ${master_id} 2>&1 | grep -q "OK" || {
-            print_error "Failed to assign slots to ${master}"
-            exit 1
-        }
+        print_error "Failed to assign slots to ${master}"
+        print_error "  Tried: ${REDIS_CLI} -h ${bs_host} -p ${bs_port} CLUSTER ADDSLOTSRANGE ${start_slot} ${end_slot} ${master_id}"
+        print_error "  Response: ${addslots_out}"
+        exit 1
     fi
-    print_success "Assigned slots ${start_slot}-${end_slot} to ${master}"
 done
 echo
 

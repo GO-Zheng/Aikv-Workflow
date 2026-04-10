@@ -253,18 +253,10 @@ if [[ "$DO_INIT" == "true" ]]; then
     if [[ -n "${SERVER_HOST:-}" ]]; then
         build_cluster_nodes_from_host "$SERVER_HOST"
         echo "检测到 SERVER_HOST=$SERVER_HOST，使用该地址初始化集群..."
-        INIT_CONNECT_HOST=""
-        if ! timeout 3 redis-cli -h "$SERVER_HOST" -p 6379 ping 2>/dev/null | grep -q PONG; then
-            INIT_CONNECT_HOST="127.0.0.1"
-            echo "提示: 本机无法通过 ${SERVER_HOST}:6379 访问（常见于在 SERVER 上用局域网 IP 访问 Docker 端口映射 / hairpin）。"
-            echo "      将用 CLUSTER_REDIS_CONNECT_HOST=127.0.0.1 连各端口；CLUSTER MEET 仍使用 ${SERVER_HOST}，外网 redis-cli -c 不受影响。"
-        fi
-        # 显式 export，避免个别 shell/包装下前缀赋值未传入子进程
-        if [[ -n "$INIT_CONNECT_HOST" ]]; then
-            export CLUSTER_REDIS_CONNECT_HOST="$INIT_CONNECT_HOST"
-        else
-            unset CLUSTER_REDIS_CONNECT_HOST 2>/dev/null || true
-        fi
+        # 在 SERVER 宿主机上跑初始化时，一律用 127.0.0.1 + 映射端口连 redis-cli。
+        # 仅靠「能 PING 通局域网 IP」不够：部分环境 hairpin 对长响应/部分命令仍失败，导致 ADDSLOTSRANGE 等静默 grep 不到 OK。
+        export CLUSTER_REDIS_CONNECT_HOST="127.0.0.1"
+        echo "redis-cli 使用 CLUSTER_REDIS_CONNECT_HOST=127.0.0.1；CLUSTER MEET / 元数据中的对外地址仍使用 ${SERVER_HOST}。"
         "$SCRIPT_DIR/init_cluster.sh" -m "$CLUSTER_MASTERS" -r "$CLUSTER_REPLICAS"
         unset CLUSTER_REDIS_CONNECT_HOST 2>/dev/null || true
     else

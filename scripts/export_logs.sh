@@ -40,6 +40,10 @@
 #   --host        节点名过滤 (service 标签), 如: aikv-master-1, aikv-replica-1a
 #   --request-id  请求 ID 过滤 (JSON 字段)
 #   --diag-event  诊断事件名 (JSON 字段 diag_event, 与 AiKv tracing 一致)
+#   --diag-events 多个诊断事件（逗号分隔，文本模式按 diag_event=... 正则匹配）
+#   --diag-mode   diag_event 过滤模式: auto|json|contains (默认: auto)
+#   --scenario    迁移排障场景快捷过滤:
+#                 migration-setslot|migration-ask|migration-migrate|migration-forward
 #   --contains    行级子串过滤 (LogQL |=, 适用于 aidb log:: 文本中的 diag_event=...)
 #   --limit       最大返回条数 (默认: 1000, 上限 5000)
 #   --format      输出格式: json (默认) 或 csv
@@ -79,6 +83,9 @@ SERVICE=""
 HOST=""
 REQUEST_ID=""
 DIAG_EVENT=""
+DIAG_EVENTS=""
+DIAG_MODE="auto"
+SCENARIO=""
 CONTAINS=""
 LIMIT="1000"
 
@@ -116,6 +123,18 @@ while [[ $# -gt 0 ]]; do
             DIAG_EVENT="${1#*=}"
             shift
             ;;
+        --diag-events=*)
+            DIAG_EVENTS="${1#*=}"
+            shift
+            ;;
+        --diag-mode=*)
+            DIAG_MODE="${1#*=}"
+            shift
+            ;;
+        --scenario=*)
+            SCENARIO="${1#*=}"
+            shift
+            ;;
         --contains=*)
             CONTAINS="${1#*=}"
             shift
@@ -142,7 +161,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         --help|-h)
-            echo "用法: $0 [--duration=...] [--start=...] [--end=...] [--level=...] [--service=...] [--host=...] [--request-id=...] [--diag-event=...] [--contains=...] [--limit=...] [--format=json|csv] [--list]"
+            echo "用法: $0 [--duration=...] [--start=...] [--end=...] [--level=...] [--service=...] [--host=...] [--request-id=...] [--diag-event=...] [--diag-events=...] [--diag-mode=auto|json|contains] [--scenario=...] [--contains=...] [--limit=...] [--format=json|csv] [--list]"
             echo ""
             echo "参数:"
             echo "  --duration    时间范围, 如: 5m, 1h, 30m, 24h (默认: 5m)"
@@ -154,6 +173,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --host        节点名过滤 (service 标签), 如: aikv-master-1, aikv-replica-1a"
             echo "  --request-id  请求 ID 过滤 (JSON 字段)"
             echo "  --diag-event  诊断事件 (JSON 字段 diag_event)"
+            echo "  --diag-events 多个诊断事件（逗号分隔）"
+            echo "  --diag-mode   diag_event 过滤模式: auto|json|contains (默认 auto)"
+            echo "  --scenario    迁移场景快捷过滤: migration-setslot|migration-ask|migration-migrate|migration-forward"
             echo "  --contains    行子串 (LogQL |=)"
             echo "  --limit       最大返回条数 (默认: 1000, 上限 5000)"
             echo "  --format      输出格式: json 或 csv (默认: json)"
@@ -173,6 +195,28 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# 场景快捷过滤（仅在未显式传 --diag-event/--diag-events 时生效）
+if [[ -n "$SCENARIO" && -z "$DIAG_EVENT" && -z "$DIAG_EVENTS" ]]; then
+    case "$SCENARIO" in
+        migration-setslot)
+            DIAG_EVENTS="cluster_setslot_attempt,cluster_setslot_forward_to_leader,cluster_setslot_meta_apply_success,cluster_setslot_meta_apply_failed,cluster_meta_post_sync_start,cluster_meta_post_sync_success,cluster_meta_post_sync_failed"
+            ;;
+        migration-ask)
+            DIAG_EVENTS="cluster_client_ask,cluster_client_asking_marked,cluster_route_check_ask_redirect,cluster_route_check_allow_importing,cluster_route_check_moved_redirect"
+            ;;
+        migration-migrate)
+            DIAG_EVENTS="cluster_migrate_attempt,cluster_migrate_connect_failed,cluster_migrate_auth_failed,cluster_migrate_restore_failed,cluster_migrate_delete_source_failed,cluster_migrate_nokey,cluster_migrate_success"
+            ;;
+        migration-forward)
+            DIAG_EVENTS="cluster_setslot_forward_rpc_attempt,cluster_setslot_forward_rpc_failed,cluster_setslot_forward_rpc_success,cluster_raft_forward_to_moved,cluster_raft_forward_unparsed"
+            ;;
+        *)
+            echo "错误: 不支持的 --scenario=$SCENARIO" >&2
+            exit 1
+            ;;
+    esac
+fi
 
 # 将 duration 转换为秒
 duration_to_seconds() {
@@ -277,9 +321,27 @@ build_logql() {
         query="$query | json | request_id=\"$REQUEST_ID\""
     fi
 
-    # diag_event（AiKv tracing JSON）
+    # diag_event（支持 json/contains/auto）
     if [[ -n "$DIAG_EVENT" ]]; then
-        query="$query | json | diag_event=\"$DIAG_EVENT\""
+        case "$DIAG_MODE" in
+            json)
+                query="$query | json | diag_event=\"$DIAG_EVENT\""
+                ;;
+            contains|auto)
+                query="$query |= \"diag_event=$DIAG_EVENT\""
+                ;;
+            *)
+                echo "错误: 不支持的 --diag-mode=$DIAG_MODE" >&2
+                exit 1
+                ;;
+        esac
+    fi
+
+    # diag_events（多个事件，文本正则模式）
+    if [[ -n "$DIAG_EVENTS" ]]; then
+        local ev_regex
+        ev_regex="$(echo "$DIAG_EVENTS" | sed 's/,/|/g')"
+        query="$query |~ \"diag_event=($ev_regex)\""
     fi
 
     # 行级子串（如 aidb log:: 输出的 diag_event=...）；勿含双引号
@@ -297,6 +359,8 @@ echo "导出日志"
 echo "时间范围: $TIME_DESC"
 echo "查询条件: $QUERY"
 [[ -n "$DIAG_EVENT" ]] && echo "diag_event: $DIAG_EVENT"
+[[ -n "$DIAG_EVENTS" ]] && echo "diag_events: $DIAG_EVENTS"
+[[ -n "$SCENARIO" ]] && echo "scenario: $SCENARIO"
 [[ -n "$CONTAINS" ]] && echo "行子串(contains): $CONTAINS"
 echo "限制: $LIMIT 条"
 echo ""
