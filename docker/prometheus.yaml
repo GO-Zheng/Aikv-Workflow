@@ -12,6 +12,10 @@ scrape_configs:
     static_configs:
       - targets: ["${SERVER_HOST}:9100"]
 
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["${SERVER_HOST}:8088"]
+
   - job_name: "aikv-exporter"
     static_configs:
       - targets: ["${MONITOR_HOST}:9121"]

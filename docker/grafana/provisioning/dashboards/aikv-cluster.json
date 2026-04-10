@@ -3737,6 +3737,441 @@
       ],
       "title": "AiDb Block Cache 使用率 ",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 138
+      },
+      "id": 500,
+      "panels": [],
+      "title": "cAdvisor（容器资源）",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_memory_working_set_bytes | cAdvisor | 容器工作集内存，近似表示不可轻易回收的活跃内存 |\n\n### 面板说明\n\n#### 容器内存工作集（Working Set）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| 各容器工作集（多色） | 每个 AiKv 容器当前活跃内存占用 | `sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"cadvisor\",container_label_app=\"aikv\"})` |\n\n| 实际场景 | 现象 | 说明 |\n|------|------|------|\n| 正常稳态 | 曲线随流量小幅波动 | 内存压力可控 |\n| 写入突增 | 工作集快速抬升后回落 | 批量写入/迁移导致短时内存占用增加 |\n| 异常持续高位 | 长时间不回落 | 可能存在内存泄漏或回收不及时 |",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 139
+      },
+      "id": 501,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"cadvisor\",container_label_app=\"aikv\"})",
+          "legendFormat": "{{container_label_com_docker_compose_service}}",
+          "refId": "A"
+        }
+      ],
+      "title": "容器内存工作集（Working Set）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_memory_rss | cAdvisor | 容器匿名常驻内存（RSS），直接反映进程堆等真实内存占用 |\n\n### 面板说明\n\n#### 容器 RSS 内存（匿名内存）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| 各容器 RSS（多色） | 每个 AiKv 容器真实匿名内存 | `sum by (container_label_com_docker_compose_service) (container_memory_rss{job=\"cadvisor\",container_label_app=\"aikv\"})` |\n\n| 实际场景 | 现象 | 说明 |\n|------|------|------|\n| RSS 与 Working Set 同步上升 | 两条曲线一起涨 | 更可能是进程真实内存增长 |\n| Working Set 高而 RSS 稳定 | RSS 变化小 | 可能是缓存/临时页影响 |\n| RSS 持续高位 | 长时间不降 | 需优先排查泄漏或异常缓冲累积 |",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 139
+      },
+      "id": 502,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_rss{job=\"cadvisor\",container_label_app=\"aikv\"})",
+          "legendFormat": "{{container_label_com_docker_compose_service}}",
+          "refId": "A"
+        }
+      ],
+      "title": "容器 RSS 内存（匿名内存）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_fs_reads_bytes_total | cAdvisor | 容器累计磁盘读取字节数 |\n| container_fs_writes_bytes_total | cAdvisor | 容器累计磁盘写入字节数 |\n\n### 面板说明\n\n#### 容器磁盘 I/O 吞吐（Read/Write）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| Read（多色） | 各容器每秒读取字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_fs_reads_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))` |\n| Write（多色） | 各容器每秒写入字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_fs_writes_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))` |\n\n| 实际场景 | 现象 | 说明 |\n|------|------|------|\n| 迁移/重平衡 | Write 明显升高 | 副本应用日志、刷盘增多 |\n| 读压力高 | Read 持续高位 | 查询或 compaction 读放大 |\n| 双高 | Read/Write 同时高 | I/O 瓶颈风险上升，需结合延迟面板排查 |",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 147
+      },
+      "id": 503,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_reads_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} read",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_writes_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} write",
+          "refId": "B"
+        }
+      ],
+      "title": "容器磁盘 I/O 吞吐（Read/Write）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_network_receive_bytes_total | cAdvisor | 容器累计接收字节数（RX） |\n| container_network_transmit_bytes_total | cAdvisor | 容器累计发送字节数（TX） |\n\n### 面板说明\n\n#### 容器网络 I/O 吞吐（RX/TX）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| RX（多色） | 各容器每秒接收字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_network_receive_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))` |\n| TX（多色） | 各容器每秒发送字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_network_transmit_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))` |\n\n| 实际场景 | 现象 | 说明 |\n|------|------|------|\n| 复制同步高峰 | 主节点 TX、从节点 RX 同时升高 | Raft/复制链路流量上升 |\n| 业务读高峰 | 节点 TX 增加明显 | 响应流量放大 |\n| 网络异常 | 吞吐抖动且延迟升高 | 需联合网络与命令延迟面板排查 |",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 147
+      },
+      "id": 504,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_network_receive_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} rx",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_network_transmit_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} tx",
+          "refId": "B"
+        }
+      ],
+      "title": "容器网络 I/O 吞吐（RX/TX）",
+      "type": "timeseries"
     }
   ],
   "preload": false,
@@ -3758,6 +4193,6 @@
   "timezone": "browser",
   "title": "AiKv Cluster",
   "uid": "aikv-cluster",
-  "version": 3,
+  "version": 1,
   "weekStart": ""
 }

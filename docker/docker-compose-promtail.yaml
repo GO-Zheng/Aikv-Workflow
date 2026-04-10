@@ -22,6 +22,24 @@ services:
     networks:
       - aikv-workflow
 
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: aikv-cadvisor
+    ports:
+      - "8088:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
 networks:
   aikv-workflow:
     name: aikv-workflow

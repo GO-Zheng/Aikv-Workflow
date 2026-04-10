@@ -25,7 +25,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- System CPU (\u6a59\u8272): \u5185\u6838\u6001 CPU\uff0c\u53cd\u6620\u7cfb\u7edf\u8c03\u7528\u3001I/O \u7b49\u5f85\n- User CPU (\u84dd\u8272): \u7528\u6237\u6001 CPU\uff0c\u53cd\u6620\u4e1a\u52a1\u903b\u8f91\u8ba1\u7b97\n- Total CPU (\u7eff\u8272): \u4e24\u8005\u4e4b\u548c\n\n**\u8ba1\u7b97\u516c\u5f0f**:\n- System CPU: `rate(redis_cpu_sys_seconds_total[1m])`\n- User CPU: `rate(redis_cpu_user_seconds_total[1m])`\n- Total CPU: `rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])`\n\n**\u8c03\u4f18\u573a\u666f**:\n- User CPU \u9ad8 \u2192 \u4e1a\u52a1\u903b\u8f91\u91cd\uff0c\u8003\u8651\u4f18\u5316\u7b97\u6cd5\n- System CPU \u9ad8 \u2192 I/O \u9891\u7e41\uff0c\u68c0\u67e5 AOF/RDB \u7b56\u7565\n- \u4e24\u8005\u90fd\u9ad8 \u2192 \u8d1f\u8f7d\u4e25\u91cd\uff0c\u8003\u8651\u6269\u5bb9",
+      "description": "**曲线说明**:\n- System CPU (橙色): 内核态 CPU，反映系统调用、I/O 等待\n- User CPU (蓝色): 用户态 CPU，反映业务逻辑计算\n- Total CPU (绿色): 两者之和\n\n**计算公式**:\n- System CPU: `rate(redis_cpu_sys_seconds_total[1m])`\n- User CPU: `rate(redis_cpu_user_seconds_total[1m])`\n- Total CPU: `rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])`\n\n**调优场景**:\n- User CPU 高 → 业务逻辑重，考虑优化算法\n- System CPU 高 → I/O 频繁，检查 AOF/RDB 策略\n- 两者都高 → 负载严重，考虑扩容",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -184,7 +184,7 @@
           "refId": "C"
         }
       ],
-      "title": "CPU \u4f7f\u7528\u7387",
+      "title": "CPU 使用率",
       "type": "timeseries"
     },
     {
@@ -192,7 +192,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u8ba1\u7b97\u516c\u5f0f**: `rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])`\n\n**\u9608\u503c\u8bf4\u660e**:\n- \u7eff\u8272 (0-70%): \u6b63\u5e38\n- \u9ec4\u8272 (70-90%): \u8b66\u544a\uff0cCPU \u8d1f\u8f7d\u8f83\u9ad8\n- \u7ea2\u8272 (>90%): \u5371\u9669\uff0cCPU \u5373\u5c06\u9971\u548c\n\n**\u6ce8\u610f**: \u503c\u8868\u793a CPU \u6838\u5fc3\u6570\uff0c1.0 = 1 \u6838 100%",
+      "description": "**计算公式**: `rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])`\n\n**阈值说明**:\n- 绿色 (0-70%): 正常\n- 黄色 (70-90%): 警告，CPU 负载较高\n- 红色 (>90%): 危险，CPU 即将饱和\n\n**注意**: 值表示 CPU 核心数，1.0 = 1 核 100%",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -258,7 +258,7 @@
           "refId": "A"
         }
       ],
-      "title": "\u603b CPU \u4f7f\u7528\u7387",
+      "title": "总 CPU 使用率",
       "type": "gauge"
     },
     {
@@ -266,7 +266,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- RSS Memory (\u7eff\u8272): \u8fdb\u7a0b\u5e38\u9a7b\u7269\u7406\u5185\u5b58\u5185\u5b58\n- Peak Memory (\u6a59\u8272): \u5386\u53f2\u5cf0\u503c\u5185\u5b58\n- Used Memory (\u84dd\u8272): AiKv \u5b9e\u9645\u5206\u914d\u7684\n\n**\u8ba1\u7b97\u516c\u5f0f**: \u76f4\u63a5\u53d6\u503c\n\n**\u8c03\u4f18\u573a\u666f**:\n- Used Memory \u6301\u7eed\u589e\u957f \u2192 \u53ef\u80fd\u6709\u5185\u5b58\u6cc4\u6f0f\n- Peak Memory \u63a5\u8fd1\u673a\u5668\u5185\u5b58 \u2192 \u8003\u8651\u6269\u5bb9\u6216\u4f18\u5316\u6570\u636e\u7ed3\u6784",
+      "description": "**曲线说明**:\n- RSS Memory (绿色): 进程常驻物理内存内存\n- Peak Memory (橙色): 历史峰值内存\n- Used Memory (蓝色): AiKv 实际分配的\n\n**计算公式**: 直接取值\n\n**调优场景**:\n- Used Memory 持续增长 → 可能有内存泄漏\n- Peak Memory 接近机器内存 → 考虑扩容或优化数据结构",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -379,7 +379,7 @@
           "refId": "C"
         }
       ],
-      "title": "\u5185\u5b58\u4f7f\u7528\u91cf",
+      "title": "内存使用量",
       "type": "timeseries"
     },
     {
@@ -387,7 +387,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u8ba1\u7b97\u516c\u5f0f**: `redis_mem_fragmentation_ratio`\n\n**\u9608\u503c\u8bf4\u660e**:\n- \u7eff\u8272 (0-1.5): \u6b63\u5e38\uff0c\u5185\u5b58\u788e\u7247\u8f83\u5c11\n- \u9ec4\u8272 (1.5-3): \u8b66\u544a\uff0c\u5185\u5b58\u788e\u7247\u8f83\u591a\n- \u7ea2\u8272 (>3): \u5371\u9669\uff0c\u5185\u5b58\u788e\u7247\u4e25\u91cd\uff0c\u5efa\u8bae\u91cd\u542f\n\n**\u8bf4\u660e**: RSS/Used Memory ratio\uff0c\u53cd\u6620\u5185\u5b58\u5206\u914d\u6548\u7387",
+      "description": "**计算公式**: `redis_mem_fragmentation_ratio`\n\n**阈值说明**:\n- 绿色 (0-1.5): 正常，内存碎片较少\n- 黄色 (1.5-3): 警告，内存碎片较多\n- 红色 (>3): 危险，内存碎片严重，建议重启\n\n**说明**: RSS/Used Memory ratio，反映内存分配效率",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -453,7 +453,7 @@
           "refId": "A"
         }
       ],
-      "title": "\u5185\u5b58\u788e\u7247\u7387",
+      "title": "内存碎片率",
       "type": "gauge"
     },
     {
@@ -461,7 +461,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- QPS (\u84dd\u8272): \u8bfb\u547d\u4ee4\u6bcf\u79d2\u8c03\u7528\u6b21\u6570 (GET/MGET/HGET/SMEMBERS \u7b49)\n- OPS (\u6a59\u8272): \u5168\u90e8\u547d\u4ee4\u6bcf\u79d2\u8c03\u7528\u6b21\u6570\n\n**\u8ba1\u7b97\u516c\u5f0f**:\n- QPS: sum(rate(redis_commands_total{cmd=~\"get|mget|hget|sget|lget|smembers|scard|sismember\"}[1m]))\n- OPS: sum(rate(redis_commands_total[1m]))\n\n**\u8c03\u4f18\u573a\u666f**:\n- OPS \u6301\u7eed\u63a5\u8fd1\u4e0a\u9650 \u2192 \u8003\u8651\u6269\u5bb9\u6216\u4f18\u5316\u67e5\u8be2\n- QPS/OPS \u6bd4\u503c\u9ad8 \u2192 \u8bfb\u591a\u5199\u5c11\uff0c\u53ef\u8003\u8651\u8bfb\u5199\u5206\u79bb",
+      "description": "**曲线说明**:\n- QPS (蓝色): 读命令每秒调用次数 (GET/MGET/HGET/SMEMBERS 等)\n- OPS (橙色): 全部命令每秒调用次数\n\n**计算公式**:\n- QPS: sum(rate(redis_commands_total{cmd=~\"get|mget|hget|sget|lget|smembers|scard|sismember\"}[1m]))\n- OPS: sum(rate(redis_commands_total[1m]))\n\n**调优场景**:\n- OPS 持续接近上限 → 考虑扩容或优化查询\n- QPS/OPS 比值高 → 读多写少，可考虑读写分离",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -585,7 +585,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**: \u5f53\u524d\u5b9e\u65f6\u8fde\u63a5\u6570\n\n**\u6570\u636e\u6765\u6e90**: `redis_connected_clients`\n\n**\u9608\u503c\u8bf4\u660e**:\n- \u7eff\u8272: \u6b63\u5e38 (< 100)\n- \u9ec4\u8272: \u8b66\u544a (100-500)\n- \u7ea2\u8272: \u5371\u9669 (> 500)\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u6301\u7eed\u9ad8 \u2192 \u8fde\u63a5\u6570\u63a5\u8fd1\u4e0a\u9650\uff0c\u8003\u8651\u6269\u5bb9\n- \u7a81\u589e/\u7a81\u964d \u2192 \u68c0\u67e5\u5e94\u7528\u8fde\u63a5\u6c60\u914d\u7f6e",
+      "description": "**曲线说明**: 当前实时连接数\n\n**数据来源**: `redis_connected_clients`\n\n**阈值说明**:\n- 绿色: 正常 (< 100)\n- 黄色: 警告 (100-500)\n- 红色: 危险 (> 500)\n\n**调优场景**:\n- 持续高 → 连接数接近上限，考虑扩容\n- 突增/突降 → 检查应用连接池配置",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -645,11 +645,11 @@
             "uid": "prometheus"
           },
           "expr": "redis_connected_clients{job=\"aikv-cluster-exporter\", node=\"$node\"}",
-          "legendFormat": "\u5f53\u524d\u8fde\u63a5\u6570",
+          "legendFormat": "当前连接数",
           "refId": "A"
         }
       ],
-      "title": "\u5f53\u524d\u8fde\u63a5\u6570",
+      "title": "当前连接数",
       "type": "stat"
     },
     {
@@ -657,7 +657,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- Total Commands (\u84dd\u8272): AiKv \u7d2f\u8ba1\u5904\u7406\u7684\u547d\u4ee4\u603b\u6570\n- Connections (\u6a59\u8272): \u7d2f\u8ba1\u63a5\u6536\u7684\u8fde\u63a5\u6570\n\n**\u6570\u636e\u6765\u6e90**:\n- Total Commands: `redis_commands_processed_total` (Counter)\n- Connections: `redis_connections_received_total` (Counter)\n\n**\u8c03\u4f18\u573a\u666f**:\n- Commands \u589e\u957f\u505c\u6ede \u2192 \u670d\u52a1\u53ef\u80fd\u6545\u969c\n- Connections \u5f02\u5e38\u589e\u957f \u2192 \u53ef\u80fd\u5b58\u5728\u8fde\u63a5\u6cc4\u6f0f",
+      "description": "**曲线说明**:\n- Total Commands (蓝色): AiKv 累计处理的命令总数\n- Connections (橙色): 累计接收的连接数\n\n**数据来源**:\n- Total Commands: `redis_commands_processed_total` (Counter)\n- Connections: `redis_connections_received_total` (Counter)\n\n**调优场景**:\n- Commands 增长停滞 → 服务可能故障\n- Connections 异常增长 → 可能存在连接泄漏",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -725,11 +725,11 @@
             "uid": "prometheus"
           },
           "expr": "redis_commands_processed_total{job=\"aikv-cluster-exporter\", node=\"$node\"}",
-          "legendFormat": "\u7d2f\u8ba1\u547d\u4ee4\u6570",
+          "legendFormat": "累计命令数",
           "refId": "A"
         }
       ],
-      "title": "\u7d2f\u8ba1\u547d\u4ee4\u6570",
+      "title": "累计命令数",
       "type": "stat"
     },
     {
@@ -737,7 +737,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- \u7f51\u7edc\u8f93\u5165\u901f\u7387 (\u6a59\u8272): \u670d\u52a1\u5668\u63a5\u6536\u6570\u636e\u7684\u901f\u7387\n- \u7f51\u7edc\u8f93\u51fa\u901f\u7387 (\u84dd\u8272): \u670d\u52a1\u5668\u53d1\u9001\u6570\u636e\u7684\u901f\u7387\n\n**\u8ba1\u7b97\u516c\u5f0f**:\n- \u8f93\u5165\u901f\u7387: `rate(redis_net_input_bytes_total[$__rate_interval])`\n- \u8f93\u51fa\u901f\u7387: `rate(redis_net_output_bytes_total[$__rate_interval])`\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u8f93\u5165\u901f\u7387\u9ad8 \u2192 \u5927\u91cf\u5199\u5165\u6216\u6570\u636e\u540c\u6b65\n- \u8f93\u51fa\u901f\u7387\u9ad8 \u2192 \u5927\u91cf\u8bfb\u53d6\u6216\u6570\u636e\u5bfc\u51fa\n- \u4e24\u8005\u90fd\u9ad8 \u2192 \u590d\u5236\u6216\u5907\u4efd\u64cd\u4f5c",
+      "description": "**曲线说明**:\n- 网络输入速率 (橙色): 服务器接收数据的速率\n- 网络输出速率 (蓝色): 服务器发送数据的速率\n\n**计算公式**:\n- 输入速率: `rate(redis_net_input_bytes_total[$__rate_interval])`\n- 输出速率: `rate(redis_net_output_bytes_total[$__rate_interval])`\n\n**调优场景**:\n- 输入速率高 → 大量写入或数据同步\n- 输出速率高 → 大量读取或数据导出\n- 两者都高 → 复制或备份操作",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -866,7 +866,7 @@
           "refId": "B"
         }
       ],
-      "title": "\u7f51\u7edc I/O \u901f\u7387",
+      "title": "网络 I/O 速率",
       "type": "timeseries"
     },
     {
@@ -874,7 +874,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- Hits (\u84dd\u8272): GET \u547d\u4ee4\u6210\u529f\u627e\u5230 key \u7684\u6b21\u6570\n- Misses (\u6a59\u8272): GET \u547d\u4ee4\u8fd4\u56de key \u4e0d\u5b58\u5728\u7684\u6b21\u6570\n- Hit Ratio (\u7eff\u8272): \u547d\u4e2d\u7387 = hits / (hits + misses)\n\n**\u6570\u636e\u6765\u6e90**:\n- Hits: `rate(redis_keyspace_hits_total[1m])`\n- Misses: `rate(redis_keyspace_misses_total[1m])`\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u6b63\u5e38: Hit Ratio \u9ad8 (>80%)\uff0cMisses \u5f88\u4f4e\uff0c\u5927\u90e8\u5206 GET \u8bf7\u6c42\u90fd\u547d\u4e2d\u4e86\u6570\u636e\n- Hit Ratio \u6301\u7eed\u4f4e: \u5927\u90e8\u5206\u8bf7\u6c42\u90fd miss\uff0c\u68c0\u67e5\u4e1a\u52a1\u903b\u8f91\n- Misses \u6301\u7eed\u9ad8: key \u4e0d\u5b58\u5728\uff0c\u53ef\u80fd\u539f\u56e0\uff1a\u6570\u636e\u4ece\u672a\u5199\u5165\u3001\u5df2\u8fc7\u671f\u3001\u88ab\u5220\u9664\n- Misses \u7a81\u589e: \u53ef\u80fd\u6709\u6279\u91cf\u5220\u9664\u3001\u5927\u91cf key \u8fc7\u671f\u3001\u6216\u7f13\u5b58\u7a7f\u900f\u653b\u51fb",
+      "description": "**曲线说明**:\n- Hits (蓝色): GET 命令成功找到 key 的次数\n- Misses (橙色): GET 命令返回 key 不存在的次数\n- Hit Ratio (绿色): 命中率 = hits / (hits + misses)\n\n**数据来源**:\n- Hits: `rate(redis_keyspace_hits_total[1m])`\n- Misses: `rate(redis_keyspace_misses_total[1m])`\n\n**调优场景**:\n- 正常: Hit Ratio 高 (>80%)，Misses 很低，大部分 GET 请求都命中了数据\n- Hit Ratio 持续低: 大部分请求都 miss，检查业务逻辑\n- Misses 持续高: key 不存在，可能原因：数据从未写入、已过期、被删除\n- Misses 突增: 可能有批量删除、大量 key 过期、或缓存穿透攻击",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1016,7 +1016,7 @@
           "refId": "C"
         }
       ],
-      "title": "Keyspace \u547d\u4e2d\u7387",
+      "title": "Keyspace 命中率",
       "type": "timeseries"
     },
     {
@@ -1024,7 +1024,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- \u8bfb\u53d6\u901f\u7387 (\u84dd\u8272): \u78c1\u76d8\u6bcf\u79d2\u8bfb\u53d6\u5b57\u8282\u6570\n- \u5199\u5165\u901f\u7387 (\u6a59\u8272): \u78c1\u76d8\u6bcf\u79d2\u5199\u5165\u5b57\u8282\u6570\n\n**\u6570\u636e\u6765\u6e90**:\n- node_exporter \u91c7\u96c6\u81ea /proc/diskstats\n\n**\u8ba1\u7b97\u516c\u5f0f**:\n- \u8bfb\u53d6\u901f\u7387: `rate(node_disk_read_bytes_total[$__rate_interval])`\n- \u5199\u5165\u901f\u7387: `rate(node_disk_written_bytes_total[$__rate_interval])`",
+      "description": "**曲线说明**:\n- 读取速率 (蓝色): 磁盘每秒读取字节数\n- 写入速率 (橙色): 磁盘每秒写入字节数\n\n**数据来源**:\n- node_exporter 采集自 /proc/diskstats\n\n**计算公式**:\n- 读取速率: `rate(node_disk_read_bytes_total[$__rate_interval])`\n- 写入速率: `rate(node_disk_written_bytes_total[$__rate_interval])`",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1153,7 +1153,7 @@
           "refId": "B"
         }
       ],
-      "title": "\u78c1\u76d8 I/O \u901f\u7387",
+      "title": "磁盘 I/O 速率",
       "type": "timeseries"
     },
     {
@@ -1161,7 +1161,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- \u8bfb\u53d6 IOPS (\u84dd\u8272): \u78c1\u76d8\u6bcf\u79d2\u8bfb\u53d6\u6b21\u6570\n- \u5199\u5165 IOPS (\u6a59\u8272): \u78c1\u76d8\u6bcf\u79d2\u5199\u5165\u6b21\u6570\n\n**\u6570\u636e\u6765\u6e90**:\n- node_exporter \u91c7\u96c6\u81ea /proc/diskstats\n\n**\u8ba1\u7b97\u516c\u5f0f**:\n- \u8bfb\u53d6 IOPS: `rate(node_disk_reads_completed_total[$__rate_interval])`\n- \u5199\u5165 IOPS: `rate(node_disk_writes_completed_total[$__rate_interval])`",
+      "description": "**曲线说明**:\n- 读取 IOPS (蓝色): 磁盘每秒读取次数\n- 写入 IOPS (橙色): 磁盘每秒写入次数\n\n**数据来源**:\n- node_exporter 采集自 /proc/diskstats\n\n**计算公式**:\n- 读取 IOPS: `rate(node_disk_reads_completed_total[$__rate_interval])`\n- 写入 IOPS: `rate(node_disk_writes_completed_total[$__rate_interval])`",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1290,7 +1290,7 @@
           "refId": "B"
         }
       ],
-      "title": "\u78c1\u76d8 IOPS",
+      "title": "磁盘 IOPS",
       "type": "timeseries"
     },
     {
@@ -1298,7 +1298,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n\u663e\u793a\u5404\u7c7b\u578b\u547d\u4ee4\u7684\u6bcf\u79d2\u8c03\u7528\u6b21\u6570\n\n**\u6570\u636e\u6765\u6e90**:\n- `redis_commands_total{cmd=\"...\"}` \u6765\u81ea redis_exporter\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u67d0\u7c7b\u547d\u4ee4\u5360\u6bd4\u8fc7\u9ad8 \u2192 \u8003\u8651\u6279\u91cf\u64cd\u4f5c\u4f18\u5316\n- SET/GET \u6bd4\u4f8b\u5f02\u5e38 \u2192 \u68c0\u67e5\u4e1a\u52a1\u6a21\u5f0f",
+      "description": "**曲线说明**:\n显示各类型命令的每秒调用次数\n\n**数据来源**:\n- `redis_commands_total{cmd=\"...\"}` 来自 redis_exporter\n\n**调优场景**:\n- 某类命令占比过高 → 考虑批量操作优化\n- SET/GET 比例异常 → 检查业务模式",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1389,7 +1389,7 @@
           "refId": "A"
         }
       ],
-      "title": "\u547d\u4ee4\u7c7b\u578b\u5206\u5e03 (QPS by cmd)",
+      "title": "命令类型分布 (QPS by cmd)",
       "type": "timeseries"
     },
     {
@@ -1397,7 +1397,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u6570\u503c\u542b\u4e49**: \u9009\u4e2d\u65f6\u95f4\u8303\u56f4\u5185\u5404\u547d\u4ee4\u7684\u603b\u6267\u884c\u6b21\u6570\n\n**\u6570\u636e\u6765\u6e90**: `increase(redis_commands_total[$__range])`\n\n**\u56fe\u4f8b\u8bf4\u660e**:\n- \u6247\u533a\u5927\u5c0f = \u8be5\u547d\u4ee4\u5360\u603b\u6b21\u6570\u7684\u767e\u5206\u6bd4\n- \u6570\u503c = \u8be5\u547d\u4ee4\u5728\u65f6\u95f4\u8303\u56f4\u5185\u7684\u603b\u6267\u884c\u6b21\u6570\uff08\u4f30\u7b97\uff09\n\n**\u8c03\u4f18\u573a\u666f**: \u67d0\u7c7b\u547d\u4ee4\u5360\u6bd4\u8fc7\u9ad8 \u2192 \u8003\u8651\u6279\u91cf\u64cd\u4f5c\u4f18\u5316",
+      "description": "**数值含义**: 选中时间范围内各命令的总执行次数\n\n**数据来源**: `increase(redis_commands_total[$__range])`\n\n**图例说明**:\n- 扇区大小 = 该命令占总次数的百分比\n- 数值 = 该命令在时间范围内的总执行次数（估算）\n\n**调优场景**: 某类命令占比过高 → 考虑批量操作优化",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1464,7 +1464,7 @@
           "refId": "A"
         }
       ],
-      "title": "\u547d\u4ee4\u7c7b\u578b\u5360\u6bd4 (\u997c\u56fe)",
+      "title": "命令类型占比 (饼图)",
       "type": "piechart"
     },
     {
@@ -1472,7 +1472,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- P50 (\u84dd\u8272): 50% \u8bf7\u6c42\u7684\u5ef6\u8fdf\u4f4e\u4e8e\u6b64\u503c\n- P95 (\u6a59\u8272): 95% \u8bf7\u6c42\u7684\u5ef6\u8fdf\u4f4e\u4e8e\u6b64\u503c\n- P99 (\u7eff\u8272): 99% \u8bf7\u6c42\u7684\u5ef6\u8fdf\u4f4e\u4e8e\u6b64\u503c\n\n**\u6570\u636e\u6765\u6e90**:\n- `redis_commands_latencies_usec_bucket{le=\"...\"}` \u901a\u8fc7 histogram_quantile \u8ba1\u7b97\n\n**\u8c03\u4f18\u573a\u666f**:\n- P99 \u8fdc\u9ad8\u4e8e P50 \u2192 \u5b58\u5728\u5c11\u91cf\u6162\u8bf7\u6c42\uff0c\u6392\u67e5\u5927 key \u6216\u7f51\u7edc\u95ee\u9898\n- P95/P99 \u7a81\u7136\u5347\u9ad8 \u2192 \u7cfb\u7edf\u51fa\u73b0\u5f02\u5e38\uff0c\u53ef\u80fd\u6709\u963b\u585e\u64cd\u4f5c\n- \u5404\u5206\u4f4d\u6570\u90fd\u9ad8 \u2192 \u7cfb\u7edf\u6574\u4f53\u8d1f\u8f7d\u9ad8\uff0c\u8003\u8651\u6269\u5bb9",
+      "description": "**曲线说明**:\n- P50 (蓝色): 50% 请求的延迟低于此值\n- P95 (橙色): 95% 请求的延迟低于此值\n- P99 (绿色): 99% 请求的延迟低于此值\n\n**数据来源**:\n- `redis_commands_latencies_usec_bucket{le=\"...\"}` 通过 histogram_quantile 计算\n\n**调优场景**:\n- P99 远高于 P50 → 存在少量慢请求，排查大 key 或网络问题\n- P95/P99 突然升高 → 系统出现异常，可能有阻塞操作\n- 各分位数都高 → 系统整体负载高，考虑扩容",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1522,7 +1522,7 @@
               }
             ]
           },
-          "unit": "\u00b5s"
+          "unit": "µs"
         },
         "overrides": [
           {
@@ -1625,7 +1625,7 @@
           "refId": "C"
         }
       ],
-      "title": "\u547d\u4ee4\u5ef6\u8fdf P50/P95/P99",
+      "title": "命令延迟 P50/P95/P99",
       "type": "timeseries"
     },
     {
@@ -1633,7 +1633,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n\u5c55\u793a\u5404\u547d\u4ee4\u7c7b\u578b\u7684 P50 \u5ef6\u8fdf\n\n**\u6570\u636e\u6765\u6e90**:\n- `redis_commands_latencies_usec_bucket{cmd=\\\"get\\\", le=\\\"...\\\"}`\n\n**\u8c03\u4f18\u573a\u666f**:\n- GET \u5ef6\u8fdf\u9ad8 \u2192 \u68c0\u67e5\u5b58\u50a8\u5c42\u8bfb\u53d6\u6027\u80fd\n- SET \u5ef6\u8fdf\u9ad8 \u2192 \u68c0\u67e5\u5199\u5165\u548c\u6301\u4e45\u5316\u6027\u80fd\n- \u67d0\u547d\u4ee4\u5ef6\u8fdf\u7a81\u589e \u2192 \u8be5\u547d\u4ee4\u7c7b\u578b\u51fa\u73b0\u6027\u80fd\u95ee\u9898",
+      "description": "**曲线说明**:\n展示各命令类型的 P50 延迟\n\n**数据来源**:\n- `redis_commands_latencies_usec_bucket{cmd=\\\"get\\\", le=\\\"...\\\"}`\n\n**调优场景**:\n- GET 延迟高 → 检查存储层读取性能\n- SET 延迟高 → 检查写入和持久化性能\n- 某命令延迟突增 → 该命令类型出现性能问题",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1683,7 +1683,7 @@
               }
             ]
           },
-          "unit": "\u00b5s"
+          "unit": "µs"
         },
         "overrides": []
       },
@@ -1724,7 +1724,7 @@
           "refId": "A"
         }
       ],
-      "title": "\u547d\u4ee4\u7c7b\u578b\u5ef6\u8fdf\u5206\u5e03",
+      "title": "命令类型延迟分布",
       "type": "timeseries"
     },
     {
@@ -1732,7 +1732,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- MemTable: \u6d3b\u8dc3\u5185\u5b58\u8868\u5927\u5c0f\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u6301\u7eed\u589e\u957f \u2192 \u5199\u5165\u538b\u529b\u5927\uff0c\u8003\u8651\u8c03\u5927 memtable_size\n- \u5468\u671f\u6027\u5347\u964d \u2192 \u6b63\u5e38 flush \u884c\u4e3a",
+      "description": "**曲线说明**:\n- MemTable: 活跃内存表大小\n\n**调优场景**:\n- 持续增长 → 写入压力大，考虑调大 memtable_size\n- 周期性升降 → 正常 flush 行为",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1829,7 +1829,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- WAL: Write-Ahead Log \u6587\u4ef6\u5927\u5c0f\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u6301\u7eed\u589e\u957f \u2192 \u5237\u65b0\u4e0d\u53ca\u65f6\uff0c\u68c0\u67e5 flush \u914d\u7f6e\n- \u5468\u671f\u6027\u4e0b\u964d \u2192 \u6b63\u5e38 flush \u5230\u78c1\u76d8",
+      "description": "**曲线说明**:\n- WAL: Write-Ahead Log 文件大小\n\n**调优场景**:\n- 持续增长 → 刷新不及时，检查 flush 配置\n- 周期性下降 → 正常 flush 到磁盘",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1926,7 +1926,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**\u66f2\u7ebf\u8bf4\u660e**:\n- Block Cache \u4f7f\u7528\u7387 (%)\n\n**\u989c\u8272\u9608\u503c**:\n- \u7eff\u8272 (0-70%): \u6b63\u5e38\n- \u9ec4\u8272 (70-90%): \u8b66\u544a\uff0c\u7f13\u5b58\u63a5\u8fd1\u9971\u548c\n- \u7ea2\u8272 (>90%): \u5371\u9669\uff0c\u7f13\u5b58\u9971\u548c\n\n**\u8c03\u4f18\u573a\u666f**:\n- \u4f7f\u7528\u7387\u6301\u7eed >80% \u2192 \u8003\u8651\u6269\u5bb9 Block Cache",
+      "description": "**曲线说明**:\n- Block Cache 使用率 (%)\n\n**颜色阈值**:\n- 绿色 (0-70%): 正常\n- 黄色 (70-90%): 警告，缓存接近饱和\n- 红色 (>90%): 危险，缓存饱和\n\n**调优场景**:\n- 使用率持续 >80% → 考虑扩容 Block Cache",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2019,11 +2019,433 @@
             "uid": "prometheus"
           },
           "expr": "aidb_block_cache_bytes{job=\"aidb-cluster-exporter\", node=\"$node\"} / aidb_block_cache_capacity_bytes{job=\"aidb-cluster-exporter\", node=\"$node\"}",
-          "legendFormat": "Block Cache \u4f7f\u7528\u7387",
+          "legendFormat": "Block Cache 使用率",
           "refId": "A"
         }
       ],
       "title": "AiDb Block Cache",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_memory_working_set_bytes | cAdvisor | 容器工作集内存，近似不可回收的活跃内存 |\n\n### 面板说明\n\n#### 容器内存工作集（Working Set）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| 各容器工作集（多色） | 每个 AiKv 容器当前活跃内存占用 | `sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"})` |",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 71
+      },
+      "id": 26,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"})",
+          "legendFormat": "{{container_label_com_docker_compose_service}}",
+          "refId": "A"
+        }
+      ],
+      "title": "容器内存工作集（Working Set）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_memory_rss | cAdvisor | 容器匿名常驻内存（RSS），更接近进程真实堆占用 |\n\n### 面板说明\n\n#### 容器 RSS 内存（匿名内存）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| 各容器 RSS（多色） | 每个 AiKv 容器真实匿名内存 | `sum by (container_label_com_docker_compose_service) (container_memory_rss{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"})` |",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 71
+      },
+      "id": 27,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_rss{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"})",
+          "legendFormat": "{{container_label_com_docker_compose_service}}",
+          "refId": "A"
+        }
+      ],
+      "title": "容器 RSS 内存（匿名内存）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_fs_reads_bytes_total | cAdvisor | 容器累计磁盘读取字节数 |\n| container_fs_writes_bytes_total | cAdvisor | 容器累计磁盘写入字节数 |\n\n### 面板说明\n\n#### 容器磁盘 I/O 吞吐（Read/Write）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| Read（多色） | 各容器每秒读取字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_fs_reads_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"}[$__rate_interval]))` |\n| Write（多色） | 各容器每秒写入字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_fs_writes_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"}[$__rate_interval]))` |",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 79
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_reads_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} read",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_writes_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} write",
+          "refId": "B"
+        }
+      ],
+      "title": "容器磁盘 I/O 吞吐（Read/Write）",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_network_receive_bytes_total | cAdvisor | 容器累计网络接收字节数（RX） |\n| container_network_transmit_bytes_total | cAdvisor | 容器累计网络发送字节数（TX） |\n\n### 面板说明\n\n#### 容器网络 I/O 吞吐（RX/TX）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| RX（多色） | 各容器每秒接收字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_network_receive_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"}[$__rate_interval]))` |\n| TX（多色） | 各容器每秒发送字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_network_transmit_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"}[$__rate_interval]))` |",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 79
+      },
+      "id": 29,
+      "options": {
+        "legend": {
+          "calcs": [
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.4.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_network_receive_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} rx",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_network_transmit_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"}[$__rate_interval]))",
+          "legendFormat": "{{container_label_com_docker_compose_service}} tx",
+          "refId": "B"
+        }
+      ],
+      "title": "容器网络 I/O 吞吐（RX/TX）",
       "type": "timeseries"
     }
   ],
@@ -2047,7 +2469,7 @@
           "uid": "PBFA97CFB590B2093"
         },
         "definition": "label_values(up{job=~\"aikv-cluster-exporter|aidb-cluster-exporter\"}, node)",
-        "description": "aikv \u96c6\u7fa4\u8282\u70b9",
+        "description": "aikv 集群节点",
         "label": "node",
         "name": "node",
         "options": [],

@@ -378,6 +378,74 @@
 
 ---
 
+## cAdvisor（容器资源）
+
+### 指标说明
+
+| 指标 | 采集器 | 含义 |
+|------|--------|------|
+| container_memory_working_set_bytes | cAdvisor | 容器工作集内存，近似不可回收的活跃内存 |
+| container_memory_rss | cAdvisor | 容器匿名常驻内存（RSS），更接近进程真实堆占用 |
+| container_memory_cache | cAdvisor | 容器文件页缓存 |
+| container_fs_reads_bytes_total | cAdvisor | 容器累计磁盘读取字节数 |
+| container_fs_writes_bytes_total | cAdvisor | 容器累计磁盘写入字节数 |
+| container_network_receive_bytes_total | cAdvisor | 容器累计网络接收字节数（RX） |
+| container_network_transmit_bytes_total | cAdvisor | 容器累计网络发送字节数（TX） |
+
+### 面板说明
+
+#### 容器内存工作集（Working Set）
+
+| 曲线 | 曲线说明 | 计算公式 |
+|------|----------|----------|
+| 各容器工作集（多色） | 每个 AiKv 容器当前活跃内存占用 | `sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job="cadvisor",container_label_app="aikv"})` |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 正常稳态 | 曲线随流量小幅波动 | 内存压力可控 |
+| 写入突增 | 工作集快速抬升后回落 | 批量写入/迁移导致短时内存上升 |
+| 异常高位 | 长时间不回落 | 可能存在泄漏或释放不及时 |
+
+#### 容器 RSS 内存（匿名内存）
+
+| 曲线 | 曲线说明 | 计算公式 |
+|------|----------|----------|
+| 各容器 RSS（多色） | 每个 AiKv 容器真实匿名内存 | `sum by (container_label_com_docker_compose_service) (container_memory_rss{job="cadvisor",container_label_app="aikv"})` |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| RSS 与 Working Set 同步上升 | 两条曲线一起涨 | 更可能是进程真实内存增长 |
+| Working Set 高但 RSS 稳定 | RSS 变化小 | 可能是缓存/临时页影响 |
+| RSS 持续高位 | 长时间不降 | 优先排查内存泄漏/缓冲积压 |
+
+#### 容器磁盘 I/O 吞吐（Read/Write）
+
+| 曲线 | 曲线说明 | 计算公式 |
+|------|----------|----------|
+| Read（多色） | 各容器每秒读取字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_fs_reads_bytes_total{job="cadvisor",container_label_app="aikv"}[$__rate_interval]))` |
+| Write（多色） | 各容器每秒写入字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_fs_writes_bytes_total{job="cadvisor",container_label_app="aikv"}[$__rate_interval]))` |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 迁移/重平衡 | Write 明显升高 | 副本应用日志、刷盘增多 |
+| 读压力高 | Read 持续高位 | 查询或 compaction 读放大 |
+| 双高 | Read/Write 同时高 | I/O 瓶颈风险上升 |
+
+#### 容器网络 I/O 吞吐（RX/TX）
+
+| 曲线 | 曲线说明 | 计算公式 |
+|------|----------|----------|
+| RX（多色） | 各容器每秒接收字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_network_receive_bytes_total{job="cadvisor",container_label_app="aikv"}[$__rate_interval]))` |
+| TX（多色） | 各容器每秒发送字节数 | `sum by (container_label_com_docker_compose_service) (rate(container_network_transmit_bytes_total{job="cadvisor",container_label_app="aikv"}[$__rate_interval]))` |
+
+| 实际场景 | 现象 | 说明 |
+|------|------|------|
+| 复制同步高峰 | 主 TX、从 RX 同时升高 | 复制链路流量上升 |
+| 业务读高峰 | TX 增加明显 | 响应流量放大 |
+| 抖动异常 | 吞吐抖动且延迟升高 | 需结合延迟面板排查 |
+
+---
+
 ## Prometheus 与面板 job 对齐
 
 与仓库内 [docker/prometheus.yaml](../../prometheus.yaml) 一致：
