@@ -544,7 +544,7 @@ services:
   # 节点监控服务
   promtail:
     image: grafana/promtail:3.6.8
-    container_name: aikv-promtail
+    container_name: promtail
     user: "0:0"
     command:
       - "-config.expand-env=true"
@@ -588,7 +588,7 @@ services:
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
-    container_name: aikv-cadvisor
+    container_name: cadvisor
     ports:
       - "8088:8080"
     volumes:

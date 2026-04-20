@@ -151,7 +151,7 @@ main() {
         ssh $server "rm -f /root/AiKv-Workflow/aikv-image.tar" > /dev/null 2>&1
     fi
 
-    ssh $server "docker rm -f \$(docker ps -q -f name=aikv-replica) \$(docker ps -q -f name=aikv-master) \$(docker ps -q -f name=aikv)" > /dev/null 2>&1 || true
+    ssh $server "docker rm -f $CLUSTER_SERVICES $EXPAND_SERVICES $SINGLE_SERVICES" > /dev/null 2>&1 || true
 
     # 提取服务器 IP
     local server_host_val="${server#root@}"
