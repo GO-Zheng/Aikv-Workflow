@@ -1,5 +1,5 @@
-# AiKv Replica 2b (of Master 2)
-# Redis: 容器 6379 -> 宿主机 6384；Raft: 容器 50051 -> 宿主机 50056
+# AiKv Replica 2b - Master 2 的副本
+# Redis: 容器 6379 -> 宿主机 6384; Raft: 容器 50051 -> 宿主机 50056
 
 [server]
 host = "0.0.0.0"

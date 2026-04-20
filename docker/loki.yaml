@@ -22,7 +22,7 @@ memberlist:
 
 schema_config:
   configs:
-    - from: 2026-01-01
+    - from: 2026-04-15
       store: tsdb
       object_store: filesystem
       schema: v13

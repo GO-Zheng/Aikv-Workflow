@@ -2,6 +2,85 @@
 
 name: aikv-monitor
 services:
+  grafana:
+    image: grafana/grafana:12.4.1
+    container_name: aikv-grafana
+    user: "0:0"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      # - ./data/grafana:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  prometheus:
+    image: prom/prometheus:v3.9.1
+    container_name: aikv-prometheus
+    user: "0:0"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+      - "--storage.tsdb.path=/prometheus"
+      # 存储保留策略
+      - "--storage.tsdb.retention.time=15d"
+      - "--storage.tsdb.retention.size=5GB"
+      # 热加载: curl -X POST http://localhost:9090/-/reload
+      - "--web.enable-lifecycle"
+      - "--web.enable-remote-write-receiver"
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml:ro
+      # - ./data/prometheus:/prometheus
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  loki:
+    image: grafana/loki:3.7
+    container_name: aikv-loki
+    user: "0:0"
+    command:
+      - "-config.file=/etc/loki/loki.yaml"
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki.yaml:/etc/loki/loki.yaml:ro
+      # - ./data/loki:/loki
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # promtail:
+  #   image: grafana/promtail:3.6.8
+  #   container_name: aikv-promtail
+  #   user: "0:0"
+  #   command:
+  #     - "-config.file=/etc/promtail/promtail.yaml"
+  #   ports:
+  #     - "9081:9081"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
+  #     # - ./logs:/var/log/aikv:ro
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
+
   # node-exporter:
   #   image: prom/node-exporter:v1.10.2
   #   container_name: node-exporter
@@ -26,111 +105,23 @@ services:
   #     timeout: 5s
   #     retries: 3
 
-  aikv-exporter:
-    image: oliver006/redis_exporter:v1.80.1
-    container_name: aikv-exporter
-    environment:
-      - REDIS_ADDR=redis://${SERVER_HOST}:6379
-    ports:
-      - "9121:9121"
-    restart: unless-stopped
-    networks:
-      aikv-workflow:
-        aliases:
-          - aikv-exporter-master-1
-
-  aidb-exporter:
-    image: aidb-exporter:v0.0.2
-    container_name: aidb-exporter
-    environment:
-      - AIDB_TARGET=redis://${SERVER_HOST}:6379
-      - EXPORTER_PORT=9120
-    ports:
-      - "9120:9120"
-    restart: unless-stopped
-    networks:
-      aikv-workflow:
-        aliases:
-          - aidb-exporter-master-1
-
-  prometheus:
-    image: prom/prometheus:v3.9.1
-    container_name: aikv-prometheus
-    user: "0:0"
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yaml"
-      - "--storage.tsdb.path=/prometheus"
-      # 存储保留策略
-      - "--storage.tsdb.retention.time=15d"
-      - "--storage.tsdb.retention.size=5GB"
-      # 热加载: curl -X POST http://localhost:9090/-/reload
-      - "--web.enable-lifecycle"
-      - "--web.enable-remote-write-receiver"
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.runtime.yaml:/etc/prometheus/prometheus.yaml:ro
-      # - ../data/prometheus:/prometheus
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-  loki:
-    image: grafana/loki:3.7
-    container_name: aikv-loki
-    user: "0:0"
-    command:
-      - "-config.file=/etc/loki/loki.yaml"
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./loki.yaml:/etc/loki/loki.yaml:ro
-      # - ../data/loki:/loki
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
-
-  # promtail:
-  #   image: grafana/promtail:3.6.8
-  #   container_name: aikv-promtail
-  #   user: "0:0"
-  #   command:
-  #     - "-config.file=/etc/promtail/promtail.yaml"
+  # cadvisor:
+  #   image: gcr.io/cadvisor/cadvisor:latest
+  #   container_name: aikv-cadvisor
   #   ports:
-  #     - "9081:9081"
+  #     - "8088:8080"
   #   volumes:
-  #     - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
-  #     # - ../logs:/var/log/aikv:ro
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:ro
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker:/var/lib/docker:ro
+  #     - /dev/disk:/dev/disk:ro
+  #   privileged: true
+  #   devices:
+  #     - /dev/kmsg
   #   restart: unless-stopped
   #   networks:
   #     - aikv-workflow
-
-  grafana:
-    image: grafana/grafana:12.4.1
-    container_name: aikv-grafana
-    user: "0:0"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    ports:
-      - "3000:3000"
-    volumes:
-      # - ../data/grafana:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
 
 networks:
   aikv-workflow:

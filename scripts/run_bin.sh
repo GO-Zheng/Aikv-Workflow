@@ -12,7 +12,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 TARGET_DIR="$PROJECT_DIR/target"
-CONFIG_SOURCE="$PROJECT_DIR/config/aikv.toml"
+CONFIG_SOURCE="$PROJECT_DIR/docker/config/aikv.toml"
 CONFIG_TARGET="$TARGET_DIR/aikv.toml"
 BINARY="$TARGET_DIR/aikv"
 PID_FILE="$TARGET_DIR/aikv.pid"

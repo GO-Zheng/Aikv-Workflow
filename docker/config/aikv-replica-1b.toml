@@ -1,5 +1,5 @@
-# AiKv Replica 2a (of Master 2)
-# Redis: 容器 6379 -> 宿主机 6383；Raft: 容器 50051 -> 宿主机 50055
+# AiKv Replica 1b - Master 1 的副本
+# Redis: 容器 6379 -> 宿主机 6381; Raft: 容器 50051 -> 宿主机 50053
 
 [server]
 host = "0.0.0.0"
@@ -7,7 +7,7 @@ port = 6379
 
 [cluster]
 enabled = true
-raft_address = "aikv-replica-2a:50051"
+raft_address = "aikv-replica-1b:50051"
 is_bootstrap = false
 peers = []
 

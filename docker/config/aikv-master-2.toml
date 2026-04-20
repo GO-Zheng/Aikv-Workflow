@@ -1,5 +1,5 @@
 # AiKv Master 2
-# Redis: 容器 6379 -> 宿主机 6382；Raft: 容器 50051 -> 宿主机 50054
+# Redis: 容器 6379 -> 宿主机 6382; Raft: 容器 50051 -> 宿主机 50054
 
 [server]
 host = "0.0.0.0"
@@ -7,7 +7,6 @@ port = 6379
 
 [cluster]
 enabled = true
-# 容器内 Raft 始终监听 compose 中映射的「右侧」端口（默认 50051）；宿主机 50053 由 compose 映射。
 raft_address = "aikv-master-2:50051"
 is_bootstrap = false
 peers = []

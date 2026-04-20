@@ -25,7 +25,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**:\n- System CPU (橙色): 内核态 CPU，反映系统调用、I/O 等待\n- User CPU (蓝色): 用户态 CPU，反映业务逻辑计算\n- Total CPU (绿色): 两者之和\n\n**计算公式**:\n- System CPU: `rate(redis_cpu_sys_seconds_total[1m])`\n- User CPU: `rate(redis_cpu_user_seconds_total[1m])`\n- Total CPU: `rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])`\n\n**调优场景**:\n- User CPU 高 → 业务逻辑重，考虑优化算法\n- System CPU 高 → I/O 频繁，检查 AOF/RDB 策略\n- 两者都高 → 负载严重，考虑扩容",
+      "description": "**曲线说明**:\n- System CPU (橙色): 内核态 CPU, 反映系统调用、I/O 等待\n- User CPU (蓝色): 用户态 CPU, 反映业务逻辑计算\n- Total CPU (绿色): 两者之和\n\n**计算公式**:\n- System CPU: `rate(redis_cpu_sys_seconds_total[1m])`\n- User CPU: `rate(redis_cpu_user_seconds_total[1m])`\n- Total CPU: `rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])`\n\n**调优场景**:\n- User CPU 高 → 业务逻辑重, 考虑优化算法\n- System CPU 高 → I/O 频繁, 检查 AOF/RDB 策略\n- 两者都高 → 负载严重, 考虑扩容",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -192,7 +192,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**计算公式**: `rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])`\n\n**阈值说明**:\n- 绿色 (0-70%): 正常\n- 黄色 (70-90%): 警告，CPU 负载较高\n- 红色 (>90%): 危险，CPU 即将饱和\n\n**注意**: 值表示 CPU 核心数，1.0 = 1 核 100%",
+      "description": "**计算公式**: `rate(redis_cpu_sys_seconds_total[1m]) + rate(redis_cpu_user_seconds_total[1m])`\n\n**阈值说明**:\n- 绿色 (0-70%): 正常\n- 黄色 (70-90%): 警告, CPU 负载较高\n- 红色 (>90%): 危险, CPU 即将饱和\n\n**注意**: 值表示 CPU 核心数, 1.0 = 1 核 100%",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -387,7 +387,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**计算公式**: `redis_mem_fragmentation_ratio`\n\n**阈值说明**:\n- 绿色 (0-1.5): 正常，内存碎片较少\n- 黄色 (1.5-3): 警告，内存碎片较多\n- 红色 (>3): 危险，内存碎片严重，建议重启\n\n**说明**: RSS/Used Memory ratio，反映内存分配效率",
+      "description": "**计算公式**: `redis_mem_fragmentation_ratio`\n\n**阈值说明**:\n- 绿色 (0-1.5): 正常, 内存碎片较少\n- 黄色 (1.5-3): 警告, 内存碎片较多\n- 红色 (>3): 危险, 内存碎片严重, 建议重启\n\n**说明**: RSS/Used Memory ratio, 反映内存分配效率",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -461,7 +461,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**:\n- QPS (蓝色): 读命令每秒调用次数 (GET/MGET/HGET/SMEMBERS 等)\n- OPS (橙色): 全部命令每秒调用次数\n\n**计算公式**:\n- QPS: sum(rate(redis_commands_total{cmd=~\"get|mget|hget|sget|lget|smembers|scard|sismember\"}[1m]))\n- OPS: sum(rate(redis_commands_total[1m]))\n\n**调优场景**:\n- OPS 持续接近上限 → 考虑扩容或优化查询\n- QPS/OPS 比值高 → 读多写少，可考虑读写分离",
+      "description": "**曲线说明**:\n- QPS (蓝色): 读命令每秒调用次数 (GET/MGET/HGET/SMEMBERS 等)\n- OPS (橙色): 全部命令每秒调用次数\n\n**计算公式**:\n- QPS: sum(rate(redis_commands_total{cmd=~\"get|mget|hget|sget|lget|smembers|scard|sismember\"}[1m]))\n- OPS: sum(rate(redis_commands_total[1m]))\n\n**调优场景**:\n- OPS 持续接近上限 → 考虑扩容或优化查询\n- QPS/OPS 比值高 → 读多写少, 可考虑读写分离",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -585,7 +585,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**: 当前实时连接数\n\n**数据来源**: `redis_connected_clients`\n\n**阈值说明**:\n- 绿色: 正常 (< 100)\n- 黄色: 警告 (100-500)\n- 红色: 危险 (> 500)\n\n**调优场景**:\n- 持续高 → 连接数接近上限，考虑扩容\n- 突增/突降 → 检查应用连接池配置",
+      "description": "**曲线说明**: 当前实时连接数\n\n**数据来源**: `redis_connected_clients`\n\n**阈值说明**:\n- 绿色: 正常 (< 100)\n- 黄色: 警告 (100-500)\n- 红色: 危险 (> 500)\n\n**调优场景**:\n- 持续高 → 连接数接近上限, 考虑扩容\n- 突增/突降 → 检查应用连接池配置",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -874,7 +874,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**:\n- Hits (蓝色): GET 命令成功找到 key 的次数\n- Misses (橙色): GET 命令返回 key 不存在的次数\n- Hit Ratio (绿色): 命中率 = hits / (hits + misses)\n\n**数据来源**:\n- Hits: `rate(redis_keyspace_hits_total[1m])`\n- Misses: `rate(redis_keyspace_misses_total[1m])`\n\n**调优场景**:\n- 正常: Hit Ratio 高 (>80%)，Misses 很低，大部分 GET 请求都命中了数据\n- Hit Ratio 持续低: 大部分请求都 miss，检查业务逻辑\n- Misses 持续高: key 不存在，可能原因：数据从未写入、已过期、被删除\n- Misses 突增: 可能有批量删除、大量 key 过期、或缓存穿透攻击",
+      "description": "**曲线说明**:\n- Hits (蓝色): GET 命令成功找到 key 的次数\n- Misses (橙色): GET 命令返回 key 不存在的次数\n- Hit Ratio (绿色): 命中率 = hits / (hits + misses)\n\n**数据来源**:\n- Hits: `rate(redis_keyspace_hits_total[1m])`\n- Misses: `rate(redis_keyspace_misses_total[1m])`\n\n**调优场景**:\n- 正常: Hit Ratio 高 (>80%), Misses 很低, 大部分 GET 请求都命中了数据\n- Hit Ratio 持续低: 大部分请求都 miss, 检查业务逻辑\n- Misses 持续高: key 不存在, 可能原因：数据从未写入、已过期、被删除\n- Misses 突增: 可能有批量删除、大量 key 过期、或缓存穿透攻击",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1472,7 +1472,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**:\n- P50 (蓝色): 50% 请求的延迟低于此值\n- P95 (橙色): 95% 请求的延迟低于此值\n- P99 (绿色): 99% 请求的延迟低于此值\n\n**数据来源**:\n- `redis_commands_latencies_usec_bucket{le=\"...\"}` 通过 histogram_quantile 计算\n\n**调优场景**:\n- P99 远高于 P50 → 存在少量慢请求，排查大 key 或网络问题\n- P95/P99 突然升高 → 系统出现异常，可能有阻塞操作\n- 各分位数都高 → 系统整体负载高，考虑扩容",
+      "description": "**曲线说明**:\n- P50 (蓝色): 50% 请求的延迟低于此值\n- P95 (橙色): 95% 请求的延迟低于此值\n- P99 (绿色): 99% 请求的延迟低于此值\n\n**数据来源**:\n- `redis_commands_latencies_usec_bucket{le=\"...\"}` 通过 histogram_quantile 计算\n\n**调优场景**:\n- P99 远高于 P50 → 存在少量慢请求, 排查大 key 或网络问题\n- P95/P99 突然升高 → 系统出现异常, 可能有阻塞操作\n- 各分位数都高 → 系统整体负载高, 考虑扩容",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1732,7 +1732,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**:\n- MemTable: 活跃内存表大小\n\n**调优场景**:\n- 持续增长 → 写入压力大，考虑调大 memtable_size\n- 周期性升降 → 正常 flush 行为",
+      "description": "**曲线说明**:\n- MemTable: 活跃内存表大小\n\n**调优场景**:\n- 持续增长 → 写入压力大, 考虑调大 memtable_size\n- 周期性升降 → 正常 flush 行为",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1829,7 +1829,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**:\n- WAL: Write-Ahead Log 文件大小\n\n**调优场景**:\n- 持续增长 → 刷新不及时，检查 flush 配置\n- 周期性下降 → 正常 flush 到磁盘",
+      "description": "**曲线说明**:\n- WAL: Write-Ahead Log 文件大小\n\n**调优场景**:\n- 持续增长 → 刷新不及时, 检查 flush 配置\n- 周期性下降 → 正常 flush 到磁盘",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1926,7 +1926,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "**曲线说明**:\n- Block Cache 使用率 (%)\n\n**颜色阈值**:\n- 绿色 (0-70%): 正常\n- 黄色 (70-90%): 警告，缓存接近饱和\n- 红色 (>90%): 危险，缓存饱和\n\n**调优场景**:\n- 使用率持续 >80% → 考虑扩容 Block Cache",
+      "description": "**曲线说明**:\n- Block Cache 使用率 (%)\n\n**颜色阈值**:\n- 绿色 (0-70%): 正常\n- 黄色 (70-90%): 警告, 缓存接近饱和\n- 红色 (>90%): 危险, 缓存饱和\n\n**调优场景**:\n- 使用率持续 >80% → 考虑扩容 Block Cache",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2031,7 +2031,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_memory_working_set_bytes | cAdvisor | 容器工作集内存，近似不可回收的活跃内存 |\n\n### 面板说明\n\n#### 容器内存工作集（Working Set）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| 各容器工作集（多色） | 每个 AiKv 容器当前活跃内存占用 | `sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"})` |",
+      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_memory_working_set_bytes | cAdvisor | 容器工作集内存, 近似不可回收的活跃内存 |\n\n### 面板说明\n\n#### 容器内存工作集（Working Set）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| 各容器工作集（多色） | 每个 AiKv 容器当前活跃内存占用 | `sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"})` |",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -2132,7 +2132,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_memory_rss | cAdvisor | 容器匿名常驻内存（RSS），更接近进程真实堆占用 |\n\n### 面板说明\n\n#### 容器 RSS 内存（匿名内存）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| 各容器 RSS（多色） | 每个 AiKv 容器真实匿名内存 | `sum by (container_label_com_docker_compose_service) (container_memory_rss{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"})` |",
+      "description": "### 指标说明\n\n| 指标 | 采集器 | 含义 |\n|------|--------|------|\n| container_memory_rss | cAdvisor | 容器匿名常驻内存（RSS）, 更接近进程真实堆占用 |\n\n### 面板说明\n\n#### 容器 RSS 内存（匿名内存）\n\n| 曲线 | 曲线说明 | 计算公式 |\n|------|----------|----------|\n| 各容器 RSS（多色） | 每个 AiKv 容器真实匿名内存 | `sum by (container_label_com_docker_compose_service) (container_memory_rss{job=\"cadvisor\",container_label_app=\"aikv\",container_label_com_docker_compose_service=~\"aikv-$node\"})` |",
       "fieldConfig": {
         "defaults": {
           "color": {

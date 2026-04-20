@@ -1,3 +1,6 @@
+# AiKv 单节点模式
+
+name: aikv
 services:
   aikv:
     image: aikv:latest
@@ -29,6 +32,97 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # --------------------------------------------------
+  # 节点监控服务
+  promtail:
+    image: grafana/promtail:3.6.8
+    container_name: aikv-promtail
+    user: "0:0"
+    command:
+      - "-config.expand-env=true"
+      - "-config.file=/etc/promtail/promtail.yaml"
+    environment:
+      - MONITOR_HOST=${MONITOR_HOST}
+      - SERVER_HOST=localhost
+    ports:
+      - "9081:9081"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
+      # - ./logs:/var/log/aikv:ro
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # node-exporter:
+  #   image: prom/node-exporter:v1.10.2
+  #   container_name: node-exporter
+  #   command:
+  #     - "--path.procfs=/host/proc"
+  #     - "--path.sysfs=/host/sys"
+  #     - "--path.rootfs=/host"
+  #     # 排除易重复的挂载点 (WSL2/Docker 下 /run/user 等会重复采集导致 ERROR)
+  #     - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+  #   ports:
+  #     - "9100:9100"
+  #   volumes:
+  #     - /proc:/host/proc:ro
+  #     - /sys:/host/sys:ro
+  #     - /:/host:ro
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
+  #   healthcheck:
+  #     test: ["CMD", "wget", "-q", "--spider", "http://localhost:9100"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+
+  aikv-exporter:
+    image: oliver006/redis_exporter:v1.80.1
+    container_name: aikv-exporter
+    environment:
+      - REDIS_ADDR=redis://localhost:6379
+    ports:
+      - "9121:9121"
+    restart: unless-stopped
+    networks:
+      aikv-workflow:
+        aliases:
+          - aikv-exporter-master-1
+
+  aidb-exporter:
+    image: aidb-exporter:v0.0.2
+    container_name: aidb-exporter
+    environment:
+      - AIDB_TARGET=redis://localhost:6379
+      - EXPORTER_PORT=9120
+    ports:
+      - "9120:9120"
+    restart: unless-stopped
+    networks:
+      aikv-workflow:
+        aliases:
+          - aidb-exporter-master-1
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: aikv-cadvisor
+    ports:
+      - "8088:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
 
 networks:
   aikv-workflow:

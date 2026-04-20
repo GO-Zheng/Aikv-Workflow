@@ -10,43 +10,49 @@ scrape_configs:
 
   - job_name: "node-exporter"
     static_configs:
-      - targets: ["${SERVER_HOST}:9100"]
+      - targets: ["192.168.1.112:9100", "192.168.1.113:9100"]
 
   - job_name: "cadvisor"
     static_configs:
-      - targets: ["${SERVER_HOST}:8088"]
+      - targets: ["192.168.1.112:8088", "192.168.1.113:8088"]
 
   - job_name: "aikv-exporter"
     static_configs:
-      - targets: ["${MONITOR_HOST}:9121"]
+      - targets: ["192.168.1.112:9121", "192.168.1.113:9121"]
 
   - job_name: "aidb-exporter"
     static_configs:
-      - targets: ["${MONITOR_HOST}:9120"]
+      - targets: ["192.168.1.112:9120", "192.168.1.113:9120"]
 
   - job_name: "aikv-cluster-exporter"
     static_configs:
-      - targets: ["${MONITOR_HOST}:9121"]
+      - targets: ["192.168.1.112:9121", "192.168.1.113:9121"]
         labels:
           node: master-1
-      - targets: ["${MONITOR_HOST}:9221"]
+      - targets: ["192.168.1.112:9221", "192.168.1.113:9221"]
         labels:
           node: replica-1a
-      - targets: ["${MONITOR_HOST}:9321"]
+      - targets: ["192.168.1.112:9321", "192.168.1.113:9321"]
         labels:
           node: replica-1b
-      - targets: ["${MONITOR_HOST}:9421"]
+      - targets: ["192.168.1.112:9421", "192.168.1.113:9421"]
         labels:
           node: master-2
-      - targets: ["${MONITOR_HOST}:9521"]
+      - targets: ["192.168.1.112:9521", "192.168.1.113:9521"]
         labels:
           node: replica-2a
-      - targets: ["${MONITOR_HOST}:9621"]
+      - targets: ["192.168.1.112:9621", "192.168.1.113:9621"]
         labels:
           node: replica-2b
-      - targets: ["${MONITOR_HOST}:9721"]
+      - targets: ["192.168.1.112:9721", "192.168.1.113:9721"]
         labels:
           node: master-3
+      - targets: ["192.168.1.112:9821", "192.168.1.113:9821"]
+        labels:
+          node: replica-3a
+      - targets: ["192.168.1.112:9921", "192.168.1.113:9921"]
+        labels:
+          node: replica-3b
     relabel_configs:
       - source_labels: [node]
         regex: (.*)
@@ -55,27 +61,33 @@ scrape_configs:
 
   - job_name: "aidb-cluster-exporter"
     static_configs:
-      - targets: ["${MONITOR_HOST}:9120"]
+      - targets: ["192.168.1.112:9120", "192.168.1.113:9120"]
         labels:
           node: master-1
-      - targets: ["${MONITOR_HOST}:9220"]
+      - targets: ["192.168.1.112:9220", "192.168.1.113:9220"]
         labels:
           node: replica-1a
-      - targets: ["${MONITOR_HOST}:9320"]
+      - targets: ["192.168.1.112:9320", "192.168.1.113:9320"]
         labels:
           node: replica-1b
-      - targets: ["${MONITOR_HOST}:9420"]
+      - targets: ["192.168.1.112:9420", "192.168.1.113:9420"]
         labels:
           node: master-2
-      - targets: ["${MONITOR_HOST}:9520"]
+      - targets: ["192.168.1.112:9520", "192.168.1.113:9520"]
         labels:
           node: replica-2a
-      - targets: ["${MONITOR_HOST}:9620"]
+      - targets: ["192.168.1.112:9620", "192.168.1.113:9620"]
         labels:
           node: replica-2b
-      - targets: ["${MONITOR_HOST}:9720"]
+      - targets: ["192.168.1.112:9720", "192.168.1.113:9720"]
         labels:
           node: master-3
+      - targets: ["192.168.1.112:9820", "192.168.1.113:9820"]
+        labels:
+          node: replica-3a
+      - targets: ["192.168.1.112:9920", "192.168.1.113:9920"]
+        labels:
+          node: replica-3b
     relabel_configs:
       - source_labels: [node]
         regex: (.*)

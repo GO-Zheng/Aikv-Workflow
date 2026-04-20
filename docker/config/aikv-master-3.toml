@@ -1,5 +1,7 @@
-# AiKv Master 3（扩容用，初始不入槽；加入集群由 test_cluster_expand_master.sh / METARAFT 完成）
-# Redis: 容器 6379 -> 宿主机 6385；Raft: 容器 50051 -> 宿主机 50057
+# AiKv Master 3
+# Redis: 容器 6379 -> 宿主机 6385; Raft: 容器 50051 -> 宿主机 50057
+#
+# 扩容使用
 
 [server]
 host = "0.0.0.0"

@@ -31,15 +31,15 @@ usage() {
   默认同步两台主机; 仅 -m / 仅 -s 见上。
 
   -c, --cluster  集群模式开关:
-                 - Monitor: 镜像检查包含 docker-compose-cluster-monitor.yaml，-r 时执行 run_monitor.sh --cluster
-                 - Server : -r 时执行 run_cluster.sh（否则 run_docker.sh）
+                 - Monitor: 镜像检查包含 docker-compose-cluster-monitor.yaml,-r 时执行 run_monitor.sh --cluster
+                 - Server : -r 时执行 run_cluster.sh(否则 run_docker.sh)
 
   -p, --promtail Monitor 部署: 本机镜像检查包含 docker-compose-promtail.yaml;
                  与 -r 联用时由本机直连 SERVER_HOST 执行 promtail compose up -d
 
   -r, --run      同步且镜像检查通过后 SSH 执行:
                  Monitor → run_monitor.sh(按需附加 --cluster/--promtail)
-                 Server  → 默认 run_docker.sh；加 -c 时 run_cluster.sh
+                 Server  → 默认 run_docker.sh;加 -c 时 run_cluster.sh
 
   Monitor: $REMOTE_DEST/ 下 docker scripts
   Server:  $REMOTE_DEST/ 下 config docker scripts tests
@@ -77,7 +77,7 @@ if [[ "$DO_MONITOR" -eq 0 && "$DO_SERVER" -eq 0 ]]; then
   DO_SERVER=1
 fi
 
-# 语义统一: 只要给了 -c 且 -r, Server 默认按集群运行（m/s 可同时生效）
+# 语义统一: 只要给了 -c 且 -r, Server 默认按集群运行(m/s 可同时生效)
 if [[ "$DO_SERVER" -eq 1 && "$MONITOR_CLUSTER" -eq 1 && "$REMOTE_RUN" -eq 1 && "$SERVER_RUN_KIND" == "docker" ]]; then
   SERVER_RUN_KIND=cluster
 fi
@@ -166,7 +166,7 @@ if [[ "$DO_MONITOR" -eq 1 ]]; then
 fi
 
 if [[ "$DO_SERVER" -eq 1 ]]; then
-  for d in config docker scripts tests; do
+  for d in docker scripts tests; do
     [[ -d "$PROJECT_DIR/$d" ]] || {
       echo -e "${RED}缺少目录: $PROJECT_DIR/$d${NC}" >&2
       exit 1
@@ -177,7 +177,7 @@ if [[ "$DO_SERVER" -eq 1 ]]; then
   scp -r "$PROJECT_DIR/config" "$PROJECT_DIR/docker" "$PROJECT_DIR/scripts" "$PROJECT_DIR/tests" "${SERVER_SSH}:$REMOTE_DEST/"
 fi
 
-# 仅当 -p 但未选择 -s 时，仍需给 Server 提前下发 docker/，否则无法执行 promtail compose
+# 仅当 -p 但未选择 -s 时,仍需给 Server 提前下发 docker/,否则无法执行 promtail compose
 if [[ "$MONITOR_PROMTAIL" -eq 1 && "$DO_SERVER" -eq 0 ]]; then
   echo -e "${BLUE}同步 Server docker/ (供 promtail compose) -> $SERVER_SSH:$REMOTE_DEST/docker/${NC}"
   [[ -d "$DOCKER_DIR" ]] || { echo -e "${RED}缺少目录 $DOCKER_DIR${NC}" >&2; exit 1; }

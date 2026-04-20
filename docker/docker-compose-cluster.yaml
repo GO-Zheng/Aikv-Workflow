@@ -1,4 +1,5 @@
-# AiKv 集群模式 (2 组分片：每组 1 主 2 从，共 6 节点；每分片 Raft 3 副本，可容忍 1 节点故障)
+# AiKv 集群模式
+#    2 组分片: 每组 1 主 2 从, 共 6 节点; 每分片 Raft 3 副本, 可容忍 1 节点故障
 #
 # 节点规划:
 #   Master-1:    6379, Raft 50051 (bootstrap)
@@ -7,19 +8,22 @@
 #   Master-2:    6382, Raft 50054
 #   Replica-2a:  6383, Raft 50055
 #   Replica-2b:  6384, Raft 50056
+#   -----------------------------
+#   (扩容测试使用)
+#   Master-3:    6385, Raft 50057
+#   Replica-3a:  6386, Raft 50058
+#   Replica-3b:  6387, Raft 50059
 #
 # 启动后需要运行初始化脚本:
 #   docker compose -f docker-compose-cluster.yaml up -d
 #   ./scripts/init_cluster.sh
 #
-# 镜像由环境变量 AIKV_CLUSTER_IMAGE 指定（默认 aikv:cluster），run_cluster.sh 启动前会导出。
+# 镜像由环境变量 AIKV_CLUSTER_IMAGE 指定(默认 aikv:cluster).
 
+name: aikv-cluster
 services:
-  # ============================================================
-  # Master-1 (Bootstrap Node) — 分片 1 主
-  # ============================================================
   aikv-master-1:
-    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
+    image: &image ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
     container_name: aikv-master-1
     hostname: aikv-master-1
     user: root
@@ -28,9 +32,9 @@ services:
       - "6379:6379"   # Redis protocol
       - "50051:50051" # Raft gRPC
     volumes:
-      # - ../data/aikv-cluster/master-1:/app/data
-      # - ../logs/cluster:/app/logs
-      - ../config/aikv-master-1.toml:/app/aikv-cluster.toml:ro
+      - ./config/aikv-master-1.toml:/app/aikv-cluster.toml:ro
+      # - ./data/aikv-cluster/master-1:/app/data
+      # - ./logs/cluster:/app/logs
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
@@ -41,10 +45,11 @@ services:
     restart: unless-stopped
     labels:
       - app=aikv
+      - node=master-1
     networks:
       aikv-workflow:
         aliases:
-          - aikv    # 兼容单机模式 monitor
+          - aikv  # 兼容单机模式 monitor
     healthcheck:
       test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "ping"]
       interval: 30s
@@ -52,11 +57,36 @@ services:
       retries: 3
       start_period: 10s
 
-  # ============================================================
-  # Replica-1a (of Master-1)
-  # ============================================================
+  aikv-exporter:
+    image: oliver006/redis_exporter:v1.80.1
+    container_name: aikv-exporter
+    environment:
+      - REDIS_ADDR=redis://localhost:6379
+    ports:
+      - "9121:9121"
+    restart: unless-stopped
+    networks:
+      aikv-workflow:
+        aliases:
+          - aikv-exporter-master-1
+
+  aidb-exporter:
+    image: aidb-exporter:v0.0.2
+    container_name: aidb-exporter
+    environment:
+      - AIDB_TARGET=redis://localhost:6379
+      - EXPORTER_PORT=9120
+    ports:
+      - "9120:9120"
+    restart: unless-stopped
+    networks:
+      aikv-workflow:
+        aliases:
+          - aidb-exporter-master-1
+
+  # --------------------------------------------------
   aikv-replica-1a:
-    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
+    image: *image
     container_name: aikv-replica-1a
     hostname: aikv-replica-1a
     user: root
@@ -65,9 +95,9 @@ services:
       - "6380:6379"
       - "50052:50051"
     volumes:
-      # - ../data/aikv-cluster/replica-1a:/app/data
-      # - ../logs/cluster:/app/logs
-      - ../config/aikv-replica-1a.toml:/app/aikv-cluster.toml:ro
+      - ./config/aikv-replica-1a.toml:/app/aikv-cluster.toml:ro
+      # - ./data/aikv-cluster/replica-1a:/app/data
+      # - ./logs/cluster:/app/logs
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
@@ -78,6 +108,7 @@ services:
     restart: unless-stopped
     labels:
       - app=aikv
+      - node=replica-1a
     networks:
       - aikv-workflow
     healthcheck:
@@ -87,11 +118,32 @@ services:
       retries: 3
       start_period: 10s
 
-  # ============================================================
-  # Replica-1b (of Master-1)
-  # ============================================================
+  aikv-exporter-replica-1a:
+    image: &aikv-exporter-image oliver006/redis_exporter:v1.80.1
+    container_name: aikv-exporter-replica-1a
+    environment:
+      - REDIS_ADDR=redis://localhost:6380
+    ports:
+      - "9221:9121"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  aidb-exporter-replica-1a:
+    image: &aidb-exporter-image aidb-exporter:v0.0.2
+    container_name: aidb-exporter-replica-1a
+    environment:
+      - AIDB_TARGET=redis://localhost:6380
+      - EXPORTER_PORT=9120
+    ports:
+      - "9220:9120"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # --------------------------------------------------
   aikv-replica-1b:
-    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
+    image: *image
     container_name: aikv-replica-1b
     hostname: aikv-replica-1b
     user: root
@@ -100,9 +152,9 @@ services:
       - "6381:6379"
       - "50053:50051"
     volumes:
-      # - ../data/aikv-cluster/replica-1b:/app/data
-      # - ../logs/cluster:/app/logs
-      - ../config/aikv-replica-1b.toml:/app/aikv-cluster.toml:ro
+      - ./config/aikv-replica-1b.toml:/app/aikv-cluster.toml:ro
+      # - ./data/aikv-cluster/replica-1b:/app/data
+      # - ./logs/cluster:/app/logs
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
@@ -113,6 +165,7 @@ services:
     restart: unless-stopped
     labels:
       - app=aikv
+      - node=replica-1b
     networks:
       - aikv-workflow
     healthcheck:
@@ -122,11 +175,32 @@ services:
       retries: 3
       start_period: 10s
 
-  # ============================================================
-  # Master-2 — 分片 2 主
-  # ============================================================
+  aikv-exporter-replica-1b:
+    image: *aikv-exporter-image
+    container_name: aikv-exporter-replica-1b
+    environment:
+      - REDIS_ADDR=redis://localhost:6381
+    ports:
+      - "9321:9121"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  aidb-exporter-replica-1b:
+    image: *aidb-exporter-image
+    container_name: aidb-exporter-replica-1b
+    environment:
+      - AIDB_TARGET=redis://localhost:6381
+      - EXPORTER_PORT=9120
+    ports:
+      - "9320:9120"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # --------------------------------------------------
   aikv-master-2:
-    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
+    image: *image
     container_name: aikv-master-2
     hostname: aikv-master-2
     user: root
@@ -135,9 +209,9 @@ services:
       - "6382:6379"
       - "50054:50051"
     volumes:
-      # - ../data/aikv-cluster/master-2:/app/data
-      # - ../logs/cluster:/app/logs
-      - ../config/aikv-master-2.toml:/app/aikv-cluster.toml:ro
+      - ./config/aikv-master-2.toml:/app/aikv-cluster.toml:ro
+      # - ./data/aikv-cluster/master-2:/app/data
+      # - ./logs/cluster:/app/logs
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
@@ -148,6 +222,7 @@ services:
     restart: unless-stopped
     labels:
       - app=aikv
+      - node=master-2
     networks:
       - aikv-workflow
     healthcheck:
@@ -157,11 +232,32 @@ services:
       retries: 3
       start_period: 10s
 
-  # ============================================================
-  # Replica-2a (of Master-2)
-  # ============================================================
+  aikv-exporter-master-2:
+    image: *aikv-exporter-image
+    container_name: aikv-exporter-master-2
+    environment:
+      - REDIS_ADDR=redis://localhost:6382
+    ports:
+      - "9421:9121"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  aidb-exporter-master-2:
+    image: *aidb-exporter-image
+    container_name: aidb-exporter-master-2
+    environment:
+      - AIDB_TARGET=redis://localhost:6382
+      - EXPORTER_PORT=9120
+    ports:
+      - "9420:9120"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # --------------------------------------------------
   aikv-replica-2a:
-    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
+    image: *image
     container_name: aikv-replica-2a
     hostname: aikv-replica-2a
     user: root
@@ -170,9 +266,9 @@ services:
       - "6383:6379"
       - "50055:50051"
     volumes:
-      # - ../data/aikv-cluster/replica-2a:/app/data
-      # - ../logs/cluster:/app/logs
-      - ../config/aikv-replica-2a.toml:/app/aikv-cluster.toml:ro
+      - ./config/aikv-replica-2a.toml:/app/aikv-cluster.toml:ro
+      # - ./data/aikv-cluster/replica-2a:/app/data
+      # - ./logs/cluster:/app/logs
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
@@ -183,6 +279,7 @@ services:
     restart: unless-stopped
     labels:
       - app=aikv
+      - node=replica-2a
     networks:
       - aikv-workflow
     healthcheck:
@@ -192,11 +289,32 @@ services:
       retries: 3
       start_period: 10s
 
-  # ============================================================
-  # Replica-2b (of Master-2)
-  # ============================================================
+  aikv-exporter-replica-2a:
+    image: *aikv-exporter-image
+    container_name: aikv-exporter-replica-2a
+    environment:
+      - REDIS_ADDR=redis://localhost:6383
+    ports:
+      - "9521:9121"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  aidb-exporter-replica-2a:
+    image: *aidb-exporter-image
+    container_name: aidb-exporter-replica-2a
+    environment:
+      - AIDB_TARGET=redis://localhost:6383
+      - EXPORTER_PORT=9120
+    ports:
+      - "9520:9120"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # --------------------------------------------------
   aikv-replica-2b:
-    image: ${AIKV_CLUSTER_IMAGE:-aikv:cluster}
+    image: *image
     container_name: aikv-replica-2b
     hostname: aikv-replica-2b
     user: root
@@ -205,9 +323,9 @@ services:
       - "6384:6379"
       - "50056:50051"
     volumes:
-      # - ../data/aikv-cluster/replica-2b:/app/data
-      # - ../logs/cluster:/app/logs
-      - ../config/aikv-replica-2b.toml:/app/aikv-cluster.toml:ro
+      - ./config/aikv-replica-2b.toml:/app/aikv-cluster.toml:ro
+      # - ./data/aikv-cluster/replica-2b:/app/data
+      # - ./logs/cluster:/app/logs
     environment:
       - RUST_LOG=debug
       - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
@@ -218,6 +336,7 @@ services:
     restart: unless-stopped
     labels:
       - app=aikv
+      - node=replica-2b
     networks:
       - aikv-workflow
     healthcheck:
@@ -226,6 +345,264 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+
+  aikv-exporter-replica-2b:
+    image: *aikv-exporter-image
+    container_name: aikv-exporter-replica-2b
+    environment:
+      - REDIS_ADDR=redis://localhost:6384
+    ports:
+      - "9621:9121"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  aidb-exporter-replica-2b:
+    image: *aidb-exporter-image
+    container_name: aidb-exporter-replica-2b
+    environment:
+      - AIDB_TARGET=redis://localhost:6384
+      - EXPORTER_PORT=9120
+    ports:
+      - "9620:9120"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # --------------------------------------------------
+  aikv-master-3:
+    image: *image
+    container_name: aikv-master-3
+    hostname: aikv-master-3
+    user: root
+    command: ["--config", "/app/aikv-cluster.toml"]
+    ports:
+      - "6385:6379"
+      - "50057:50051"
+    volumes:
+      - ./config/aikv-master-3.toml:/app/aikv-cluster.toml:ro
+      # - ./data/aikv-cluster/master-3:/app/data
+      # - ./logs/cluster:/app/logs
+    environment:
+      - RUST_LOG=debug
+      - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
+      - AIKV_AUTO_FAILOVER=true
+      - AIKV_AUTO_FAILOVER_REQUIRED_CHECKS=2
+      - AIKV_AUTO_FAILOVER_MIN_OFFLINE_SECS=10
+      - AIKV_AUTO_FAILOVER_COOLDOWN_SECS=30
+    restart: unless-stopped
+    labels:
+      - app=aikv
+      - node=master-3
+    networks:
+      - aikv-workflow
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  aikv-exporter-master-3:
+    image: *aikv-exporter-image
+    container_name: aikv-exporter-master-3
+    environment:
+      - REDIS_ADDR=redis://localhost:6385
+    ports:
+      - "9721:9121"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  aidb-exporter-master-3:
+    image: *aidb-exporter-image
+    container_name: aidb-exporter-master-3
+    environment:
+      - AIDB_TARGET=redis://localhost:6385
+      - EXPORTER_PORT=9120
+    ports:
+      - "9720:9120"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # --------------------------------------------------
+  aikv-replica-3a:
+    image: *image
+    container_name: aikv-replica-3a
+    hostname: aikv-replica-3a
+    user: root
+    command: ["--config", "/app/aikv-cluster.toml"]
+    ports:
+      - "6386:6379"
+      - "50058:50051"
+    volumes:
+      - ./config/aikv-replica-3a.toml:/app/aikv-cluster.toml:ro
+      # - ./data/aikv-cluster/replica-3a:/app/data
+      # - ./logs/cluster:/app/logs
+    environment:
+      - RUST_LOG=debug
+      - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
+      - AIKV_AUTO_FAILOVER=true
+      - AIKV_AUTO_FAILOVER_REQUIRED_CHECKS=2
+      - AIKV_AUTO_FAILOVER_MIN_OFFLINE_SECS=10
+      - AIKV_AUTO_FAILOVER_COOLDOWN_SECS=30
+    restart: unless-stopped
+    labels:
+      - app=aikv
+      - node=replica-3a
+    networks:
+      - aikv-workflow
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  aikv-exporter-replica-3a:
+    image: *aikv-exporter-image
+    container_name: aikv-exporter-replica-3a
+    environment:
+      - REDIS_ADDR=redis://localhost:6386
+    ports:
+      - "9821:9121"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  aidb-exporter-replica-3a:
+    image: *aidb-exporter-image
+    container_name: aidb-exporter-replica-3a
+    environment:
+      - AIDB_TARGET=redis://localhost:6386
+      - EXPORTER_PORT=9120
+    ports:
+      - "9820:9120"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # --------------------------------------------------
+  aikv-replica-3b:
+    image: *image
+    container_name: aikv-replica-3b
+    hostname: aikv-replica-3b
+    user: root
+    command: ["--config", "/app/aikv-cluster.toml"]
+    ports:
+      - "6387:6379"
+      - "50059:50051"
+    volumes:
+      - ./config/aikv-replica-3b.toml:/app/aikv-cluster.toml:ro
+      # - ./data/aikv-cluster/replica-3b:/app/data
+      # - ./logs/cluster:/app/logs
+    environment:
+      - RUST_LOG=debug
+      - AIKV_ADVERTISE_HOST=${SERVER_HOST:-127.0.0.1}
+      - AIKV_AUTO_FAILOVER=true
+      - AIKV_AUTO_FAILOVER_REQUIRED_CHECKS=2
+      - AIKV_AUTO_FAILOVER_MIN_OFFLINE_SECS=10
+      - AIKV_AUTO_FAILOVER_COOLDOWN_SECS=30
+    restart: unless-stopped
+    labels:
+      - app=aikv
+      - node=replica-3b
+    networks:
+      - aikv-workflow
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "localhost", "-p", "6379", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  aikv-exporter-replica-3b:
+    image: *aikv-exporter-image
+    container_name: aikv-exporter-replica-3b
+    environment:
+      - REDIS_ADDR=redis://localhost:6387
+    ports:
+      - "9921:9121"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  aidb-exporter-replica-3b:
+    image: *aidb-exporter-image
+    container_name: aidb-exporter-replica-3b
+    environment:
+      - AIDB_TARGET=redis://localhost:6387
+      - EXPORTER_PORT=9120
+    ports:
+      - "9920:9120"
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # --------------------------------------------------
+  # 节点监控服务
+  promtail:
+    image: grafana/promtail:3.6.8
+    container_name: aikv-promtail
+    user: "0:0"
+    command:
+      - "-config.expand-env=true"
+      - "-config.file=/etc/promtail/promtail.yaml"
+    environment:
+      - MONITOR_HOST=${MONITOR_HOST}
+      - SERVER_HOST=localhost
+    ports:
+      - "9081:9081"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
+      # - ./logs:/var/log/aikv:ro
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
+
+  # node-exporter:
+  #   image: prom/node-exporter:v1.10.2
+  #   container_name: node-exporter
+  #   command:
+  #     - "--path.procfs=/host/proc"
+  #     - "--path.sysfs=/host/sys"
+  #     - "--path.rootfs=/host"
+  #     # 排除易重复的挂载点 (WSL2/Docker 下 /run/user 等会重复采集导致 ERROR)
+  #     - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+  #   ports:
+  #     - "9100:9100"
+  #   volumes:
+  #     - /proc:/host/proc:ro
+  #     - /sys:/host/sys:ro
+  #     - /:/host:ro
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
+  #   healthcheck:
+  #     test: ["CMD", "wget", "-q", "--spider", "http://localhost:9100"]
+  #     interval: 30s
+  #     timeout: 5s
+  #     retries: 3
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: aikv-cadvisor
+    ports:
+      - "8088:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    restart: unless-stopped
+    networks:
+      - aikv-workflow
 
 networks:
   aikv-workflow:

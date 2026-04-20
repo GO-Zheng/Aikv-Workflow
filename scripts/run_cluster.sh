@@ -25,7 +25,7 @@ DO_INIT=true
 WITH_CLUSTER_MONITOR=false
 IMAGE_NAME="aikv:cluster"
 IMAGE_EXPLICIT=false
-BOOTSTRAP_CONFIG="$PROJECT_DIR/config/aikv-master-1.toml"
+BOOTSTRAP_CONFIG="$PROJECT_DIR/docker/config/aikv-master-1.toml"
 
 # 从 docker/.env 加载环境变量(仅当当前环境未定义时)
 load_env_file() {

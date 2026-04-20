@@ -1,0 +1,33 @@
+# AiKv 单节点配置
+
+[server]
+host = "0.0.0.0"
+port = 6379
+
+
+[storage]
+engine = "aidb"
+data_dir = "./data"
+databases = 16
+
+
+[logging]
+level = "debug"
+
+
+[slowlog]
+# 慢查询阈值(微秒)
+# CONFIG SET slowlog-log-slower-than <us>
+# 超过此时间的命令将被记录
+log-slower-than = 10000
+
+# 最大慢查询日志条目数
+# CONFIG SET slowlog-max-len <len>
+max-len = 128
+
+
+# [tracing]
+# enabled = false
+# service_name = "aikv"
+# otlp_endpoint = "http://localhost:4317"
+# sampling_ratio = 1.0
