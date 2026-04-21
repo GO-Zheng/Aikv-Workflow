@@ -54,6 +54,10 @@ scrape_configs:
         labels:
           node: replica-3b
     relabel_configs:
+      - source_labels: [__address__]
+        regex: ([^:]+):.*
+        replacement: "$1"
+        target_label: host
       - source_labels: [node]
         regex: (.*)
         replacement: "aikv-exporter-$1:9121"
@@ -89,6 +93,10 @@ scrape_configs:
         labels:
           node: replica-3b
     relabel_configs:
+      - source_labels: [__address__]
+        regex: ([^:]+):.*
+        replacement: "$1"
+        target_label: host
       - source_labels: [node]
         regex: (.*)
         replacement: "aidb-exporter-$1:9120"

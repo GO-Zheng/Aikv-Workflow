@@ -30,9 +30,10 @@ h2() { info "${LIGHTCYAN}--- $* ---${NC}"; }
 
 # 使用说明
 usage() {
-    echo "Usage: $0 [-i|--image] [-c|--cluster] [-m|--monitor] [-d|--dir] [-b|--build] [-e|--expand]"
+    echo "Usage: $0 [-i|--image] [-s|--single] [-c|--cluster] [-m|--monitor] [-d|--dir] [-b|--build] [-e|--expand]"
     echo "  -i, --image     同步镜像到远程节点"
-    echo "  -c, --cluster   使用集群模式部署 (默认: 单节点模式)"
+    echo "  -s, --single    使用单机模式部署"
+    echo "  -c, --cluster   使用集群模式部署"
     echo "  -m, --monitor   部署监控节点"
     echo "  -d, --dir       同步文件到远程节点"
     echo "  -b, --build     重新构建 Docker 镜像 (build_docker.sh --dev --cluster)"
@@ -42,13 +43,14 @@ usage() {
 
 # 解析命令行参数
 SYNC_IMAGES=false
+SINGLE_MODE=false
 CLUSTER_MODE=false
 DEPLOY_MONITOR=false
 SYNC_FILES=false
 BUILD_IMAGE=false
 EXPAND_MODE=false
 
-OPTS=$(getopt -o "icmdbe" -l "image,cluster,monitor,dir,build,expand" -n "$0" -- "$@")
+OPTS=$(getopt -o "iscmdbe" -l "image,single,cluster,monitor,dir,build,expand" -n "$0" -- "$@")
 if [[ $? -ne 0 ]]; then
     usage
 fi
@@ -57,6 +59,7 @@ eval set -- "$OPTS"
 while true; do
     case "$1" in
         -i|--image)      SYNC_IMAGES=true; shift ;;
+        -s|--single)     SINGLE_MODE=true; shift ;;
         -c|--cluster)    CLUSTER_MODE=true; shift ;;
         -m|--monitor)    DEPLOY_MONITOR=true; shift ;;
         -d|--dir)        SYNC_FILES=true; shift ;;
@@ -67,16 +70,33 @@ while true; do
     esac
 done
 
+# 模式校验
+if $SINGLE_MODE && $CLUSTER_MODE; then
+    error "不能同时选择 --single 和 --cluster"
+    usage
+fi
+
 # 确定部署模式
 if $CLUSTER_MODE; then
     SERVER_COMPOSE="docker-compose-cluster.yaml"
     IMAGE_NAME="aikv:cluster"
-else
+elif $SINGLE_MODE; then
     SERVER_COMPOSE="docker-compose.yaml"
     IMAGE_NAME="aikv:latest"
+else
+    SERVER_COMPOSE=""
+    IMAGE_NAME="aikv:cluster"
 fi
 
-info "部署模式: $(if $CLUSTER_MODE; then echo "${CYAN}集群模式${NC}"; else echo "${CYAN}单节点模式${NC}"; fi)"
+if $EXPAND_MODE; then
+    info "部署模式: ${CYAN}扩容模式${NC}"
+elif $CLUSTER_MODE; then
+    info "部署模式: ${CYAN}集群模式${NC}"
+elif $SINGLE_MODE; then
+    info "部署模式: ${CYAN}单节点模式${NC}"
+else
+    warn "未选择服务部署模式, 默认不部署 AiKv 服务 (可使用 -s 或 -c)"
+fi
 info "镜像: ${CYAN}$IMAGE_NAME${NC}"
 
 # 服务节点
@@ -106,13 +126,30 @@ if $EXPAND_MODE; then
     SERVICES="$EXPAND_SERVICES"
 elif $CLUSTER_MODE; then
     SERVICES="$CLUSTER_SERVICES"
-else
+elif $SINGLE_MODE; then
     SERVICES="$SINGLE_SERVICES"
+else
+    SERVICES=""
 fi
 
 # 复制文件到远程节点
 MONITOR="root@$MONITOR_HOST"
 SERVERS=("root@$SERVER_HOST_1" "root@$SERVER_HOST_2")
+
+# 仅同步文件到所有服务节点
+sync_files_only() {
+    h1 "同步文件到服务节点"
+    for server in "${SERVERS[@]}"; do
+        h2 "同步文件到 ${CYAN}$server${NC}"
+        ssh $server "mkdir -p /root/AiKv-Workflow/" > /dev/null 2>&1
+        scp -r $DOCKER_DIR $server:/root/AiKv-Workflow/ > /dev/null 2>&1
+    done
+
+    h1 "同步文件到监控节点"
+    h2 "同步文件到 ${CYAN}$MONITOR${NC}"
+    ssh $MONITOR "mkdir -p /root/AiKv-Workflow/" > /dev/null 2>&1
+    scp -r $DOCKER_DIR $MONITOR:/root/AiKv-Workflow/ > /dev/null 2>&1
+}
 
 
 # 部署监控
@@ -181,10 +218,16 @@ if $DEPLOY_MONITOR; then
     deploy_monitor
 fi
 
-h1 "部署 ${CYAN}AiKv${NC}"
-for server in "${SERVERS[@]}"; do
-    main $server
-done
+if $SYNC_FILES; then
+    sync_files_only
+fi
+
+if [[ -n "$SERVICES" ]]; then
+    h1 "部署 ${CYAN}AiKv${NC}"
+    for server in "${SERVERS[@]}"; do
+        main $server
+    done
+fi
 
 rm -f $DOCKER_DIR/aikv-image.tar
 success "部署完成"

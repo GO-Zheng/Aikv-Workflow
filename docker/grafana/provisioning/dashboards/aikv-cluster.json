@@ -122,7 +122,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(rate(redis_cpu_sys_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(rate(redis_cpu_sys_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -219,7 +219,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(rate(redis_cpu_user_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(rate(redis_cpu_user_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -316,7 +316,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(rate(redis_cpu_sys_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]) + rate(redis_cpu_user_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(rate(redis_cpu_sys_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]) + rate(redis_cpu_user_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -388,7 +388,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(rate(redis_cpu_sys_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]) + rate(redis_cpu_user_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(rate(redis_cpu_sys_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]) + rate(redis_cpu_user_seconds_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -499,7 +499,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "label_replace(process_resident_memory_bytes{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(process_resident_memory_bytes{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "range": true,
           "refId": "A"
@@ -598,7 +598,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "label_replace(redis_memory_used_bytes{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(redis_memory_used_bytes{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "range": true,
           "refId": "A"
@@ -696,7 +696,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(redis_memory_used_peak_bytes{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(redis_memory_used_peak_bytes{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -768,7 +768,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(redis_mem_fragmentation_ratio{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(redis_mem_fragmentation_ratio{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -878,7 +878,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(node_disk_read_bytes_total{job=\"node-exporter\"}[$__rate_interval])",
+          "expr": "rate(node_disk_read_bytes_total{job=\"node-exporter\",instance=~\"$host:9100\"}[$__rate_interval])",
           "legendFormat": "{{device}}",
           "refId": "A"
         }
@@ -975,7 +975,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(node_disk_written_bytes_total{job=\"node-exporter\"}[$__rate_interval])",
+          "expr": "rate(node_disk_written_bytes_total{job=\"node-exporter\",instance=~\"$host:9100\"}[$__rate_interval])",
           "legendFormat": "{{device}}",
           "refId": "A"
         }
@@ -1088,7 +1088,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(node_disk_reads_completed_total{job=\"node-exporter\"}[$__rate_interval])",
+          "expr": "rate(node_disk_reads_completed_total{job=\"node-exporter\",instance=~\"$host:9100\"}[$__rate_interval])",
           "legendFormat": "{{device}}",
           "refId": "A"
         }
@@ -1201,7 +1201,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "rate(node_disk_writes_completed_total{job=\"node-exporter\"}[$__rate_interval])",
+          "expr": "rate(node_disk_writes_completed_total{job=\"node-exporter\",instance=~\"$host:9100\"}[$__rate_interval])",
           "legendFormat": "{{device}}",
           "refId": "A"
         }
@@ -1311,7 +1311,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(rate(redis_net_input_bytes_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(rate(redis_net_input_bytes_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -1408,7 +1408,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(rate(redis_net_output_bytes_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(rate(redis_net_output_bytes_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -1519,7 +1519,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "label_replace(sum by (instance) (rate(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval])), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(sum by (instance) (rate(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval])), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "range": true,
           "refId": "A"
@@ -1592,7 +1592,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(redis_connected_clients{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(redis_connected_clients{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -1689,7 +1689,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(sum by (instance) (rate(redis_commands_total{cmd=~\"get|mget|hget|sget|lget|smembers|scard|sismember\",instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval])), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(sum by (instance) (rate(redis_commands_total{cmd=~\"get|mget|hget|sget|lget|smembers|scard|sismember\",instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval])), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -1753,7 +1753,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(redis_commands_processed_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(redis_commands_processed_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}, \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -1865,8 +1865,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (rate(redis_commands_total{instance=\"aikv-exporter-master-1:9121\"}[$__rate_interval]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (rate(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -1964,8 +1964,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (rate(redis_commands_total{instance=\"aikv-exporter-replica-1a:9121\"}[$__rate_interval]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (rate(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2063,8 +2063,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (rate(redis_commands_total{instance=\"aikv-exporter-master-2:9121\"}[$__rate_interval]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (rate(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2162,8 +2162,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (rate(redis_commands_total{instance=\"aikv-exporter-replica-2a:9121\"}[$__rate_interval]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (rate(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2261,8 +2261,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (rate(redis_commands_total{instance=\"aikv-exporter-replica-1b:9121\"}[$__rate_interval]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (rate(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2360,8 +2360,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (rate(redis_commands_total{instance=\"aikv-exporter-replica-2b:9121\"}[$__rate_interval]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (rate(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2435,8 +2435,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (increase(redis_commands_total{instance=\"aikv-exporter-master-1:9121\"}[$__range]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (increase(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__range]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2510,8 +2510,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (increase(redis_commands_total{instance=\"aikv-exporter-master-2:9121\"}[$__range]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (increase(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__range]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2585,8 +2585,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (increase(redis_commands_total{instance=\"aikv-exporter-replica-1b:9121\"}[$__range]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (increase(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__range]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2660,8 +2660,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (increase(redis_commands_total{instance=\"aikv-exporter-replica-1a:9121\"}[$__range]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (increase(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__range]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2735,8 +2735,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (increase(redis_commands_total{instance=\"aikv-exporter-replica-2a:9121\"}[$__range]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (increase(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__range]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2810,8 +2810,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (cmd) (increase(redis_commands_total{instance=\"aikv-exporter-replica-2b:9121\"}[$__range]))",
-          "legendFormat": "{{cmd}}",
+          "expr": "sum by (instance, cmd) (increase(redis_commands_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__range]))",
+          "legendFormat": "{{instance}} {{cmd}}",
           "refId": "A"
         }
       ],
@@ -2920,7 +2920,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(histogram_quantile(0.50, sum by (le, instance) (rate(redis_commands_latencies_usec_bucket{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]))), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(histogram_quantile(0.50, sum by (le, instance) (rate(redis_commands_latencies_usec_bucket{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]))), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -3017,7 +3017,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(histogram_quantile(0.95, sum by (le, instance) (rate(redis_commands_latencies_usec_bucket{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]))), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(histogram_quantile(0.95, sum by (le, instance) (rate(redis_commands_latencies_usec_bucket{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]))), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -3114,7 +3114,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(histogram_quantile(0.99, sum by (le, instance) (rate(redis_commands_latencies_usec_bucket{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]))), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(histogram_quantile(0.99, sum by (le, instance) (rate(redis_commands_latencies_usec_bucket{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]))), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -3224,7 +3224,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(rate(redis_keyspace_hits_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(rate(redis_keyspace_hits_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -3321,7 +3321,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(rate(redis_keyspace_misses_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(rate(redis_keyspace_misses_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -3418,7 +3418,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(rate(redis_keyspace_hits_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]) / (rate(redis_keyspace_hits_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval]) + rate(redis_keyspace_misses_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\"}[$__rate_interval])), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
+          "expr": "label_replace(rate(redis_keyspace_hits_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]) / (rate(redis_keyspace_hits_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval]) + rate(redis_keyspace_misses_total{instance=~\"aikv-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9121\",host=~\"$host\"}[$__rate_interval])), \"short_name\", \"$1\", \"instance\", \"aikv-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -3528,7 +3528,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(aidb_memtable_bytes{instance=~\"aidb-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9120\"}, \"short_name\", \"$1\", \"instance\", \"aidb-exporter-(.*):.*\")",
+          "expr": "label_replace(aidb_memtable_bytes{instance=~\"aidb-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9120\",host=~\"$host\"}, \"short_name\", \"$1\", \"instance\", \"aidb-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -3625,7 +3625,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(aidb_wal_bytes{instance=~\"aidb-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9120\"}, \"short_name\", \"$1\", \"instance\", \"aidb-exporter-(.*):.*\")",
+          "expr": "label_replace(aidb_wal_bytes{instance=~\"aidb-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9120\",host=~\"$host\"}, \"short_name\", \"$1\", \"instance\", \"aidb-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -3730,7 +3730,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "label_replace(aidb_block_cache_bytes{instance=~\"aidb-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9120\"} / aidb_block_cache_capacity_bytes{instance=~\"aidb-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9120\"}, \"short_name\", \"$1\", \"instance\", \"aidb-exporter-(.*):.*\")",
+          "expr": "label_replace(aidb_block_cache_bytes{instance=~\"aidb-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9120\",host=~\"$host\"} / aidb_block_cache_capacity_bytes{instance=~\"aidb-exporter-(master-[0-9]+|replica-[0-9]+[a-z]*):9120\",host=~\"$host\"}, \"short_name\", \"$1\", \"instance\", \"aidb-exporter-(.*):.*\")",
           "legendFormat": "{{short_name}}",
           "refId": "A"
         }
@@ -3844,7 +3844,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"cadvisor\",container_label_app=\"aikv\"})",
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_working_set_bytes{job=\"cadvisor\",container_label_app=\"aikv\",instance=~\"$host:8088\"})",
           "legendFormat": "{{container_label_com_docker_compose_service}}",
           "refId": "A"
         }
@@ -3945,7 +3945,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_rss{job=\"cadvisor\",container_label_app=\"aikv\"})",
+          "expr": "sum by (container_label_com_docker_compose_service) (container_memory_rss{job=\"cadvisor\",container_label_app=\"aikv\",instance=~\"$host:8088\"})",
           "legendFormat": "{{container_label_com_docker_compose_service}}",
           "refId": "A"
         }
@@ -4046,7 +4046,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_reads_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_reads_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",instance=~\"$host:8088\"}[$__rate_interval]))",
           "legendFormat": "{{container_label_com_docker_compose_service}} read",
           "refId": "A"
         },
@@ -4055,7 +4055,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_writes_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_fs_writes_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",instance=~\"$host:8088\"}[$__rate_interval]))",
           "legendFormat": "{{container_label_com_docker_compose_service}} write",
           "refId": "B"
         }
@@ -4156,7 +4156,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_network_receive_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_network_receive_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",instance=~\"$host:8088\"}[$__rate_interval]))",
           "legendFormat": "{{container_label_com_docker_compose_service}} rx",
           "refId": "A"
         },
@@ -4165,7 +4165,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_network_transmit_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\"}[$__rate_interval]))",
+          "expr": "sum by (container_label_com_docker_compose_service) (rate(container_network_transmit_bytes_total{job=\"cadvisor\",container_label_app=\"aikv\",instance=~\"$host:8088\"}[$__rate_interval]))",
           "legendFormat": "{{container_label_com_docker_compose_service}} tx",
           "refId": "B"
         }
@@ -4183,7 +4183,36 @@
     "cluster"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "192.168.1.112",
+          "value": "192.168.1.112"
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "definition": "label_values(redis_up{job=~\"aikv-cluster-exporter|aidb-cluster-exporter\"}, host)",
+        "description": "选择服务器Host",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Host",
+        "multi": false,
+        "name": "host",
+        "options": [],
+        "query": {
+          "query": "label_values(redis_up{job=~\"aikv-cluster-exporter|aidb-cluster-exporter\"}, host)",
+          "refId": "StandardVariableQuery"
+        },
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-15m",
@@ -4193,6 +4222,6 @@
   "timezone": "browser",
   "title": "AiKv Cluster",
   "uid": "aikv-cluster",
-  "version": 1,
+  "version": 3,
   "weekStart": ""
 }
