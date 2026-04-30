@@ -57,32 +57,32 @@ services:
       retries: 3
       start_period: 10s
 
-  aikv-exporter:
-    image: oliver006/redis_exporter:v1.80.1
-    container_name: aikv-exporter
-    environment:
-      - REDIS_ADDR=redis://aikv-master-1:6379
-    ports:
-      - "9121:9121"
-    restart: unless-stopped
-    networks:
-      aikv-workflow:
-        aliases:
-          - aikv-exporter-master-1
+  # aikv-exporter:
+  #   image: oliver006/redis_exporter:v1.80.1
+  #   container_name: aikv-exporter
+  #   environment:
+  #     - REDIS_ADDR=redis://aikv-master-1:6379
+  #   ports:
+  #     - "9121:9121"
+  #   restart: unless-stopped
+  #   networks:
+  #     aikv-workflow:
+  #       aliases:
+  #         - aikv-exporter-master-1
 
-  aidb-exporter:
-    image: aidb-exporter:v0.0.2
-    container_name: aidb-exporter
-    environment:
-      - AIDB_TARGET=redis://aikv-master-1:6379
-      - EXPORTER_PORT=9120
-    ports:
-      - "9120:9120"
-    restart: unless-stopped
-    networks:
-      aikv-workflow:
-        aliases:
-          - aidb-exporter-master-1
+  # aidb-exporter:
+  #   image: aidb-exporter:v0.0.2
+  #   container_name: aidb-exporter
+  #   environment:
+  #     - AIDB_TARGET=redis://aikv-master-1:6379
+  #     - EXPORTER_PORT=9120
+  #   ports:
+  #     - "9120:9120"
+  #   restart: unless-stopped
+  #   networks:
+  #     aikv-workflow:
+  #       aliases:
+  #         - aidb-exporter-master-1
 
   # --------------------------------------------------
   aikv-replica-1a:
@@ -118,28 +118,28 @@ services:
       retries: 3
       start_period: 10s
 
-  aikv-exporter-replica-1a:
-    image: &aikv-exporter-image oliver006/redis_exporter:v1.80.1
-    container_name: aikv-exporter-replica-1a
-    environment:
-      - REDIS_ADDR=redis://aikv-replica-1a:6379
-    ports:
-      - "9221:9121"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aikv-exporter-replica-1a:
+  #   image: &aikv-exporter-image oliver006/redis_exporter:v1.80.1
+  #   container_name: aikv-exporter-replica-1a
+  #   environment:
+  #     - REDIS_ADDR=redis://aikv-replica-1a:6379
+  #   ports:
+  #     - "9221:9121"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
-  aidb-exporter-replica-1a:
-    image: &aidb-exporter-image aidb-exporter:v0.0.2
-    container_name: aidb-exporter-replica-1a
-    environment:
-      - AIDB_TARGET=redis://aikv-replica-1a:6379
-      - EXPORTER_PORT=9120
-    ports:
-      - "9220:9120"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aidb-exporter-replica-1a:
+  #   image: &aidb-exporter-image aidb-exporter:v0.0.2
+  #   container_name: aidb-exporter-replica-1a
+  #   environment:
+  #     - AIDB_TARGET=redis://aikv-replica-1a:6379
+  #     - EXPORTER_PORT=9120
+  #   ports:
+  #     - "9220:9120"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
   # --------------------------------------------------
   aikv-replica-1b:
@@ -175,28 +175,28 @@ services:
       retries: 3
       start_period: 10s
 
-  aikv-exporter-replica-1b:
-    image: *aikv-exporter-image
-    container_name: aikv-exporter-replica-1b
-    environment:
-      - REDIS_ADDR=redis://aikv-replica-1b:6379
-    ports:
-      - "9321:9121"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aikv-exporter-replica-1b:
+  #   image: *aikv-exporter-image
+  #   container_name: aikv-exporter-replica-1b
+  #   environment:
+  #     - REDIS_ADDR=redis://aikv-replica-1b:6379
+  #   ports:
+  #     - "9321:9121"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
-  aidb-exporter-replica-1b:
-    image: *aidb-exporter-image
-    container_name: aidb-exporter-replica-1b
-    environment:
-      - AIDB_TARGET=redis://aikv-replica-1b:6379
-      - EXPORTER_PORT=9120
-    ports:
-      - "9320:9120"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aidb-exporter-replica-1b:
+  #   image: *aidb-exporter-image
+  #   container_name: aidb-exporter-replica-1b
+  #   environment:
+  #     - AIDB_TARGET=redis://aikv-replica-1b:6379
+  #     - EXPORTER_PORT=9120
+  #   ports:
+  #     - "9320:9120"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
   # --------------------------------------------------
   aikv-master-2:
@@ -232,28 +232,28 @@ services:
       retries: 3
       start_period: 10s
 
-  aikv-exporter-master-2:
-    image: *aikv-exporter-image
-    container_name: aikv-exporter-master-2
-    environment:
-      - REDIS_ADDR=redis://aikv-master-2:6379
-    ports:
-      - "9421:9121"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aikv-exporter-master-2:
+  #   image: *aikv-exporter-image
+  #   container_name: aikv-exporter-master-2
+  #   environment:
+  #     - REDIS_ADDR=redis://aikv-master-2:6379
+  #   ports:
+  #     - "9421:9121"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
-  aidb-exporter-master-2:
-    image: *aidb-exporter-image
-    container_name: aidb-exporter-master-2
-    environment:
-      - AIDB_TARGET=redis://aikv-master-2:6379
-      - EXPORTER_PORT=9120
-    ports:
-      - "9420:9120"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aidb-exporter-master-2:
+  #   image: *aidb-exporter-image
+  #   container_name: aidb-exporter-master-2
+  #   environment:
+  #     - AIDB_TARGET=redis://aikv-master-2:6379
+  #     - EXPORTER_PORT=9120
+  #   ports:
+  #     - "9420:9120"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
   # --------------------------------------------------
   aikv-replica-2a:
@@ -289,28 +289,28 @@ services:
       retries: 3
       start_period: 10s
 
-  aikv-exporter-replica-2a:
-    image: *aikv-exporter-image
-    container_name: aikv-exporter-replica-2a
-    environment:
-      - REDIS_ADDR=redis://aikv-replica-2a:6379
-    ports:
-      - "9521:9121"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aikv-exporter-replica-2a:
+  #   image: *aikv-exporter-image
+  #   container_name: aikv-exporter-replica-2a
+  #   environment:
+  #     - REDIS_ADDR=redis://aikv-replica-2a:6379
+  #   ports:
+  #     - "9521:9121"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
-  aidb-exporter-replica-2a:
-    image: *aidb-exporter-image
-    container_name: aidb-exporter-replica-2a
-    environment:
-      - AIDB_TARGET=redis://aikv-replica-2a:6379
-      - EXPORTER_PORT=9120
-    ports:
-      - "9520:9120"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aidb-exporter-replica-2a:
+  #   image: *aidb-exporter-image
+  #   container_name: aidb-exporter-replica-2a
+  #   environment:
+  #     - AIDB_TARGET=redis://aikv-replica-2a:6379
+  #     - EXPORTER_PORT=9120
+  #   ports:
+  #     - "9520:9120"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
   # --------------------------------------------------
   aikv-replica-2b:
@@ -346,28 +346,28 @@ services:
       retries: 3
       start_period: 10s
 
-  aikv-exporter-replica-2b:
-    image: *aikv-exporter-image
-    container_name: aikv-exporter-replica-2b
-    environment:
-      - REDIS_ADDR=redis://aikv-replica-2b:6379
-    ports:
-      - "9621:9121"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aikv-exporter-replica-2b:
+  #   image: *aikv-exporter-image
+  #   container_name: aikv-exporter-replica-2b
+  #   environment:
+  #     - REDIS_ADDR=redis://aikv-replica-2b:6379
+  #   ports:
+  #     - "9621:9121"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
-  aidb-exporter-replica-2b:
-    image: *aidb-exporter-image
-    container_name: aidb-exporter-replica-2b
-    environment:
-      - AIDB_TARGET=redis://aikv-replica-2b:6379
-      - EXPORTER_PORT=9120
-    ports:
-      - "9620:9120"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aidb-exporter-replica-2b:
+  #   image: *aidb-exporter-image
+  #   container_name: aidb-exporter-replica-2b
+  #   environment:
+  #     - AIDB_TARGET=redis://aikv-replica-2b:6379
+  #     - EXPORTER_PORT=9120
+  #   ports:
+  #     - "9620:9120"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
   # --------------------------------------------------
   aikv-master-3:
@@ -403,28 +403,28 @@ services:
       retries: 3
       start_period: 10s
 
-  aikv-exporter-master-3:
-    image: *aikv-exporter-image
-    container_name: aikv-exporter-master-3
-    environment:
-      - REDIS_ADDR=redis://aikv-master-3:6379
-    ports:
-      - "9721:9121"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aikv-exporter-master-3:
+  #   image: *aikv-exporter-image
+  #   container_name: aikv-exporter-master-3
+  #   environment:
+  #     - REDIS_ADDR=redis://aikv-master-3:6379
+  #   ports:
+  #     - "9721:9121"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
-  aidb-exporter-master-3:
-    image: *aidb-exporter-image
-    container_name: aidb-exporter-master-3
-    environment:
-      - AIDB_TARGET=redis://aikv-master-3:6379
-      - EXPORTER_PORT=9120
-    ports:
-      - "9720:9120"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aidb-exporter-master-3:
+  #   image: *aidb-exporter-image
+  #   container_name: aidb-exporter-master-3
+  #   environment:
+  #     - AIDB_TARGET=redis://aikv-master-3:6379
+  #     - EXPORTER_PORT=9120
+  #   ports:
+  #     - "9720:9120"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
   # --------------------------------------------------
   aikv-replica-3a:
@@ -460,28 +460,28 @@ services:
       retries: 3
       start_period: 10s
 
-  aikv-exporter-replica-3a:
-    image: *aikv-exporter-image
-    container_name: aikv-exporter-replica-3a
-    environment:
-      - REDIS_ADDR=redis://aikv-replica-3a:6379
-    ports:
-      - "9821:9121"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aikv-exporter-replica-3a:
+  #   image: *aikv-exporter-image
+  #   container_name: aikv-exporter-replica-3a
+  #   environment:
+  #     - REDIS_ADDR=redis://aikv-replica-3a:6379
+  #   ports:
+  #     - "9821:9121"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
-  aidb-exporter-replica-3a:
-    image: *aidb-exporter-image
-    container_name: aidb-exporter-replica-3a
-    environment:
-      - AIDB_TARGET=redis://aikv-replica-3a:6379
-      - EXPORTER_PORT=9120
-    ports:
-      - "9820:9120"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aidb-exporter-replica-3a:
+  #   image: *aidb-exporter-image
+  #   container_name: aidb-exporter-replica-3a
+  #   environment:
+  #     - AIDB_TARGET=redis://aikv-replica-3a:6379
+  #     - EXPORTER_PORT=9120
+  #   ports:
+  #     - "9820:9120"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
   # --------------------------------------------------
   aikv-replica-3b:
@@ -517,50 +517,50 @@ services:
       retries: 3
       start_period: 10s
 
-  aikv-exporter-replica-3b:
-    image: *aikv-exporter-image
-    container_name: aikv-exporter-replica-3b
-    environment:
-      - REDIS_ADDR=redis://aikv-replica-3b:6379
-    ports:
-      - "9921:9121"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aikv-exporter-replica-3b:
+  #   image: *aikv-exporter-image
+  #   container_name: aikv-exporter-replica-3b
+  #   environment:
+  #     - REDIS_ADDR=redis://aikv-replica-3b:6379
+  #   ports:
+  #     - "9921:9121"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
-  aidb-exporter-replica-3b:
-    image: *aidb-exporter-image
-    container_name: aidb-exporter-replica-3b
-    environment:
-      - AIDB_TARGET=redis://aikv-replica-3b:6379
-      - EXPORTER_PORT=9120
-    ports:
-      - "9920:9120"
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # aidb-exporter-replica-3b:
+  #   image: *aidb-exporter-image
+  #   container_name: aidb-exporter-replica-3b
+  #   environment:
+  #     - AIDB_TARGET=redis://aikv-replica-3b:6379
+  #     - EXPORTER_PORT=9120
+  #   ports:
+  #     - "9920:9120"
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
   # --------------------------------------------------
   # 节点监控服务
-  promtail:
-    image: grafana/promtail:3.6.8
-    container_name: promtail
-    user: "0:0"
-    command:
-      - "-config.expand-env=true"
-      - "-config.file=/etc/promtail/promtail.yaml"
-    environment:
-      - MONITOR_HOST=${MONITOR_HOST}
-      - SERVER_HOST=localhost
-    ports:
-      - "9081:9081"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
-      # - ./logs:/var/log/aikv:ro
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # promtail:
+  #   image: grafana/promtail:3.6.8
+  #   container_name: promtail
+  #   user: "0:0"
+  #   command:
+  #     - "-config.expand-env=true"
+  #     - "-config.file=/etc/promtail/promtail.yaml"
+  #   environment:
+  #     - MONITOR_HOST=${MONITOR_HOST}
+  #     - SERVER_HOST=localhost
+  #   ports:
+  #     - "9081:9081"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #     - ./promtail.yaml:/etc/promtail/promtail.yaml:ro
+  #     # - ./logs:/var/log/aikv:ro
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
   # node-exporter:
   #   image: prom/node-exporter:v1.10.2
@@ -586,23 +586,23 @@ services:
   #     timeout: 5s
   #     retries: 3
 
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: cadvisor
-    ports:
-      - "8088:8080"
-    volumes:
-      - /:/rootfs:ro
-      - /var/run:/var/run:ro
-      - /sys:/sys:ro
-      - /var/lib/docker:/var/lib/docker:ro
-      - /dev/disk:/dev/disk:ro
-    privileged: true
-    devices:
-      - /dev/kmsg
-    restart: unless-stopped
-    networks:
-      - aikv-workflow
+  # cadvisor:
+  #   image: gcr.io/cadvisor/cadvisor:latest
+  #   container_name: cadvisor
+  #   ports:
+  #     - "8088:8080"
+  #   volumes:
+  #     - /:/rootfs:ro
+  #     - /var/run:/var/run:ro
+  #     - /sys:/sys:ro
+  #     - /var/lib/docker:/var/lib/docker:ro
+  #     - /dev/disk:/dev/disk:ro
+  #   privileged: true
+  #   devices:
+  #     - /dev/kmsg
+  #   restart: unless-stopped
+  #   networks:
+  #     - aikv-workflow
 
 networks:
   aikv-workflow:

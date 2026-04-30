@@ -128,6 +128,22 @@ else
     exit 1
 fi
 
+# 等待数据复制到 replica 再停 master（避免数据丢失）
+info "等待数据复制到 Replica $REPLICA_PORT ..."
+_synced=false
+for _i in $(seq 1 20); do
+    replica_val=$(redis-cli -c -h 127.0.0.1 -p $REPLICA_PORT GET "$test_key" 2>/dev/null || true)
+    if [ "$replica_val" = "$test_value" ]; then
+        ok "数据已复制到 replica（等待 ${_i}s）"
+        _synced=true
+        break
+    fi
+    sleep 1
+done
+if [ "$_synced" != "true" ]; then
+    warn "数据未复制到 replica（20s 超时），Raft 复制可能未完成，后续数据校验预期失败"
+fi
+
 echo ""
 
 # --- 3. 模拟 master 故障 ---
