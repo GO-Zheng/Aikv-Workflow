@@ -1,6 +1,3 @@
-# 未使用 `# syntax=docker/dockerfile:1`：该指令会从 registry 拉取 Dockerfile 前端镜像；
-# 在仅配置了 docker.io 镜像加速（如 USTC）且对 docker/dockerfile 返回 EOF 时会导致构建失败。
-# 使用 Docker 内置 BuildKit 前端即可，仍需 DOCKER_BUILDKIT=1（Docker 24+ 默认开启）。
 # ============================================================
 # AiKv Dockerfile - 使用本地 AiDb
 #
@@ -9,17 +6,11 @@
 # - BuildKit 挂载 cargo registry/git 缓存，跨次构建复用已下载的 crate
 # - 调试可加 --build-arg PROFILE=dev（配合 build_docker.sh --dev），debug 编译远快于 release
 # ------------------------------------------------------------
-
-# ------------------------------------------------------------
-# Stage 1: Builder - 编译阶段
-# ------------------------------------------------------------
 FROM rust:1.92-bookworm AS builder
 
-# 启用 BuildKit 缓存加速
 ENV CARGO_HOME=/usr/local/cargo
 ENV CARGO_REGISTRIES_CRATES_IO_PROTOCOL=sparse
 
-# 安装编译依赖
 RUN apt-get update && apt-get install -y \
     cmake \
     pkg-config \
@@ -29,7 +20,6 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 
 ARG FEATURES=""
-# release | dev — dev 用于本地调试迭代，编译快很多
 ARG PROFILE=release
 
 # 复制 AiDb 代码（从上级目录）
@@ -45,7 +35,10 @@ RUN sed -i 's|aidb = { .*git.*github.com/wiqun/AiDb.* }|aidb = { path = "./AiDb"
 # 占位源码：仅用于把「依赖 + aidb」编译进独立层；勿在此之后改 Cargo.toml/AiDb 顺序
 RUN mkdir -p src && echo "fn main() {}" > src/main.rs
 
-# 第一次构建：拉取并编译所有依赖（源码仅为空 main）
+# 阶段 A 结尾: 占位源码已生成
+# 阶段 B: 编译所有依赖 (仅依赖层, 源码是占位 main)
+# NOTE: --mount=type=cache 是 BuildKit 持久缓存, 不受 docker build --no-cache 影响。
+# 如果 AiDb 源文件改了但 cargo 仍用旧产物, 请在 build_docker.sh 加 --fresh。
 RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
     --mount=type=cache,target=/usr/local/cargo/git,sharing=locked \
     if [ "$PROFILE" = "dev" ]; then \
@@ -70,15 +63,18 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry,sharing=locked \
       else cargo build --release --bin aikv; fi; \
     fi
 
-# release 缩小体积；产物统一到固定路径供 runtime COPY（dev 对应 target/debug）
+# 阶段 D: 产出制品
 RUN if [ "$PROFILE" = "release" ]; then \
       strip target/release/aikv && cp target/release/aikv /aikv-artifact; \
     else \
       cp target/debug/aikv /aikv-artifact; \
     fi
 
+# 构建元数据, 供 build_docker.sh --verify 检查
+RUN echo "built_with_features=$FEATURES profile=$PROFILE" > /aikv-artifact-meta
+
 # ------------------------------------------------------------
-# Stage 2: Runtime - 极简运行环境
+# Stage 2: Runtime
 # ------------------------------------------------------------
 FROM debian:bookworm-slim AS runtime
 
@@ -97,6 +93,7 @@ WORKDIR /app
 
 # 从编译阶段拷贝产物（见 builder 末尾 /aikv-artifact）
 COPY --from=builder /aikv-artifact ./aikv
+COPY --from=builder /aikv-artifact-meta ./build-meta
 COPY ../AiKv/config/aikv.toml ./aikv.toml
 
 # 权限设置
